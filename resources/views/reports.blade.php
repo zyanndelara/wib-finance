@@ -209,16 +209,16 @@
         }
 
         .user-indicator .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: #436026;
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, #436026 0%, #5a7d33 100%);
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 22px;
             text-decoration: none;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -236,17 +236,20 @@
             flex-direction: column;
             align-items: flex-end;
             text-align: right;
+            gap: 2px;
         }
 
         .user-indicator .user-name {
             font-weight: 600;
             color: #1a1a1a;
-            font-size: 14px;
+            font-size: 15px;
         }
 
-        .user-indicator .user-email {
+        .user-indicator .user-role {
             font-size: 12px;
             color: #666;
+            font-weight: 500;
+            text-transform: capitalize;
         }
 
         .content-grid {
@@ -489,10 +492,6 @@
                 padding: 20px;
             }
 
-            .user-indicator .user-info {
-                padding: 6px 10px;
-            }
-
             .user-indicator .user-name {
                 font-size: 12px;
             }
@@ -519,10 +518,6 @@
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="{{ route('reports') }}" class="menu-item active">
-                <i class="fas fa-chart-bar"></i>
-                <span>Reports</span>
-            </a>
             <a href="{{ route('remittance') }}" class="menu-item">
                 <i class="fas fa-file-invoice-dollar"></i>
                 <span>Remittance</span>
@@ -535,13 +530,17 @@
                 <i class="fas fa-store"></i>
                 <span>Merchants</span>
             </a>
-            <a href="{{ route('member-management') }}" class="menu-item">
+            <a href="{{ route('members.index') }}" class="menu-item">
                 <i class="fas fa-users-cog"></i>
                 <span>Member Management</span>
             </a>
             <a href="{{ route('audit-logs') }}" class="menu-item">
                 <i class="fas fa-clipboard-list"></i>
                 <span>Audit Logs</span>
+            </a>
+            <a href="{{ route('reports') }}" class="menu-item active">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
             </a>
             <a href="{{ route('profile') }}" class="menu-item">
                 <i class="fas fa-user"></i>
@@ -574,6 +573,7 @@
             <div class="user-indicator">
                 <div class="user-info">
                     <span class="user-name">{{ auth()->user()->name }}</span>
+                    <span class="user-role">{{ auth()->user()->role }}</span>
                 </div>
                 <a href="{{ route('profile') }}" class="user-avatar">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
@@ -602,15 +602,15 @@
             <div class="filter-group">
                 <select class="filter-select" id="merchantFilter">
                     <option value="all">All Merchants</option>
-                    <option value="sender">Sender Merchants</option>
-                    <option value="beneficiary">Beneficiary Merchants</option>
+                    <option value="partners">Partners</option>
+                    <option value="non partners">Non Partners</option>
+                    <option value="good taste">Good Taste</option>
                 </select>
             </div>
             <div class="filter-group">
                 <select class="filter-select" id="statusFilter">
                     <option value="">Filter by status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="cleared">Cleared</option>
                     <option value="pending">Pending</option>
                 </select>
             </div>

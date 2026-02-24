@@ -1,5 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+    @if(session('force_password_change'))
+    <div id="forceChangeModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;">
+        <div style="background:white;padding:40px;border-radius:10px;max-width:400px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.2);">
+            <h2 style="margin-bottom:20px;">Change Your Password</h2>
+            <form method="POST" action="{{ route('force.password.change') }}">
+                @csrf
+                <div style="margin-bottom:15px;">
+                    <label for="new_password">New Password</label>
+                    <input type="password" name="new_password" id="new_password" required style="width:100%;padding:8px;margin-top:5px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label for="new_password_confirmation">Confirm Password</label>
+                    <input type="password" name="new_password_confirmation" id="new_password_confirmation" required style="width:100%;padding:8px;margin-top:5px;">
+                </div>
+                <button type="submit" style="background:#436026;color:white;padding:10px 20px;border:none;border-radius:5px;">Change Password</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        // Prevent interaction with dashboard until password is changed
+        document.body.style.overflow = 'hidden';
+    </script>
+    @endif
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -210,8 +233,8 @@
         }
 
         .user-indicator .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 55px;
+            height: 55px;
             background: linear-gradient(135deg, #436026 0%, #5a7d33 100%);
             color: white;
             border-radius: 50%;
@@ -219,7 +242,7 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 22px;
             text-decoration: none;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -238,22 +261,21 @@
             flex-direction: column;
             align-items: flex-end;
             text-align: right;
-            padding: 8px 12px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            gap: 2px;
         }
 
         .user-indicator .user-name {
             font-weight: 600;
             color: #1a1a1a;
-            font-size: 14px;
+            font-size: 15px;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
         }
 
-        .user-indicator .user-email {
+        .user-indicator .user-role {
             font-size: 12px;
             color: #666;
+            font-weight: 500;
+            text-transform: capitalize;
         }
 
         .stats-grid {
@@ -276,6 +298,12 @@
             display: flex;
             align-items: center;
             gap: 20px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .stat-card:visited {
+            color: white;
         }
 
         .stat-card::before {
@@ -349,6 +377,32 @@
             color: #1a1a1a;
             padding-bottom: 10px;
             border-bottom: 2px solid #436026;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-filter {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            background: white;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #436026;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .chart-filter:hover {
+            border-color: #436026;
+            box-shadow: 0 2px 6px rgba(67, 96, 38, 0.2);
+        }
+
+        .chart-filter:focus {
+            border-color: #436026;
+            box-shadow: 0 0 0 3px rgba(67, 96, 38, 0.1);
         }
 
         .chart-placeholder {
@@ -580,10 +634,6 @@
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="{{ route('reports') }}" class="menu-item">
-                <i class="fas fa-chart-bar"></i>
-                <span>Reports</span>
-            </a>
             <a href="{{ route('remittance') }}" class="menu-item">
                 <i class="fas fa-file-invoice-dollar"></i>
                 <span>Remittance</span>
@@ -596,13 +646,17 @@
                 <i class="fas fa-store"></i>
                 <span>Merchants</span>
             </a>
-            <a href="{{ route('member-management') }}" class="menu-item">
+            <a href="{{ route('members.index') }}" class="menu-item">
                 <i class="fas fa-users-cog"></i>
                 <span>Member Management</span>
             </a>
             <a href="{{ route('audit-logs') }}" class="menu-item">
                 <i class="fas fa-clipboard-list"></i>
                 <span>Audit Logs</span>
+            </a>
+            <a href="{{ route('reports') }}" class="menu-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
             </a>
             <a href="{{ route('profile') }}" class="menu-item">
                 <i class="fas fa-user"></i>
@@ -623,18 +677,12 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Success Message -->
-        @if (session('success'))
-            <div class="alert-success">
-                <i class="fas fa-check-circle"></i> {{ session('success') }}
-            </div>
-        @endif
-
         <div class="content-header">
             <h1>Dashboard</h1>
             <div class="user-indicator">
                 <div class="user-info">
                     <span class="user-name">{{ auth()->user()->name }}</span>
+                    <span class="user-role">{{ auth()->user()->role }}</span>
                 </div>
                 <a href="{{ route('profile') }}" class="user-avatar">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
@@ -644,41 +692,49 @@
 
         <!-- Stats Cards -->
         <div class="stats-grid">
-            <div class="stat-card">
+            <a href="{{ route('merchants') }}" class="stat-card">
                 <i class="fas fa-wallet stat-icon"></i>
                 <div class="stat-content">
                     <h3>₱170,000</h3>
                     <p>Total Collections</p>
                 </div>
-            </div>
-            <div class="stat-card">
+            </a>
+            <a href="{{ route('merchants') }}" class="stat-card">
                 <i class="fas fa-chart-line stat-icon"></i>
                 <div class="stat-content">
                     <h3>₱200,000</h3>
                     <p>Net Revenue</p>
                 </div>
-            </div>
-            <div class="stat-card">
+            </a>
+            <a href="{{ route('merchants') }}" class="stat-card">
                 <i class="fas fa-piggy-bank stat-icon"></i>
                 <div class="stat-content">
                     <h3>-</h3>
                     <p>GT. Funds Balance</p>
                 </div>
-            </div>
-            <div class="stat-card">
+            </a>
+            <a href="{{ route('bank-deposit') }}" class="stat-card">
                 <i class="fas fa-exclamation-triangle stat-icon"></i>
                 <div class="stat-content">
                     <h3>-</h3>
                     <p>Discrepancies</p>
                 </div>
-            </div>
+            </a>
         </div>
 
         <!-- Charts -->
         <div class="charts-grid">
             <!-- Gross Sales Trend Chart -->
             <div class="chart-box">
-                <h3>Gross Sales Trend</h3>
+                <h3>
+                    <span>Gross Sales Trend</span>
+                    <select class="chart-filter" id="salesTrendFilter" onchange="changeSalesTrendView(this.value)">
+                        <option value="daily" selected>Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="annually">Annually</option>
+                    </select>
+                </h3>
                 <div class="chart-placeholder">
                     <canvas id="salesTrendChart"></canvas>
                 </div>
@@ -686,11 +742,14 @@
 
             <!-- Daily/Weekly/Monthly Chart -->
             <div class="chart-box">
-                <div class="chart-tabs">
-                    <button class="chart-tab" onclick="changeChartView('daily')">Daily</button>
-                    <button class="chart-tab active" onclick="changeChartView('weekly')">Weekly</button>
-                    <button class="chart-tab" onclick="changeChartView('monthly')">Monthly</button>
-                </div>
+                <h3>
+                    <span>Funds and Outflows</span>
+                    <select class="chart-filter" id="fundsFlowFilter" onchange="changeChartView(this.value)">
+                        <option value="daily" selected>Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </h3>
                 <div class="chart-placeholder">
                     <canvas id="expenseBalanceChart"></canvas>
                 </div>
@@ -746,7 +805,10 @@
                 },
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 100
+                        }
                     }
                 }
             }
@@ -759,17 +821,19 @@
             data: {
                 labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                 datasets: [{
+                    label: 'Beginning Balance',
+                    data: [80, 150, 110, 90, 80, 100, 110],
+                    backgroundColor: '#436026',
+                    stack: 'Stack 0',
+                    categoryPercentage: 0.7,
+                    barPercentage: 0.9
+                }, {
                     label: 'Expense',
                     data: [-120, -180, -130, -110, -100, -120, -130],
                     backgroundColor: '#ffd300',
                     stack: 'Stack 0',
-                    barThickness: 40
-                }, {
-                    label: 'Balance',
-                    data: [80, 150, 110, 90, 80, 100, 110],
-                    backgroundColor: '#436026',
-                    stack: 'Stack 0',
-                    barThickness: 40
+                    categoryPercentage: 0.7,
+                    barPercentage: 0.9
                 }]
             },
             options: {
@@ -797,6 +861,9 @@
                         beginAtZero: true,
                         grid: {
                             color: '#e5e5e5'
+                        },
+                        ticks: {
+                            stepSize: 100
                         }
                     }
                 }
@@ -804,16 +871,55 @@
         });
 
         function changeChartView(view) {
-            // Remove active class from all tabs
-            document.querySelectorAll('.chart-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            // Add active class to clicked tab
-            event.target.classList.add('active');
-            
             // Update chart data based on view (daily/weekly/monthly)
             // This is a placeholder - implement actual data fetching logic
-            console.log('Chart view changed to:', view);
+            console.log('Funds and Outflows view changed to:', view);
+            
+            // Example: Update chart labels based on period
+            let labels;
+            switch(view) {
+                case 'daily':
+                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    break;
+                case 'weekly':
+                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                    break;
+                case 'monthly':
+                    labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    break;
+            }
+            
+            // Update chart with new labels
+            expenseBalanceChart.data.labels = labels;
+            expenseBalanceChart.update();
+        }
+
+        // Change Sales Trend View
+        function changeSalesTrendView(period) {
+            // This is a placeholder - implement actual data fetching logic
+            // You can update the chart data based on the selected period
+            console.log('Sales trend period changed to:', period);
+            
+            // Example: Update chart labels based on period
+            let labels;
+            switch(period) {
+                case 'daily':
+                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    break;
+                case 'weekly':
+                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                    break;
+                case 'monthly':
+                    labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    break;
+                case 'annually':
+                    labels = ['2020', '2021', '2022', '2023', '2024', '2025', '2026'];
+                    break;
+            }
+            
+            // Update chart with new labels
+            salesTrendChart.data.labels = labels;
+            salesTrendChart.update();
         }
 
         // Toggle sidebar for mobile

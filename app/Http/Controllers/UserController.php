@@ -1,0 +1,247 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Mail\WelcomeMail;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use SendinBlue\Client\Configuration;
+use SendinBlue\Client\Api\TransactionalEmailsApi;
+use SendinBlue\Client\Model\SendSmtpEmail;
+use GuzzleHttp\Client;
+
+class UserController extends Controller
+{
+    /**
+     * Display a listing of the members.
+     */
+    public function index(Request $request)
+    {
+        $query = User::query();
+        
+        // Check if showing archived members
+        $showArchived = $request->has('archived') && $request->archived == '1';
+
+        // Search filter
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('email', 'like', '%' . $search . '%')
+                  ->orWhere('employee_id', 'like', '%' . $search . '%')
+                  ->orWhere('phone_number', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Role filter
+        if ($request->has('role') && $request->role != '') {
+            $query->where('role', $request->role);
+        }
+
+        // Status filter - if showing archived, show only inactive, otherwise show active by default
+        if ($showArchived) {
+            $query->where('status', 'inactive');
+        } else {
+            // Show only active members
+            $query->where('status', 'active');
+        }
+
+        $users = $query->orderBy('created_at', 'desc')->paginate(10);
+        return view('member-management', compact('users', 'showArchived'));
+    }
+
+    /**
+     * Store a newly created member in database.
+     */
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:2',
+            'last_name' => 'required|string|max:255',
+            'employee_id' => 'required|digits:4|unique:users',
+            'email' => 'required|string|email|max:255|unique:users',
+            'phone_number' => 'required|string|regex:/^\+63[0-9]{10}$/|max:20',
+            'role' => 'required|in:finance_officer',
+            'rank' => 'required|in:I,II,III,IV,V',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        // Auto-generate password
+        $generatedPassword = Str::random(12);
+
+        // Construct full name
+        $fullName = trim(($request->first_name ?? '') . ' ' . ($request->middle_name ?? '') . ' ' . ($request->last_name ?? ''));
+        if (empty($fullName)) {
+            $fullName = $request->email; // Fallback to email if no name provided
+        }
+
+        // Combine role and rank
+        $combinedRole = $request->role . '_' . $request->rank;
+
+        $user = User::create([
+            'name' => $fullName,
+            'first_name' => $request->first_name,
+            'middle_name' => $request->middle_name,
+            'last_name' => $request->last_name,
+            'employee_id' => $request->employee_id,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'password' => Hash::make($generatedPassword),
+            'role' => $combinedRole,
+            'status' => $request->status,
+        ]);
+
+        // Send email with generated password to user
+        try {
+            // Mail::to($request->email)->send(new WelcomeMail(
+            //     $fullName,
+            //     $request->email,
+            //     $generatedPassword,
+            //     $request->employee_id
+            // ));
+            $this->sendBrevoPassword($user, $generatedPassword);
+            
+            return redirect()->route('members.index')
+                ->with('success', value: 'Member added successfully! Password has been auto-generated and sent via email.');
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Failed to send welcome email: ' . $e->getMessage());
+            
+            return redirect()->route('members.index')
+                ->with('warning', 'Member added successfully, but failed to send email. Please contact the system administrator. Generated password: ' . $generatedPassword);
+        }
+    }
+
+    private function sendBrevoPassword($user, $generatedPassword)
+    {
+        $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', env('MAIL_PASSWORD'));
+        $apiInstance = new TransactionalEmailsApi(new Client(), $config);
+
+        $email = $user->email;
+        $name = $user->name;
+        $employeeId = $user->employee_id;
+        $password = $generatedPassword;
+
+        // Render the Blade template to HTML
+        $htmlContent = view('emails.welcome', [
+            'userName' => $name,
+            'employeeId' => $employeeId,
+            'email' => $email,
+            'password' => $password,
+        ])->render();
+
+        $sendSmtpEmail = new SendSmtpEmail([
+            'to' => [["email" => $email, "name" => $name]],
+            'sender' => ["email" => env('MAIL_FROM_ADDRESS'), "name" => env('MAIL_FROM_NAME')],
+            'subject' => 'Welcome to When in Baguio Inc.',
+            'htmlContent' => $htmlContent,
+        ]);
+
+        try {
+            $apiInstance->sendTransacEmail($sendSmtpEmail);
+        } catch (\Exception $e) {
+            Log::error('Brevo verification email failed: ' . $e->getMessage() . '\n' . $e->getTraceAsString());
+        }
+    }
+
+    /**
+     * Update the specified member in database.
+     */
+    public function update(Request $request, User $user)
+    {
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:2',
+            'last_name' => 'required|string|max:255',
+            'employee_id' => 'required|digits:4|unique:users,employee_id,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'phone_number' => 'required|string|regex:/^\+63[0-9]{10}$/|max:20',
+            'role' => 'required|in:finance_officer,admin',
+            'rank' => 'nullable|in:I,II,III,IV,V',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        // Add conditional validation for rank if role is finance_officer
+        $validator->sometimes('rank', 'required|in:I,II,III,IV,V', function ($input) {
+            return $input->role === 'finance_officer';
+        });
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        // Construct full name
+        $fullName = trim(($request->first_name ?? '') . ' ' . ($request->middle_name ?? '') . ' ' . ($request->last_name ?? ''));
+        if (empty($fullName)) {
+            $fullName = $request->email; // Fallback to email if no name provided
+        }
+
+        // Combine role and rank for finance officers, leave admin as is
+        $finalRole = $request->role;
+        if ($request->role === 'finance_officer' && $request->filled('rank')) {
+            $finalRole = $request->role . '_' . $request->rank;
+        }
+
+        $data = [
+            'name' => $fullName,
+            'first_name' => $request->first_name,
+            'middle_name' => $request->middle_name,
+            'last_name' => $request->last_name,
+            'employee_id' => $request->employee_id,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'role' => $finalRole,
+            'status' => $request->status,
+        ];
+
+        $user->update($data);
+
+        return redirect()->route('members.index')
+            ->with('success', 'Member updated successfully!');
+    }
+
+    /**
+     * Archive the specified member by setting status to inactive.
+     */
+    public function destroy(User $user)
+    {
+        // Prevent archiving the currently authenticated user
+        if ($user->id === Auth::id()) {
+            return redirect()->route('members.index')
+                ->with('error', 'You cannot archive your own account!');
+        }
+
+        // Set status to inactive instead of deleting
+        $user->update(['status' => 'inactive']);
+
+        return redirect()->route('members.index')
+            ->with('success', 'Member archived successfully!');
+    }
+
+    /**
+     * Restore the specified member by setting status to active.
+     */
+    public function restore(User $user)
+    {
+        // Set status to active to restore the member
+        $user->update(['status' => 'active']);
+
+        return redirect()->route('members.index', ['archived' => '1'])
+            ->with('success', 'Member restored successfully!');
+    }
+}

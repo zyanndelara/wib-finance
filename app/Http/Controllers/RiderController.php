@@ -15,14 +15,25 @@ class RiderController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'status' => 'required|in:pending,cleared',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'status' => 'nullable|in:pending,cleared',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        }
 
         $rider = Rider::create([
             'name' => $request->name,
-            'status' => $request->status,
+            'status' => $request->status ?? 'pending',
         ]);
 
         return response()->json([
@@ -34,10 +45,21 @@ class RiderController extends Controller
 
     public function update(Request $request, Rider $rider)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'status' => 'required|in:pending,cleared',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'status' => 'required|in:pending,cleared',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        }
 
         $rider->update([
             'name' => $request->name,

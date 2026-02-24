@@ -11,16 +11,27 @@ class RemittanceController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate([
-            'rider_id' => 'required|exists:riders,id',
-            'total_deliveries' => 'required|integer|min:0',
-            'total_delivery_fee' => 'required|numeric|min:0',
-            'total_remit' => 'required|numeric|min:0',
-            'total_tips' => 'nullable|numeric|min:0',
-            'total_collection' => 'required|numeric|min:0',
-            'mode_of_payment' => 'required|string',
-            'remit_photo' => 'nullable|image|max:5120', // 5MB max
-        ]);
+        try {
+            $request->validate([
+                'rider_id' => 'required|exists:riders,id',
+                'total_deliveries' => 'required|integer|min:0',
+                'total_delivery_fee' => 'required|numeric|min:0',
+                'total_remit' => 'required|numeric|min:0',
+                'total_tips' => 'nullable|numeric|min:0',
+                'total_collection' => 'required|numeric|min:0',
+                'mode_of_payment' => 'required|string',
+                'remit_photo' => 'nullable|image|max:5120', // 5MB max
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        }
 
         $remittanceData = [
             'rider_id' => $request->rider_id,

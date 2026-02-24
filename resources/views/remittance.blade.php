@@ -211,8 +211,8 @@
         }
 
         .user-indicator .user-avatar {
-            width: 36px;
-            height: 36px;
+            width: 55px;
+            height: 55px;
             background: linear-gradient(135deg, #436026 0%, #5a7d33 100%);
             color: white;
             border-radius: 50%;
@@ -220,7 +220,7 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 22px;
             text-decoration: none;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -239,22 +239,20 @@
             flex-direction: column;
             align-items: flex-end;
             text-align: right;
-            padding: 6px 10px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            gap: 2px;
         }
 
         .user-indicator .user-name {
             font-weight: 600;
             color: #1a1a1a;
-            font-size: 13px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+            font-size: 15px;
         }
 
-        .user-indicator .user-email {
+        .user-indicator .user-role {
             font-size: 12px;
             color: #666;
+            font-weight: 500;
+            text-transform: capitalize;
         }
 
         .remittance-container {
@@ -341,6 +339,36 @@
         .add-remit-btn:active {
             transform: translateY(-1px);
             box-shadow: 0 3px 10px rgba(67, 96, 38, 0.3);
+        }
+
+        .search-bar {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #436026;
+            box-shadow: 0 0 0 3px rgba(67, 96, 38, 0.1);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 14px;
         }
 
         .rider-list {
@@ -956,6 +984,84 @@
             color: #28a745;
         }
 
+        /* Cleared Riders Table */
+        .cleared-riders-section {
+            margin-top: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(67, 96, 38, 0.1);
+            animation: fadeInUp 0.6s ease 0.4s both;
+        }
+
+        .cleared-riders-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .cleared-riders-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .cleared-riders-table thead {
+            background: linear-gradient(135deg, #436026 0%, #5a7d33 100%);
+            color: white;
+        }
+
+        .cleared-riders-table thead th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cleared-riders-table tbody tr {
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .cleared-riders-table tbody tr:hover {
+            background: #f8f9fa;
+            transform: translateX(3px);
+        }
+
+        .cleared-riders-table tbody td {
+            padding: 12px 15px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .cleared-riders-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .table-empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .table-empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+
+        .table-empty-state p {
+            font-size: 14px;
+            margin: 0;
+        }
+
         @keyframes slideInDown {
             from {
                 opacity: 0;
@@ -1042,6 +1148,14 @@
                 width: 100%;
                 justify-content: flex-end;
             }
+
+            .cleared-riders-section {
+                overflow-x: auto;
+            }
+
+            .cleared-riders-table {
+                min-width: 600px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1063,7 +1177,8 @@
             }
 
             .rider-queue-panel,
-            .remittance-details-panel {
+            .remittance-details-panel,
+            .cleared-riders-section {
                 padding: 15px;
             }
 
@@ -1085,6 +1200,26 @@
 
             .net-turnover-amount {
                 font-size: 26px;
+            }
+
+            .cleared-riders-header {
+                font-size: 16px;
+            }
+
+            .cleared-riders-header {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px !important;
+            }
+
+            .cleared-riders-header .search-bar {
+                max-width: 100% !important;
+            }
+
+            .cleared-riders-table thead th,
+            .cleared-riders-table tbody td {
+                padding: 10px;
+                font-size: 12px;
             }
         }
     </style>
@@ -1109,10 +1244,6 @@
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="{{ route('reports') }}" class="menu-item">
-                <i class="fas fa-chart-bar"></i>
-                <span>Reports</span>
-            </a>
             <a href="{{ route('remittance') }}" class="menu-item active">
                 <i class="fas fa-file-invoice-dollar"></i>
                 <span>Remittance</span>
@@ -1125,13 +1256,17 @@
                 <i class="fas fa-store"></i>
                 <span>Merchants</span>
             </a>
-            <a href="{{ route('member-management') }}" class="menu-item">
+            <a href="{{ route('members.index') }}" class="menu-item">
                 <i class="fas fa-users-cog"></i>
                 <span>Member Management</span>
             </a>
             <a href="{{ route('audit-logs') }}" class="menu-item">
                 <i class="fas fa-clipboard-list"></i>
                 <span>Audit Logs</span>
+            </a>
+            <a href="{{ route('reports') }}" class="menu-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
             </a>
             <a href="{{ route('profile') }}" class="menu-item">
                 <i class="fas fa-user"></i>
@@ -1164,6 +1299,7 @@
             <div class="user-indicator">
                 <div class="user-info">
                     <span class="user-name">{{ auth()->user()->name }}</span>
+                    <span class="user-role">{{ auth()->user()->role }}</span>
                 </div>
                 <a href="{{ route('profile') }}" class="user-avatar">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
@@ -1181,8 +1317,15 @@
                         <span>Add Rider</span>
                     </button>
                 </div>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="riderSearch" placeholder="Search rider..." oninput="searchRiders()">
+                </div>
                 <div class="rider-list">
-                    @forelse($riders as $index => $rider)
+                    @php
+                        $pendingRiders = $riders->where('status', 'pending');
+                    @endphp
+                    @forelse($pendingRiders as $index => $rider)
                         <div class="rider-row" data-rider-id="{{ $rider->id }}">
                             <div class="rider-item {{ $index === 0 ? 'active' : '' }}">
                                 <div class="rider-item-info">
@@ -1204,7 +1347,7 @@
                     @empty
                         <div class="empty-state" style="text-align: center; padding: 40px; color: #6c757d;">
                             <i class="fas fa-users" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
-                            <p style="font-size: 14px; margin: 0;">No riders yet. Click "Add Rider" to get started.</p>
+                            <p style="font-size: 14px; margin: 0;">No pending riders. Click "Add Rider" to get started.</p>
                         </div>
                     @endforelse
                 </div>
@@ -1248,12 +1391,62 @@
                         <i class="fas fa-image"></i>
                         <span>View Remit Photo</span>
                     </button>
+                    <button class="action-btn" id="editRemitBtn" onclick="editRemittance()" disabled style="opacity: 0.5; cursor: not-allowed; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);">
+                        <i class="fas fa-edit"></i>
+                        <span>Edit</span>
+                    </button>
                     <button class="action-btn" id="confirmReceiptBtn" onclick="confirmReceipt()" disabled style="opacity: 0.5; cursor: not-allowed;">
                         <i class="fas fa-check"></i>
                         <span>Confirm Receipt</span>
                     </button>
                 </div>
             </div>
+        </div>
+
+        <!-- Cleared Riders Table -->
+        <div class="cleared-riders-section">
+            <div class="cleared-riders-header" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 3px; height: 20px; background: linear-gradient(180deg, #436026 0%, #5a7d33 100%); border-radius: 2px;"></div>
+                    <span>Cleared Riders History</span>
+                </div>
+                @php
+                    $clearedRiders = $riders->where('status', 'cleared');
+                @endphp
+                @if($clearedRiders->count() > 0)
+                    <div class="search-bar" style="margin-bottom: 0; max-width: 300px;">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="clearedRiderSearch" placeholder="Search cleared riders..." oninput="searchClearedRiders()">
+                    </div>
+                @endif
+            </div>
+            @if($clearedRiders->count() > 0)
+                <table class="cleared-riders-table">
+                    <thead>
+                        <tr>
+                            <th>Rider Name</th>
+                            <th>Status</th>
+                            <th>Date Cleared</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($clearedRiders as $rider)
+                            <tr>
+                                <td><strong>{{ $rider->name }}</strong></td>
+                                <td>
+                                    <span class="rider-status cleared">{{ ucfirst($rider->status) }}</span>
+                                </td>
+                                <td>{{ $rider->updated_at->format('M d, Y h:i A') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <div class="table-empty-state">
+                    <i class="fas fa-clipboard-check"></i>
+                    <p>No cleared riders yet.</p>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -1270,17 +1463,9 @@
                         <label for="riderName"><i class="fas fa-user"></i> Rider Name</label>
                         <input type="text" id="riderName" name="riderName" placeholder="Enter rider name" required>
                     </div>
-                    <div class="form-group">
-                        <label for="riderStatus"><i class="fas fa-flag"></i> Status</label>
-                        <select id="riderStatus" name="riderStatus" required>
-                            <option value="pending">Pending</option>
-                            <option value="cleared">Cleared</option>
-                        </select>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="modal-btn cancel" onclick="closeAddRiderModal()">Cancel</button>
                 <button class="modal-btn submit" onclick="submitAddRider()"><i class="fas fa-check"></i> Add Rider</button>
             </div>
         </div>
@@ -1291,7 +1476,7 @@
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
                 <h3><i class="fas fa-money-bill-wave"></i> Remittance Form</h3>
-                <button class="modal-close" onclick="closeRemitModal()">&times;</button>
+                
             </div>
             <div class="modal-body">
                 <form id="remitForm" enctype="multipart/form-data">
@@ -1310,7 +1495,7 @@
                         </div>
                         <div class="form-group">
                             <label for="totalDeliveryFee"><i class="fas fa-dollar-sign"></i> Total Delivery Fee</label>
-                            <input type="number" id="totalDeliveryFee" name="total_delivery_fee" placeholder="0.00" step="0.01" min="0" required>
+                            <input type="number" id="totalDeliveryFee" name="total_delivery_fee" placeholder="0.00" step="0.01" min="0" required oninput="calculateTotalRemit()">
                         </div>
                     </div>
 
@@ -1336,8 +1521,6 @@
                                 <option value="">Select Payment Mode</option>
                                 <option value="cash">Cash</option>
                                 <option value="gcash">GCash</option>
-                                <option value="bank_transfer">Bank Transfer</option>
-                                <option value="mixed">Mixed</option>
                             </select>
                         </div>
                     </div>
@@ -1364,13 +1547,29 @@
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header" id="messageModalHeader">
                 <h3 id="messageModalTitle"><i class="fas fa-info-circle"></i> Message</h3>
-                <button class="modal-close" onclick="closeMessageModal()">&times;</button>
             </div>
             <div class="modal-body" style="padding: 30px 25px;">
                 <p id="messageModalText" style="margin: 0; font-size: 14px; line-height: 1.6; color: #333;"></p>
             </div>
             <div class="modal-footer">
                 <button class="modal-btn submit" onclick="closeMessageModal()" style="width: 100%;"><i class="fas fa-check"></i> OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #436026 0%, #5a7d33 100%);">
+                <h3><i class="fas fa-question-circle"></i> Confirmation</h3>
+                
+            </div>
+            <div class="modal-body" style="padding: 30px 25px;">
+                <p id="confirmModalText" style="margin: 0; font-size: 14px; line-height: 1.6; color: #333;"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeConfirmModal()">Cancel</button>
+                <button class="modal-btn submit" id="confirmModalOkBtn"><i class="fas fa-check"></i> OK</button>
             </div>
         </div>
     </div>
@@ -1408,10 +1607,42 @@
             document.getElementById('messageModal').classList.remove('active');
         }
         
+        // Confirmation Modal Functions
+        function showConfirmModal(message, onConfirm) {
+            const modal = document.getElementById('confirmModal');
+            const text = document.getElementById('confirmModalText');
+            const okBtn = document.getElementById('confirmModalOkBtn');
+            
+            text.textContent = message;
+            
+            // Remove any previous event listeners
+            const newOkBtn = okBtn.cloneNode(true);
+            okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+            
+            // Add new event listener
+            newOkBtn.addEventListener('click', function() {
+                closeConfirmModal();
+                onConfirm();
+            });
+            
+            modal.classList.add('active');
+        }
+        
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+        }
+        
         // Close message modal when clicking outside
         document.getElementById('messageModal').addEventListener('click', function(event) {
             if (event.target === this) {
                 closeMessageModal();
+            }
+        });
+        
+        // Close confirmation modal when clicking outside
+        document.getElementById('confirmModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeConfirmModal();
             }
         });
 
@@ -1461,29 +1692,63 @@
                 closeAddRiderModal();
                 closeRemitModal();
                 closeMessageModal();
+                closeConfirmModal();
             }
         });
+
+        // Search Riders Function
+        function searchRiders() {
+            const searchValue = document.getElementById('riderSearch').value.toLowerCase();
+            const riderRows = document.querySelectorAll('.rider-row');
+            
+            riderRows.forEach(row => {
+                const riderName = row.querySelector('.rider-item-info strong').textContent.toLowerCase();
+                
+                if (riderName.includes(searchValue)) {
+                    row.style.display = 'flex';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Search Cleared Riders Function
+        function searchClearedRiders() {
+            const searchValue = document.getElementById('clearedRiderSearch').value.toLowerCase();
+            const tableRows = document.querySelectorAll('.cleared-riders-table tbody tr');
+            
+            tableRows.forEach(row => {
+                const riderName = row.querySelector('td:first-child strong').textContent.toLowerCase();
+                const dateCleared = row.querySelector('td:last-child').textContent.toLowerCase();
+                
+                if (riderName.includes(searchValue) || dateCleared.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
 
         function submitAddRider() {
             const form = document.getElementById('addRiderForm');
             
             if (form.checkValidity()) {
                 const riderName = document.getElementById('riderName').value;
-                const riderStatus = document.getElementById('riderStatus').value;
                 
-                // Get CSRF token
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                
-                // Send AJAX request to save rider
-                fetch('/riders', {
+                // Show custom confirmation modal
+                showConfirmModal(`Are you sure you want to add rider "${riderName}"?`, function() {
+                    // Get CSRF token
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    
+                    // Send AJAX request to save rider (status automatically set to 'pending')
+                    fetch('/riders', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({
-                        name: riderName,
-                        status: riderStatus
+                        name: riderName
                     })
                 })
                 .then(response => response.json())
@@ -1538,6 +1803,7 @@
                     console.error('Error:', error);
                     showMessageModal('Failed to add rider. Please try again.', 'error');
                 });
+                });
             } else {
                 form.reportValidity();
             }
@@ -1571,12 +1837,19 @@
             document.getElementById('remitForm').reset();
         }
 
-        // Close remit modal when clicking outside
-        document.getElementById('remitModal').addEventListener('click', function(event) {
-            if (event.target === this) {
-                closeRemitModal();
-            }
-        });
+        // Calculate Total Remit (Total Delivery Fee - 5%)
+        function calculateTotalRemit() {
+            const totalDeliveryFee = parseFloat(document.getElementById('totalDeliveryFee').value) || 0;
+            const totalRemit = totalDeliveryFee - (totalDeliveryFee * 0.05);
+            document.getElementById('totalRemit').value = totalRemit.toFixed(2);
+        }
+
+        // Close remit modal when clicking outside - DISABLED
+        // document.getElementById('remitModal').addEventListener('click', function(event) {
+        //     if (event.target === this) {
+        //         closeRemitModal();
+        //     }
+        // });
 
         // Store pending remittance data
         let pendingRemittance = null;
@@ -1638,11 +1911,16 @@
                 document.getElementById('digitalCollectionDisplay').textContent = '₱' + digitalAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                 document.getElementById('netTurnoverDisplay').textContent = '₱' + parseFloat(totalRemit).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                 
-                // Enable confirm receipt button
+                // Enable confirm receipt and edit buttons
                 const confirmBtn = document.getElementById('confirmReceiptBtn');
                 confirmBtn.disabled = false;
                 confirmBtn.style.opacity = '1';
                 confirmBtn.style.cursor = 'pointer';
+                
+                const editBtn = document.getElementById('editRemitBtn');
+                editBtn.disabled = false;
+                editBtn.style.opacity = '1';
+                editBtn.style.cursor = 'pointer';
                 
                 // Show/hide view photo button
                 if (remitPhoto) {
@@ -1679,17 +1957,33 @@
             fetch('/remittances', {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': csrfToken
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: pendingRemittance.formData
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to save remittance');
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json().then(data => ({ response, data }));
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(`Server returned non-JSON response: ${response.status} ${response.statusText}`);
+                    });
                 }
-                return response.json();
             })
-            .then(data => {
+            .then(({ response, data }) => {
+                if (!response.ok) {
+                    // Handle validation errors (422)
+                    if (response.status === 422 && data.errors) {
+                        const errorMessages = Object.entries(data.errors)
+                            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+                            .join('\n');
+                        throw new Error(`Validation failed:\n${errorMessages}`);
+                    }
+                    throw new Error(data.message || `Failed to save remittance: ${response.status} ${response.statusText}`);
+                }
                 if (!data.success) {
                     throw new Error(data.message || 'Failed to submit remittance');
                 }
@@ -1701,7 +1995,9 @@
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
                         name: pendingRemittance.riderName,
@@ -1710,44 +2006,90 @@
                 });
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to update rider status');
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json().then(data => ({ response, data }));
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(`Server returned non-JSON response: ${response.status} ${response.statusText}`);
+                    });
                 }
-                return response.json();
             })
-            .then(data => {
+            .then(({ response, data }) => {
+                if (!response.ok) {
+                    // Handle validation errors (422)
+                    if (response.status === 422 && data.errors) {
+                        const errorMessages = Object.entries(data.errors)
+                            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+                            .join('\n');
+                        throw new Error(`Validation failed:\n${errorMessages}`);
+                    }
+                    throw new Error(data.message || `Failed to update rider status: ${response.status} ${response.statusText}`);
+                }
                 if (!data.success) {
                     throw new Error(data.message || 'Failed to update rider status');
                 }
                 
                 console.log('Rider status updated successfully:', data);
                 
-                // Update the rider status badge in the UI
+                // Remove the rider from the Rider Queue (pending section)
                 const riderRow = document.querySelector(`[data-rider-id="${pendingRemittance.riderId}"]`);
                 console.log('Found rider row:', riderRow);
                 
                 if (riderRow) {
-                    const statusBadge = riderRow.querySelector('.rider-status');
-                    console.log('Found status badge:', statusBadge);
+                    // Remove the rider row with fade out animation
+                    riderRow.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    riderRow.style.opacity = '0';
+                    riderRow.style.transform = 'translateX(-20px)';
                     
-                    if (statusBadge) {
-                        statusBadge.className = 'rider-status cleared';
-                        statusBadge.textContent = 'Cleared';
-                        console.log('Status badge updated to Cleared');
-                    }
+                    setTimeout(() => {
+                        riderRow.remove();
+                        
+                        // Check if rider list is empty, show empty state
+                        const riderList = document.querySelector('.rider-list');
+                        const remainingRiders = riderList.querySelectorAll('.rider-row');
+                        
+                        if (remainingRiders.length === 0) {
+                            const emptyState = document.createElement('div');
+                            emptyState.className = 'empty-state';
+                            emptyState.style.cssText = 'text-align: center; padding: 40px; color: #6c757d;';
+                            emptyState.innerHTML = `
+                                <i class="fas fa-users" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
+                                <p style="font-size: 14px; margin: 0;">No pending riders. Click "Add Rider" to get started.</p>
+                            `;
+                            riderList.appendChild(emptyState);
+                        }
+                    }, 300);
                 }
                 
                 // Clear pending remittance
                 pendingRemittance = null;
                 
-                // Disable confirm button again
+                // Clear the remittance details panel
+                document.getElementById('detailsRiderName').textContent = '';
+                document.getElementById('cashCollectionDisplay').textContent = '₱0.00';
+                document.getElementById('digitalCollectionDisplay').textContent = '₱0.00';
+                document.getElementById('netTurnoverDisplay').textContent = '₱0.00';
+                document.getElementById('viewPhotoBtn').style.display = 'none';
+                
+                // Disable confirm and edit buttons again
                 confirmBtn.disabled = true;
                 confirmBtn.style.opacity = '0.5';
                 confirmBtn.style.cursor = 'not-allowed';
                 confirmBtn.innerHTML = originalText;
                 
+                const editBtn = document.getElementById('editRemitBtn');
+                editBtn.disabled = true;
+                editBtn.style.opacity = '0.5';
+                editBtn.style.cursor = 'not-allowed';
+                
                 // Show success message
-                showMessageModal('Receipt confirmed! Remittance saved and rider status updated to Cleared.', 'success');
+                showMessageModal('Receipt confirmed! Rider cleared and moved to history. Page will reload to show updated data.', 'success');
+                
+                // Reload page after 2 seconds to update the cleared riders table
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             })
             .catch(error => {
                 console.error('Error in confirmReceipt:', error);
@@ -1757,6 +2099,32 @@
                 confirmBtn.style.cursor = 'pointer';
                 confirmBtn.innerHTML = originalText;
             });
+        }
+
+        function editRemittance() {
+            if (!pendingRemittance) {
+                showMessageModal('No pending remittance to edit.', 'warning');
+                return;
+            }
+            
+            // Open the remit modal
+            document.getElementById('remitModal').classList.add('active');
+            
+            // Pre-fill all form fields with current values
+            document.getElementById('remitRiderId').value = pendingRemittance.riderId;
+            document.getElementById('remitRiderName').value = pendingRemittance.riderName;
+            document.getElementById('displayRiderName').value = pendingRemittance.riderName;
+            document.getElementById('totalDeliveries').value = pendingRemittance.totalDeliveries;
+            document.getElementById('totalDeliveryFee').value = pendingRemittance.totalDeliveryFee;
+            document.getElementById('totalRemit').value = pendingRemittance.totalRemit;
+            document.getElementById('totalTips').value = pendingRemittance.totalTips;
+            document.getElementById('totalCollection').value = pendingRemittance.totalCollection;
+            document.getElementById('modeOfPayment').value = pendingRemittance.modeOfPayment;
+            
+            // Note: File input cannot be pre-filled for security reasons
+            // The user will need to re-upload if they want to change the photo
+            
+            document.getElementById('totalDeliveries').focus();
         }
 
         function viewRemitPhoto() {
@@ -1788,11 +2156,12 @@
         // Add click handlers to existing remit buttons
         document.addEventListener('DOMContentLoaded', function() {
             const riderItems = document.querySelectorAll('.rider-row');
-            riderItems.forEach((row, index) => {
+            riderItems.forEach((row) => {
+                const riderId = row.getAttribute('data-rider-id');
                 const riderName = row.querySelector('.rider-item-info strong').textContent;
                 const remitBtn = row.querySelector('.rider-action-btn:not(.records-btn)');
-                if (remitBtn) {
-                    remitBtn.setAttribute('onclick', `openRemitModal(${index + 1}, '${riderName}')`);
+                if (remitBtn && riderId) {
+                    remitBtn.setAttribute('onclick', `openRemitModal(${riderId}, '${riderName}')`);
                 }
             });
         });

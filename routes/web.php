@@ -4,11 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RiderController;
 use App\Http\Controllers\RemittanceController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfileController;
+
 
 // Redirect root to login
 Route::get('/', function () {
     return redirect('/login');
 });
+Route::get('/email/verify/{id}/{hash}', [ProfileController::class, 'verifyEmail'])->name('verification.verify');
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -32,6 +36,8 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+
+    Route::post('/force-password-change', [AuthController::class, 'forcePasswordChange'])->name('force.password.change');
 
     Route::get('/reports', function () {
         return view('reports');
@@ -57,17 +63,23 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         return view('merchants');
     })->name('merchants');
 
-    Route::get('/member-management', function () {
-        return view('member-management');
-    })->name('member-management');
+    // Member Management Routes
+    Route::get('/member-management', [UserController::class, 'index'])->name('members.index');
+    Route::post('/members', [UserController::class, 'store'])->name('members.store');
+    Route::put('/members/{user}', [UserController::class, 'update'])->name('members.update');
+    Route::delete('/members/{user}', [UserController::class, 'destroy'])->name('members.destroy');
+    Route::patch('/members/{user}/restore', [UserController::class, 'restore'])->name('members.restore');
 
     Route::get('/audit-logs', function () {
         return view('audit-logs');
     })->name('audit-logs');
 
-    Route::get('/profile', function () {
-        return view('profile');
-    })->name('profile');
+    // Profile Routes
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/profile/resend-verification', [ProfileController::class, 'resendVerification'])->name('profile.resend-verification');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 Route::get('/info', function() {

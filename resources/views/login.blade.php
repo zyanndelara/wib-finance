@@ -319,6 +319,7 @@
             font-size: 16px;
             pointer-events: none;
             transition: all 0.3s ease;
+            z-index: 2;
         }
 
         .toggle-password {
@@ -328,7 +329,8 @@
             font-size: 16px;
             cursor: pointer;
             transition: color 0.2s ease;
-            z-index: 10;
+            z-index: 2;
+            pointer-events: auto;
         }
 
         .toggle-password:hover {
@@ -352,6 +354,24 @@
             transition: all 0.3s ease;
             width: 100%;
             background: #fafafa;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hide browser's native password reveal button */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+
+        input[type="password"]::-webkit-credentials-auto-fill-button,
+        input[type="password"]::-webkit-contacts-auto-fill-button {
+            visibility: hidden;
+            display: none !important;
+            pointer-events: none;
+            height: 0;
+            width: 0;
+            margin: 0;
         }
 
         .form-control:focus {
@@ -465,6 +485,47 @@
             box-shadow: 0 2px 10px rgba(67, 96, 38, 0.3);
         }
 
+        .btn-login:disabled {
+            opacity: 0.8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-login .loading-dots {
+            display: inline-block;
+            width: 20px;
+            text-align: left;
+        }
+
+        .btn-login .loading-dots .dot {
+            animation: blink 1.4s infinite;
+            opacity: 0;
+        }
+
+        .btn-login .loading-dots .dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .btn-login .loading-dots .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .btn-login .loading-dots .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+            0%, 20% {
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
         .signup-link {
             text-align: center;
             color: #666;
@@ -492,8 +553,13 @@
         .alert-danger {
             background-color: #fee;
             color: #c33;
-            border-left: 4px solid #dc3545;
-            padding: 12px 16px;
+            border-left: 3px solid #dc3545;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .alert-danger.compact {
+            margin-bottom: 16px;
         }
 
         .alert-success {
@@ -507,6 +573,20 @@
             color: #dc3545;
             font-size: 13px;
             margin-top: 5px;
+        }
+
+        .form-control.is-invalid {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+        }
+
+        .form-control.is-invalid:focus {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1), 0 4px 15px rgba(220, 53, 69, 0.15);
+        }
+
+        .input-icon.error {
+            color: #dc3545;
         }
 
         /* Responsive Design */
@@ -562,25 +642,6 @@
                         <p>Sign in to continue</p>
                     </div>
 
-                <!-- Error Messages -->
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <strong>Login Failed!</strong>
-                        <ul class="mb-0 mt-2" style="list-style: none; padding-left: 0;">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-                <!-- Success Message -->
-                @if (session('success'))
-                    <div class="alert alert-success">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
                 <!-- Login Form -->
                 <form action="{{ route('login') ?? '#' }}" method="POST">
                     @csrf
@@ -591,7 +652,7 @@
                         <div class="input-wrapper">
                             <input 
                                 type="email" 
-                                class="form-control @error('email') is-invalid @enderror" 
+                                class="form-control" 
                                 id="email" 
                                 name="email" 
                                 placeholder="Enter your email address"
@@ -600,9 +661,6 @@
                             >
                             <i class="fas fa-envelope input-icon"></i>
                         </div>
-                        @error('email')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
                     </div>
 
                     <!-- Password Field -->
@@ -611,7 +669,7 @@
                         <div class="input-wrapper">
                             <input 
                                 type="password" 
-                                class="form-control @error('password') is-invalid @enderror" 
+                                class="form-control" 
                                 id="password" 
                                 name="password" 
                                 placeholder="Enter your password"
@@ -621,10 +679,14 @@
                             <i class="fas fa-lock input-icon"></i>
                             <i class="fas fa-eye toggle-password" id="togglePassword" title="Show password"></i>
                         </div>
-                        @error('password')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
                     </div>
+
+                    <!-- Error Message -->
+                    @if ($errors->any())
+                        <div class="alert alert-danger compact" style="margin-top: -12px;">
+                            <i class="fas fa-exclamation-circle"></i> Incorrect email or password. Please try again.
+                        </div>
+                    @endif
 
                     <!-- Remember Me & Forgot Password -->
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -640,7 +702,9 @@
                     </div>
 
                     <!-- Login Button -->
-                    <button type="submit" class="btn-login">Sign In</button>
+                    <button type="submit" class="btn-login" id="loginBtn">
+                        <span class="btn-text">Sign In</span>
+                    </button>
                 </form>
                 </div>
             </div>
@@ -665,6 +729,22 @@
                 
                 // Update tooltip text
                 this.setAttribute('title', type === 'password' ? 'Show password' : 'Hide password');
+            });
+        }
+
+        // Login button loading animation
+        const loginForm = document.querySelector('form');
+        const loginBtn = document.getElementById('loginBtn');
+
+        if (loginForm && loginBtn) {
+            loginForm.addEventListener('submit', function(e) {
+                // Add loading state
+                loginBtn.classList.add('loading');
+                loginBtn.disabled = true;
+                
+                // Update button text with animated dots
+                const btnText = loginBtn.querySelector('.btn-text');
+                btnText.innerHTML = 'Signing In<span class="loading-dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>';
             });
         }
     </script>

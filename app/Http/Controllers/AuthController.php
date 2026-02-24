@@ -11,8 +11,24 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
-class AuthController extends Controller
-{
+class AuthController extends Controller {
+
+    /**
+     * Handle forced password change
+     */
+    public function forcePasswordChange(Request $request)
+    {
+        $request->validate([
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+        $user->password = Hash::make($request->new_password);
+        $user->force_password_change = false;
+        $user->save();
+
+        return redirect('/dashboard')->with('success', 'Password changed successfully!');
+    }
     /**
      * Show the login form
      */
@@ -64,7 +80,10 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
-            
+            // Check if user needs to change password
+            if (Auth::user()->force_password_change) {
+                return redirect()->intended('/dashboard')->with('force_password_change', true);
+            }
             return redirect()->intended('/dashboard')->with('success', 'Welcome back, ' . Auth::user()->name . '!');
         }
 
@@ -102,6 +121,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+                'force_password_change' => true,
         ]);
 
         // Automatically log in the user after registration
