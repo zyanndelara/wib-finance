@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password - Wibsystem</title>
+    <title>Reset Password - When in Baguio Inc.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -609,7 +609,7 @@
                     <form action="{{ route('password.update') }}" method="POST">
                         @csrf
                         <input type="hidden" name="token" value="{{ $token }}">
-                        <input type="hidden" name="email" value="{{ old('email', session('email', request()->email)) }}">
+                        <input type="hidden" name="email" value="{{ old('email', $email ?? '') }}">
 
                         <!-- New Password Field -->
                         <div class="form-group">

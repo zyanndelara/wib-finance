@@ -19,6 +19,8 @@ class Remittance extends Model
         'mode_of_payment',
         'remit_photo',
         'status',
+        'remarks',
+        'remittance_date',
     ];
 
     protected $casts = [
@@ -27,6 +29,7 @@ class Remittance extends Model
         'total_remit' => 'decimal:2',
         'total_tips' => 'decimal:2',
         'total_collection' => 'decimal:2',
+        'remittance_date' => 'date',
     ];
 
     public function rider()

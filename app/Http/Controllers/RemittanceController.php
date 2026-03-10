@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Remittance;
 use App\Models\Rider;
 use Illuminate\Http\Request;
@@ -41,7 +42,11 @@ class RemittanceController extends Controller
             'total_tips' => $request->total_tips ?? 0,
             'total_collection' => $request->total_collection,
             'mode_of_payment' => $request->mode_of_payment,
-            'status' => 'pending',
+            'remarks' => $request->remarks,
+            'status' => 'confirmed',
+            'remittance_date' => $request->filled('remittance_date')
+                ? \Carbon\Carbon::parse($request->remittance_date)->toDateString()
+                : today()->toDateString(),
         ];
 
         // Handle file upload
@@ -54,8 +59,23 @@ class RemittanceController extends Controller
 
         $remittance = Remittance::create($remittanceData);
 
+        // Mark the rider as cleared once a remittance is submitted
+        Rider::where('id', $remittanceData['rider_id'])->update(['status' => 'cleared']);
+
         // Load the rider relationship
         $remittance->load('rider');
+
+        AuditLog::log(
+            'Remittance Submitted – Rider: ' . ($remittance->rider->name ?? $remittance->rider_id),
+            'Remittance',
+            'completed',
+            [
+                'amount'        => $remittance->total_remit,
+                'source_bank'   => $remittance->mode_of_payment,
+                'notes'         => 'Mode: ' . $remittance->mode_of_payment . ($remittance->remarks ? ' | ' . $remittance->remarks : ''),
+                'attached_file' => $remittance->remit_photo,
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -92,6 +112,16 @@ class RemittanceController extends Controller
             'status' => $request->status,
         ]);
 
+        AuditLog::log(
+            'Remittance Status Updated – ' . ucfirst($request->status),
+            'Remittance',
+            $request->status === 'confirmed' ? 'completed' : 'dismissed',
+            [
+                'amount'      => $remittance->total_remit,
+                'source_bank' => $remittance->mode_of_payment,
+            ]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Remittance updated successfully!',
@@ -106,11 +136,96 @@ class RemittanceController extends Controller
             Storage::disk('public')->delete($remittance->remit_photo);
         }
 
+        AuditLog::log(
+            'Remittance Deleted – Rider: ' . ($remittance->rider->name ?? $remittance->rider_id),
+            'Remittance',
+            'reversed',
+            [
+                'amount'      => $remittance->total_remit,
+                'source_bank' => $remittance->mode_of_payment,
+            ]
+        );
+
         $remittance->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Remittance deleted successfully!'
+        ]);
+    }
+
+    public function getRiderRemittances($riderId)
+    {
+        $rider = Rider::findOrFail($riderId);
+        $remittances = Remittance::where('rider_id', $riderId)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'rider' => $rider,
+            'remittances' => $remittances
+        ]);
+    }
+
+    public function report(Request $request)
+    {
+        $query = Remittance::with('rider');
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        if ($request->filled('rider_id') && $request->rider_id !== 'all') {
+            $query->where('rider_id', $request->rider_id);
+        }
+        if ($request->filled('payment_mode') && $request->payment_mode !== 'all') {
+            $query->where('mode_of_payment', $request->payment_mode);
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        $remittances = $query->latest()->get();
+
+        $ridersWithRemittance = $remittances->pluck('rider_id')->unique()->count();
+        $nonRemittingRiderCount = Rider::count() - $ridersWithRemittance;
+
+        $summary = [
+            'total_records'            => $remittances->count(),
+            'total_deliveries'         => $remittances->sum('total_deliveries'),
+            'total_delivery_fee'       => $remittances->sum('total_delivery_fee'),
+            'total_remit'              => $remittances->sum('total_remit'),
+            'total_tips'               => $remittances->sum('total_tips'),
+            'total_collection'         => $remittances->sum('total_collection'),
+            'cash_collection'          => $remittances->where('mode_of_payment', 'cash')->sum('total_collection'),
+            'digital_collection'       => $remittances->whereIn('mode_of_payment', ['bank', 'gcash'])->sum('total_collection'),
+            'confirmed_count'          => $remittances->where('status', 'confirmed')->count(),
+            'pending_count'            => $remittances->where('status', 'pending')->count(),
+            'non_remitting_rider_count' => max(0, $nonRemittingRiderCount),
+        ];
+
+        // Per-rider breakdown
+        $riderBreakdown = $remittances->groupBy('rider_id')->map(function ($group) {
+            $first = $group->first();
+            return [
+                'rider_name'         => $first->rider->name ?? 'N/A',
+                'total_records'      => $group->count(),
+                'total_deliveries'   => $group->sum('total_deliveries'),
+                'total_delivery_fee' => $group->sum('total_delivery_fee'),
+                'total_remit'        => $group->sum('total_remit'),
+                'total_tips'         => $group->sum('total_tips'),
+                'total_collection'   => $group->sum('total_collection'),
+            ];
+        })->values();
+
+        return response()->json([
+            'success'        => true,
+            'remittances'    => $remittances,
+            'summary'        => $summary,
+            'riderBreakdown' => $riderBreakdown,
         ]);
     }
 }

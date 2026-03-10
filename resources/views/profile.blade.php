@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - Wibsystem</title>
+    <title>Profile - When in Baguio Inc.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -22,8 +22,8 @@
 
         /* Sidebar Styles */
         .sidebar {
-            width: 180px;
-            background: linear-gradient(180deg, #436026 0%, #344d1e 100%);
+            width: 200px;
+            background: linear-gradient(180deg, #2d4016 0%, #3a5220 40%, #2d4016 100%);
             color: white;
             display: flex;
             flex-direction: column;
@@ -31,107 +31,266 @@
             position: fixed;
             left: 0;
             top: 0;
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
             z-index: 1000;
         }
 
         .sidebar-logo {
-            padding: 30px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            position: relative;
-            background: rgba(0, 0, 0, 0.1);
+            padding: 18px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 7px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.15);
         }
 
         .sidebar-logo img {
-            width: 80px;
-            height: 80px;
+            width: 54px;
+            height: 54px;
             border-radius: 50%;
             object-fit: contain;
             transition: transform 0.3s ease;
         }
 
         .sidebar-logo img:hover {
-            transform: scale(1.05);
+            transform: scale(1.07);
+        }
+
+        .sidebar-logo .app-name {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.75);
         }
 
         .sidebar-menu {
             flex: 1;
-            padding: 20px 0;
+            padding: 10px 10px;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        .menu-section-label {
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.38);
+            padding: 10px 8px 4px;
+            user-select: none;
         }
 
         .menu-item {
             display: flex;
             align-items: center;
-            padding: 15px 20px;
-            color: white;
+            gap: 9px;
+            padding: 8px 10px;
+            color: rgba(255, 255, 255, 0.78);
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: all 0.22s ease;
             cursor: pointer;
             border: none;
             background: none;
             width: 100%;
             text-align: left;
-            font-size: 14px;
+            font-size: 12.5px;
+            font-weight: 500;
+            border-radius: 8px;
+        }
+
+        .menu-item .menu-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            transition: all 0.22s ease;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .menu-item:hover {
-            background: rgba(255, 255, 255, 0.15);
-            padding-left: 25px;
-            box-shadow: inset 4px 0 0 #ffd300;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .menu-item:hover .menu-icon {
+            background: rgba(255, 211, 0, 0.18);
+            color: #ffd300;
         }
 
         .menu-item.active {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(255, 211, 0, 0.14);
             color: #ffd300;
-            font-weight: 600;
-            box-shadow: inset 4px 0 0 #ffd300;
-            padding-left: 25px;
+            font-weight: 700;
         }
 
-        .menu-item.active i {
-            color: #ffd300;
+        .menu-item.active .menu-icon {
+            background: #ffd300;
+            color: #2d4016;
         }
 
-        .menu-item i {
-            margin-right: 12px;
-            font-size: 16px;
-            width: 20px;
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.07);
+            margin: 8px 4px;
+        }
+
+        /* Toast Notification Styles */
+        #toastContainer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .custom-toast {
+            min-width: 300px;
+            max-width: 500px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid #28a745;
+            animation: slideIn 0.3s ease-out;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-icon {
+            font-size: 24px;
+            color: #28a745;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            flex: 1;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: color 0.2s;
+        }
+
+        .toast-close:hover {
+            color: #333;
+        }
+
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #28a745;
+            animation: progress 3s linear;
+        }
+
+        @keyframes progress {
+            from {
+                width: 100%;
+            }
+            to {
+                width: 0;
+            }
         }
 
         .sidebar-footer {
-            padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
-            position: relative;
-            background: rgba(0, 0, 0, 0.1);
+            padding: 10px 10px 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.15);
         }
 
         .logout-btn {
             display: flex;
             align-items: center;
-            padding: 12px 20px;
-            background: transparent;
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
+            gap: 9px;
+            padding: 8px 10px;
+            background: rgba(255, 80, 80, 0.1);
+            color: rgba(255, 150, 150, 0.9);
+            border: 1px solid rgba(255, 80, 80, 0.2);
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.22s ease;
             width: 100%;
-            font-size: 14px;
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .logout-btn .menu-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: rgba(255, 80, 80, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            transition: all 0.22s ease;
         }
 
         .logout-btn:hover {
-            background: linear-gradient(135deg, #5a7d33 0%, #436026 100%);
-            border-color: #5a7d33;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(90, 125, 51, 0.4);
+            background: rgba(255, 80, 80, 0.22);
+            border-color: rgba(255, 80, 80, 0.5);
+            color: #ff6b6b;
+            transform: translateX(2px);
         }
 
-        .logout-btn i {
-            margin-right: 10px;
+        .logout-btn:hover .menu-icon {
+            background: rgba(255, 80, 80, 0.3);
         }
 
         /* Mobile Menu Toggle */
@@ -181,7 +340,7 @@
 
         /* Main Content Styles */
         .main-content {
-            margin-left: 180px;
+            margin-left: 200px;
             flex: 1;
             padding: 22px;
             overflow-y: auto;
@@ -841,7 +1000,7 @@
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
-                width: 240px;
+                width: 200px;
                 z-index: 1001;
             }
 
@@ -855,21 +1014,16 @@
             }
 
             .sidebar-logo {
-                padding: 20px;
+                padding: 18px 16px;
             }
 
             .sidebar-logo img {
-                width: 60px;
-                height: 60px;
+                width: 52px;
+                height: 52px;
             }
 
             .menu-item {
-                padding: 12px 20px;
-            }
-
-            .menu-item:hover,
-            .menu-item.active {
-                padding-left: 25px;
+                padding: 8px 10px;
             }
 
             .stats-grid {
@@ -1017,39 +1171,43 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <img src="{{ asset('images/logowhite.png') }}" alt="Logo">
+            <span class="app-name">When in Baguio Inc.</span>
         </div>
 
         <div class="sidebar-menu">
+            <span class="menu-section-label">Main</span>
             <a href="{{ route('dashboard') }}" class="menu-item">
-                <i class="fas fa-home"></i>
+                <span class="menu-icon"><i class="fas fa-home"></i></span>
                 <span>Dashboard</span>
             </a>
             <a href="{{ route('remittance') }}" class="menu-item">
-                <i class="fas fa-file-invoice-dollar"></i>
+                <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
                 <span>Remittance</span>
             </a>
             <a href="{{ route('bank-deposit') }}" class="menu-item">
-                <i class="fas fa-university"></i>
-                <span>Bank & Deposit</span>
+                <span class="menu-icon"><i class="fas fa-university"></i></span>
+                <span>Bank &amp; Deposit</span>
             </a>
+
+            <div class="menu-divider"></div>
+            <span class="menu-section-label">Management</span>
             <a href="{{ route('merchants') }}" class="menu-item">
-                <i class="fas fa-store"></i>
+                <span class="menu-icon"><i class="fas fa-store"></i></span>
                 <span>Merchants</span>
             </a>
             <a href="{{ route('members.index') }}" class="menu-item">
-                <i class="fas fa-users-cog"></i>
+                <span class="menu-icon"><i class="fas fa-users-cog"></i></span>
                 <span>Member Management</span>
             </a>
             <a href="{{ route('audit-logs') }}" class="menu-item">
-                <i class="fas fa-clipboard-list"></i>
+                <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
                 <span>Audit Logs</span>
             </a>
-            <a href="{{ route('reports') }}" class="menu-item">
-                <i class="fas fa-chart-bar"></i>
-                <span>Reports</span>
-            </a>
+
+            <div class="menu-divider"></div>
+            <span class="menu-section-label">Account</span>
             <a href="{{ route('profile') }}" class="menu-item active">
-                <i class="fas fa-user"></i>
+                <span class="menu-icon"><i class="fas fa-user"></i></span>
                 <span>Profile</span>
             </a>
         </div>
@@ -1058,7 +1216,7 @@
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
                 <button type="submit" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="menu-icon"><i class="fas fa-sign-out-alt"></i></span>
                     <span>Logout</span>
                 </button>
             </form>
@@ -1080,13 +1238,6 @@
                         }, 4000);
                     </script>
                 @endif
-        <!-- Success Message -->
-        @if (session('success'))
-            <div class="alert-success">
-                <i class="fas fa-check-circle"></i> {{ session('success') }}
-            </div>
-        @endif
-
         <!-- Error Messages -->
         @if ($errors->any())
             <div class="alert-success" style="background: #f8d7da; color: #721c24; border-left-color: #dc3545;">
@@ -1117,7 +1268,7 @@
                         </div>
                         <div class="profile-name-section">
                             <h2>{{ strtoupper(auth()->user()->name ?? 'NAME') }}</h2>
-                            <span class="role">{{ auth()->user()->role ?? 'Role' }}</span>
+                            <span class="role">{{ ucwords(str_replace('_', ' ', auth()->user()->role ?? 'Role')) }}</span>
                         </div>
                     </div>
                 </div>
@@ -1163,7 +1314,7 @@
                         <div class="info-grid-second-row">
                             <div class="info-field">
                                 <label>User Role:</label>
-                                <div class="field-value">{{ auth()->user()->role ?? '' }}</div>
+                                <div class="field-value">{{ ucwords(str_replace('_', ' ', auth()->user()->role ?? '')) }}</div>
                             </div>
                             <div class="info-field span-2">
                                 <label>Email Address:</label>
@@ -1253,29 +1404,103 @@
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 15px;">
-                        <span class="badge status-disabled">Disabled</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" disabled>
-                            <span class="toggle-slider"></span>
-                        </label>
+                        @if(auth()->user()->two_factor_enabled)
+                            <span class="badge" style="background:#d4edda; color:#155724;">Enabled</span>
+                            <label class="toggle-switch" title="Click to disable 2FA">
+                                <input type="checkbox" checked onchange="open2faDisableModal()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        @else
+                            <span class="badge status-disabled">Disabled</span>
+                            <label class="toggle-switch" title="Click to enable 2FA">
+                                <input type="checkbox" onchange="open2faSetupModal()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        @endif
                     </div>
                 </div>
 
-                <!-- Delete Account -->
-                <div class="security-item delete-item">
-                    <div class="security-item-left">
-                        <div class="security-icon trash">
-                            <i class="fas fa-trash-alt"></i>
-                        </div>
-                        <div class="security-info">
-                            <h4>Delete Account</h4>
-                            <p>Permanently remove your account and all associated data.</p>
-                        </div>
-                    </div>
-                    <button type="button" class="security-button danger" onclick="openDeleteModal()">
-                        <i class="fas fa-trash"></i> Delete Account
+            </div>
+        </div>
+
+        <!-- 2FA Setup Modal -->
+        <div id="twoFaSetupModal" class="modal">
+            <div class="modal-content" style="max-width: 520px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-shield-alt" style="color:#436026; margin-right:8px;"></i> Enable Two-Factor Authentication</h3>
+                    <button type="button" class="modal-close" onclick="close2faSetupModal()">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
+
+                <!-- Step 1: Scan QR -->
+                <div id="twoFaStep1">
+                    <p style="font-size:14px; color:#444; margin-bottom:16px; line-height:1.6;">
+                        Scan the QR code below with your authenticator app
+                        (e.g. <strong>Google Authenticator</strong> or <strong>Authy</strong>),
+                        then enter the 6-digit code to confirm.
+                    </p>
+                    <div id="qrCodeWrapper" style="text-align:center; margin-bottom:16px; min-height:210px; display:flex; align-items:center; justify-content:center;">
+                        <span style="color:#999; font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Loading QR code…</span>
+                    </div>
+                    <div style="background:#f5f5f5; border-radius:6px; padding:12px; margin-bottom:18px; text-align:center;">
+                        <p style="font-size:12px; color:#666; margin-bottom:4px;">Or enter this key manually:</p>
+                        <code id="twoFaSecret" style="font-size:14px; font-weight:700; letter-spacing:3px; color:#436026; word-break:break-all;"></code>
+                    </div>
+
+                    <form id="confirm2faForm" action="{{ route('profile.2fa.confirm') }}" method="POST">
+                        @csrf
+                        <div class="form-group">
+                            <label>Enter 6-digit verification code</label>
+                            <input type="text" name="code" id="twoFaCode"
+                                maxlength="6" inputmode="numeric" pattern="[0-9]{6}"
+                                autocomplete="one-time-code" required
+                                placeholder="000000"
+                                style="letter-spacing:8px; font-size:18px; text-align:center; font-weight:700; font-family:monospace;"
+                                oninput="this.value=this.value.replace(/\D/g,'').slice(0,6)">
+                            @error('2fa_code')
+                                <div class="error-text">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="modal-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check-circle"></i> Verify & Enable
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="close2faSetupModal()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2FA Disable Modal -->
+        <div id="twoFaDisableModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-lock-open" style="color:#dc3545; margin-right:8px;"></i> Disable Two-Factor Authentication</h3>
+                    <button type="button" class="modal-close" onclick="close2faDisableModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="delete-warning">
+                    <p><i class="fas fa-exclamation-triangle"></i> Disabling 2FA will make your account less secure. You'll only need your password to log in.</p>
+                </div>
+                <form action="{{ route('profile.2fa.disable') }}" method="POST">
+                    @csrf
+                    <div class="form-group">
+                        <label>Confirm your password to disable 2FA</label>
+                        <input type="password" name="password" required placeholder="Enter your password">
+                        @error('disable_password')
+                            <div class="error-text">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn" style="background:#dc3545; color:white;">
+                            <i class="fas fa-lock-open"></i> Disable 2FA
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="close2faDisableModal()">Cancel</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -1315,36 +1540,7 @@
             </div>
         </div>
 
-        <!-- Delete Account Modal -->
-        <div id="deleteModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Delete Account</h3>
-                    <button type="button" class="modal-close" onclick="closeDeleteModal()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="delete-warning">
-                    <p><strong>Warning:</strong> This action is irreversible. All your data will be permanently deleted.</p>
-                </div>
-                <form action="{{ route('profile.destroy') }}" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <div class="form-group">
-                        <label>Enter your password to confirm</label>
-                        <input type="password" name="password" required>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="submit" class="btn btn-primary" style="background: #dc3545;">
-                            <i class="fas fa-trash"></i> Delete Account
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+
     </div>
 
     <script>
@@ -1420,38 +1616,78 @@
             document.querySelector('#passwordModal form').reset();
         }
 
-        // Delete Account Modal Functions
-        function openDeleteModal() {
-            document.getElementById('deleteModal').classList.add('active');
-        }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.remove('active');
-            // Reset form
-            document.querySelector('#deleteModal form').reset();
-        }
-
         // Close modals on outside click
         window.addEventListener('click', function(event) {
             const passwordModal = document.getElementById('passwordModal');
-            const deleteModal = document.getElementById('deleteModal');
-            
-            if (event.target === passwordModal) {
-                closePasswordModal();
-            }
-            
-            if (event.target === deleteModal) {
-                closeDeleteModal();
-            }
+            const twoFaSetupModal = document.getElementById('twoFaSetupModal');
+            const twoFaDisableModal = document.getElementById('twoFaDisableModal');
+
+            if (event.target === passwordModal) closePasswordModal();
+            if (event.target === twoFaSetupModal) close2faSetupModal();
+            if (event.target === twoFaDisableModal) close2faDisableModal();
         });
 
         // Close modals on Escape key
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closePasswordModal();
-                closeDeleteModal();
+                close2faSetupModal();
+                close2faDisableModal();
             }
         });
+
+        // ---- 2FA Setup Modal ----
+        function open2faSetupModal() {
+            document.getElementById('twoFaSetupModal').classList.add('active');
+            // Load QR code from server
+            fetch('{{ route('profile.2fa.setup') }}', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                const wrapper = document.getElementById('qrCodeWrapper');
+                wrapper.innerHTML = '<img src="data:image/svg+xml;base64,' + data.qr_code + '" alt="QR Code" style="width:200px;height:200px;">';
+                document.getElementById('twoFaSecret').textContent = data.secret;
+            })
+            .catch(() => {
+                document.getElementById('qrCodeWrapper').innerHTML = '<span style="color:#dc3545;">Failed to load QR code.</span>';
+            });
+        }
+
+        function close2faSetupModal() {
+            document.getElementById('twoFaSetupModal').classList.remove('active');
+            // Reset toggle if user closes without confirming
+            @if(!auth()->user()->two_factor_enabled)
+            const toggle = document.querySelector('.toggle-switch input[onchange="open2faSetupModal()"]');
+            if (toggle) toggle.checked = false;
+            @endif
+        }
+
+        // ---- 2FA Disable Modal ----
+        function open2faDisableModal() {
+            document.getElementById('twoFaDisableModal').classList.add('active');
+        }
+
+        function close2faDisableModal() {
+            document.getElementById('twoFaDisableModal').classList.remove('active');
+            // Reset toggle back to checked if user cancels
+            @if(auth()->user()->two_factor_enabled)
+            const toggle = document.querySelector('.toggle-switch input[onchange="open2faDisableModal()"]');
+            if (toggle) toggle.checked = true;
+            @endif
+        }
+
+        @if($errors->has('2fa_code'))
+            document.addEventListener('DOMContentLoaded', function() {
+                open2faSetupModal();
+            });
+        @endif
+
+        @if($errors->has('disable_password'))
+            document.addEventListener('DOMContentLoaded', function() {
+                open2faDisableModal();
+            });
+        @endif
 
         // Auto-capitalize first letter of input fields
         function capitalizeFirstLetter(input) {
@@ -1557,6 +1793,55 @@
                 });
             }
         });
+
+        // Toast Notification Function
+        function showToast(message, type = 'success', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'custom-toast';
+            let iconHtml = '<i class="fas fa-check-circle toast-icon"></i>';
+            let borderColor = '#28a745';
+            let progressColor = '#28a745';
+            if (type === 'error') {
+                iconHtml = '<i class="fas fa-exclamation-circle toast-icon" style="color:#dc3545"></i>';
+                borderColor = '#dc3545';
+                progressColor = '#dc3545';
+            } else if (type === 'warning') {
+                iconHtml = '<i class="fas fa-exclamation-triangle toast-icon" style="color:#ffc107"></i>';
+                borderColor = '#ffc107';
+                progressColor = '#ffc107';
+            } else if (type === 'info') {
+                iconHtml = '<i class="fas fa-info-circle toast-icon" style="color:#17a2b8"></i>';
+                borderColor = '#17a2b8';
+                progressColor = '#17a2b8';
+            }
+            toast.style.borderLeftColor = borderColor;
+            toast.innerHTML = `
+                ${iconHtml}
+                <div class="toast-message">${message}</div>
+                <button class="toast-close" aria-label="Close">&times;</button>
+                <div class="toast-progress" style="background:${progressColor}"></div>
+            `;
+            toast.querySelector('.toast-close').onclick = function() {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            };
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+            container.appendChild(toast);
+        }
+
+        // Show toast for session success messages
+        @if (session('success'))
+            document.addEventListener('DOMContentLoaded', function() {
+                showToast('{{ session('success') }}', 'success');
+            });
+        @endif
     </script>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
 </body>
 </html>

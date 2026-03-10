@@ -1,32 +1,72 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-    @if(session('force_password_change'))
+    @if(auth()->user()->force_password_change && auth()->user()->role !== 'admin')
     <div id="forceChangeModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;">
-        <div style="background:white;padding:40px;border-radius:10px;max-width:400px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.2);">
-            <h2 style="margin-bottom:20px;">Change Your Password</h2>
-            <form method="POST" action="{{ route('force.password.change') }}">
+        <div style="background:white;padding:32px 32px 24px 32px;border-radius:18px;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(67,96,38,0.18);display:flex;flex-direction:column;align-items:center;">
+            <h2 style="margin-bottom:8px;font-size:1.35rem;font-weight:700;color:#222;text-align:center;">Change Your Password</h2>
+            <hr style="width:100%;margin-bottom:16px;border:0;border-top:1px solid #e0e0e0;">
+            <div style="margin-bottom:18px;text-align:center;color:#444;font-size:0.92rem;line-height:1.3;">
+                Protect your account with a strong, secure password.<br>Make sure it's hard to guess and easy for you to remember.
+            </div>
+            <form method="POST" action="{{ route('force.password.change') }}" style="width:100%;display:flex;flex-direction:column;gap:18px;">
                 @csrf
-                <div style="margin-bottom:15px;">
-                    <label for="new_password">New Password</label>
-                    <input type="password" name="new_password" id="new_password" required style="width:100%;padding:8px;margin-top:5px;">
+                @if ($errors->has('new_password'))
+                    <div style="color:#d32f2f;font-size:0.95rem;margin-bottom:8px;text-align:center;">
+                        {{ $errors->first('new_password') }}
+                    </div>
+                @endif
+                @if ($errors->has('new_password_confirmation'))
+                    <div style="color:#d32f2f;font-size:0.95rem;margin-bottom:8px;text-align:center;">
+                        {{ $errors->first('new_password_confirmation') }}
+                    </div>
+                @endif
+                @if ($errors->has('new_password') && $errors->first('new_password') === 'The new password confirmation does not match.')
+                    <div style="color:#d32f2f;font-size:0.95rem;margin-bottom:8px;text-align:center;">
+                        Passwords do not match.
+                    </div>
+                @endif
+                <div style="position:relative;width:100%;">
+                    <input type="password" name="new_password" id="new_password" required placeholder="Enter new password" style="width:100%;padding:14px 16px;border:0;background:#e0e0e0;border-radius:12px;font-size:1.08rem;color:#222;outline:none;">
+                    <!-- Eye icon removed -->
                 </div>
-                <div style="margin-bottom:15px;">
-                    <label for="new_password_confirmation">Confirm Password</label>
-                    <input type="password" name="new_password_confirmation" id="new_password_confirmation" required style="width:100%;padding:8px;margin-top:5px;">
+                <div style="position:relative;width:100%;">
+                    <input type="password" name="new_password_confirmation" id="new_password_confirmation" required placeholder="Confirm Password" style="width:100%;padding:14px 16px;border:0;background:#e0e0e0;border-radius:12px;font-size:1.08rem;color:#222;outline:none;">
+                    <!-- Eye icon removed -->
                 </div>
-                <button type="submit" style="background:#436026;color:white;padding:10px 20px;border:none;border-radius:5px;">Change Password</button>
+                    @if ($errors->has('new_password') && $errors->first('new_password') === 'The new password confirmation does not match.')
+                        <div style="color:#d32f2f;font-size:0.95rem;margin-bottom:8px;text-align:center;">
+                            Passwords do not match.
+                        </div>
+                    @endif
+                    <button type="submit" style="background:#436026;color:white;padding:14px 0;font-size:1.15rem;font-weight:700;border:none;border-radius:8px;width:100%;margin-top:8px;box-shadow:0 2px 8px rgba(67,96,38,0.08);transition:background 0.2s;cursor:pointer;">Confirm</button>
             </form>
         </div>
+        <!-- Eye icon toggle script removed -->
     </div>
     <script>
         // Prevent interaction with dashboard until password is changed
         document.body.style.overflow = 'hidden';
     </script>
     @endif
+    @if(session('force_password_change_success'))
+        <div id="passwordSuccessModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:2100;display:flex;align-items:center;justify-content:center;">
+            <div style="background:white;padding:32px 32px 24px 32px;border-radius:18px;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(67,96,38,0.18);display:flex;flex-direction:column;align-items:center;">
+                <h2 style="margin-bottom:8px;font-size:1.35rem;font-weight:700;color:#436026;text-align:center;">Password Changed Successfully</h2>
+                <hr style="width:100%;margin-bottom:16px;border:0;border-top:1px solid #e0e0e0;">
+                <div style="margin-bottom:18px;text-align:center;color:#444;font-size:1rem;line-height:1.3;">
+                    Your password has been updated. You can now continue using your account securely.
+                </div>
+                <button onclick="document.getElementById('passwordSuccessModal').style.display='none';document.body.style.overflow='auto';" style="background:#436026;color:white;padding:14px 0;font-size:1.15rem;font-weight:700;border:none;border-radius:8px;width:100%;margin-top:8px;box-shadow:0 2px 8px rgba(67,96,38,0.08);transition:background 0.2s;cursor:pointer;">OK</button>
+            </div>
+        </div>
+        <script>
+            document.body.style.overflow = 'hidden';
+        </script>
+    @endif
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Wibsystem</title>
+    <title>Dashboard - When in Baguio Inc.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -45,8 +85,8 @@
 
         /* Sidebar Styles */
         .sidebar {
-            width: 180px;
-            background: linear-gradient(180deg, #436026 0%, #344d1e 100%);
+            width: 200px;
+            background: linear-gradient(180deg, #2d4016 0%, #3a5220 40%, #2d4016 100%);
             color: white;
             display: flex;
             flex-direction: column;
@@ -54,107 +94,175 @@
             position: fixed;
             left: 0;
             top: 0;
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
             z-index: 1000;
         }
 
         .sidebar-logo {
-            padding: 30px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            position: relative;
-            background: rgba(0, 0, 0, 0.1);
+            padding: 18px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 7px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.15);
         }
 
         .sidebar-logo img {
-            width: 80px;
-            height: 80px;
+            width: 54px;
+            height: 54px;
             border-radius: 50%;
             object-fit: contain;
             transition: transform 0.3s ease;
         }
 
         .sidebar-logo img:hover {
-            transform: scale(1.05);
+            transform: scale(1.07);
+        }
+
+        .sidebar-logo .app-name {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.75);
         }
 
         .sidebar-menu {
             flex: 1;
-            padding: 20px 0;
+            padding: 10px 10px;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        .menu-section-label {
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.38);
+            padding: 10px 8px 4px;
+            user-select: none;
         }
 
         .menu-item {
             display: flex;
             align-items: center;
-            padding: 15px 20px;
-            color: white;
+            gap: 9px;
+            padding: 8px 10px;
+            color: rgba(255, 255, 255, 0.78);
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: all 0.22s ease;
             cursor: pointer;
             border: none;
             background: none;
             width: 100%;
             text-align: left;
-            font-size: 14px;
+            font-size: 12.5px;
+            font-weight: 500;
+            border-radius: 8px;
+        }
+
+        .menu-item .menu-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            transition: all 0.22s ease;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .menu-item:hover {
-            background: rgba(255, 255, 255, 0.15);
-            padding-left: 25px;
-            box-shadow: inset 4px 0 0 #ffd300;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .menu-item:hover .menu-icon {
+            background: rgba(255, 211, 0, 0.18);
+            color: #ffd300;
         }
 
         .menu-item.active {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(255, 211, 0, 0.14);
             color: #ffd300;
-            font-weight: 600;
-            box-shadow: inset 4px 0 0 #ffd300;
-            padding-left: 25px;
+            font-weight: 700;
         }
 
-        .menu-item.active i {
-            color: #ffd300;
+        .menu-item.active .menu-icon {
+            background: #ffd300;
+            color: #2d4016;
         }
 
-        .menu-item i {
-            margin-right: 12px;
-            font-size: 16px;
-            width: 20px;
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.07);
+            margin: 8px 4px;
         }
 
         .sidebar-footer {
-            padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
-            position: relative;
-            background: rgba(0, 0, 0, 0.1);
+            padding: 10px 10px 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.15);
         }
 
         .logout-btn {
             display: flex;
             align-items: center;
-            padding: 12px 20px;
-            background: transparent;
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
+            gap: 9px;
+            padding: 8px 10px;
+            background: rgba(255, 80, 80, 0.1);
+            color: rgba(255, 150, 150, 0.9);
+            border: 1px solid rgba(255, 80, 80, 0.2);
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.22s ease;
             width: 100%;
-            font-size: 14px;
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .logout-btn .menu-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: rgba(255, 80, 80, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            transition: all 0.22s ease;
         }
 
         .logout-btn:hover {
-            background: linear-gradient(135deg, #5a7d33 0%, #436026 100%);
-            border-color: #5a7d33;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(90, 125, 51, 0.4);
+            background: rgba(255, 80, 80, 0.22);
+            border-color: rgba(255, 80, 80, 0.5);
+            color: #ff6b6b;
+            transform: translateX(2px);
         }
 
-        .logout-btn i {
-            margin-right: 10px;
+        .logout-btn:hover .menu-icon {
+            background: rgba(255, 80, 80, 0.3);
         }
 
         /* Mobile Menu Toggle */
@@ -204,7 +312,7 @@
 
         /* Main Content Styles */
         .main-content {
-            margin-left: 180px;
+            margin-left: 200px;
             flex: 1;
             padding: 40px;
             overflow-y: auto;
@@ -333,6 +441,8 @@
             flex-direction: column;
             gap: 5px;
             flex: 1;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .stat-card h3 {
@@ -340,6 +450,9 @@
             font-weight: bold;
             margin: 0;
             text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
+            overflow: hidden;
+            width: 100%;
         }
 
         .stat-card p {
@@ -519,7 +632,7 @@
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
-                width: 240px;
+                width: 200px;
                 z-index: 1001;
             }
 
@@ -533,21 +646,16 @@
             }
 
             .sidebar-logo {
-                padding: 20px;
+                padding: 18px 16px;
             }
 
             .sidebar-logo img {
-                width: 60px;
-                height: 60px;
+                width: 52px;
+                height: 52px;
             }
 
             .menu-item {
-                padding: 12px 20px;
-            }
-
-            .menu-item:hover,
-            .menu-item.active {
-                padding-left: 25px;
+                padding: 10px 10px;
             }
 
             .stats-grid {
@@ -593,7 +701,7 @@
             }
 
             .stat-card h3 {
-                font-size: 28px;
+                font-size: 24px;
             }
 
             .chart-box {
@@ -627,39 +735,43 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <img src="{{ asset('images/logowhite.png') }}" alt="Logo">
+            <span class="app-name">When in Baguio Inc.</span>
         </div>
 
         <div class="sidebar-menu">
+            <span class="menu-section-label">Main</span>
             <a href="{{ route('dashboard') }}" class="menu-item active">
-                <i class="fas fa-home"></i>
+                <span class="menu-icon"><i class="fas fa-home"></i></span>
                 <span>Dashboard</span>
             </a>
             <a href="{{ route('remittance') }}" class="menu-item">
-                <i class="fas fa-file-invoice-dollar"></i>
+                <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
                 <span>Remittance</span>
             </a>
             <a href="{{ route('bank-deposit') }}" class="menu-item">
-                <i class="fas fa-university"></i>
-                <span>Bank & Deposit</span>
+                <span class="menu-icon"><i class="fas fa-university"></i></span>
+                <span>Bank &amp; Deposit</span>
             </a>
+
+            <div class="menu-divider"></div>
+            <span class="menu-section-label">Management</span>
             <a href="{{ route('merchants') }}" class="menu-item">
-                <i class="fas fa-store"></i>
+                <span class="menu-icon"><i class="fas fa-store"></i></span>
                 <span>Merchants</span>
             </a>
             <a href="{{ route('members.index') }}" class="menu-item">
-                <i class="fas fa-users-cog"></i>
+                <span class="menu-icon"><i class="fas fa-users-cog"></i></span>
                 <span>Member Management</span>
             </a>
             <a href="{{ route('audit-logs') }}" class="menu-item">
-                <i class="fas fa-clipboard-list"></i>
+                <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
                 <span>Audit Logs</span>
             </a>
-            <a href="{{ route('reports') }}" class="menu-item">
-                <i class="fas fa-chart-bar"></i>
-                <span>Reports</span>
-            </a>
+
+            <div class="menu-divider"></div>
+            <span class="menu-section-label">Account</span>
             <a href="{{ route('profile') }}" class="menu-item">
-                <i class="fas fa-user"></i>
+                <span class="menu-icon"><i class="fas fa-user"></i></span>
                 <span>Profile</span>
             </a>
         </div>
@@ -668,7 +780,7 @@
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
                 <button type="submit" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="menu-icon"><i class="fas fa-sign-out-alt"></i></span>
                     <span>Logout</span>
                 </button>
             </form>
@@ -682,7 +794,7 @@
             <div class="user-indicator">
                 <div class="user-info">
                     <span class="user-name">{{ auth()->user()->name }}</span>
-                    <span class="user-role">{{ auth()->user()->role }}</span>
+                    <span class="user-role">{{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}</span>
                 </div>
                 <a href="{{ route('profile') }}" class="user-avatar">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
@@ -695,14 +807,14 @@
             <a href="{{ route('merchants') }}" class="stat-card">
                 <i class="fas fa-wallet stat-icon"></i>
                 <div class="stat-content">
-                    <h3>₱170,000</h3>
+                    <h3>&#8369;{{ number_format($totalCollections, 2) }}</h3>
                     <p>Total Collections</p>
                 </div>
             </a>
             <a href="{{ route('merchants') }}" class="stat-card">
                 <i class="fas fa-chart-line stat-icon"></i>
                 <div class="stat-content">
-                    <h3>₱200,000</h3>
+                    <h3>&#8369;200,000</h3>
                     <p>Net Revenue</p>
                 </div>
             </a>
@@ -716,7 +828,7 @@
             <a href="{{ route('bank-deposit') }}" class="stat-card">
                 <i class="fas fa-exclamation-triangle stat-icon"></i>
                 <div class="stat-content">
-                    <h3>-</h3>
+                    <h3>&#8369;{{ number_format($totalDiscrepancies, 2) }}</h3>
                     <p>Discrepancies</p>
                 </div>
             </a>
@@ -753,6 +865,21 @@
                 <div class="chart-placeholder">
                     <canvas id="expenseBalanceChart"></canvas>
                 </div>
+            </div>
+        </div>
+
+        <!-- Orders by Month Trend -->
+        <div class="chart-box" style="margin-bottom:30px;">
+            <h3>
+                <span>Orders by Month Trend</span>
+                <select class="chart-filter" id="ordersByMonthYear" onchange="updateOrdersByMonth(this.value)">
+                    @foreach($chartYears as $yr)
+                    <option value="{{ $yr }}" {{ $loop->first ? 'selected' : '' }}>{{ $yr }}</option>
+                    @endforeach
+                </select>
+            </h3>
+            <div class="chart-placeholder">
+                <canvas id="ordersByMonthChart"></canvas>
             </div>
         </div>
 
@@ -894,6 +1021,62 @@
             expenseBalanceChart.update();
         }
 
+        // Orders by Month Chart — connected to real merchant sales (remittances)
+        const ordersData = @json($monthlySales);
+        const defaultYear = {{ $chartYears[0] }};
+
+        const ordersCtx = document.getElementById('ordersByMonthChart').getContext('2d');
+        const ordersByMonthChart = new Chart(ordersCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Sales (₱)',
+                    data: ordersData[defaultYear] || Array(12).fill(0),
+                    backgroundColor: function(context) {
+                        const value = context.dataset.data[context.dataIndex];
+                        return value === 0 ? 'rgba(67,96,38,0.15)' : '#436026';
+                    },
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    hoverBackgroundColor: '#ffd300'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return ctx.parsed.y === 0
+                                    ? ' No data'
+                                    : ' ₱' + ctx.parsed.y.toLocaleString('en-PH', {minimumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#e5e5e5' },
+                        ticks: {
+                            callback: function(value) {
+                                return '₱' + value.toLocaleString('en-PH');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateOrdersByMonth(year) {
+            ordersByMonthChart.data.datasets[0].data = ordersData[year] || Array(12).fill(0);
+            ordersByMonthChart.update();
+        }
+
         // Change Sales Trend View
         function changeSalesTrendView(period) {
             // This is a placeholder - implement actual data fetching logic
@@ -943,6 +1126,25 @@
                 }
             }
         });
+
+        // Auto-fit stat card numbers so they never overflow regardless of value length
+        function fitStatCardNumbers() {
+            document.querySelectorAll('.stat-card h3').forEach(function(h3) {
+                h3.style.fontSize = '';
+                var maxSize = 32;
+                var minSize = 10;
+                var size = maxSize;
+                h3.style.fontSize = size + 'px';
+                while (h3.scrollWidth > h3.offsetWidth && size > minSize) {
+                    size -= 0.5;
+                    h3.style.fontSize = size + 'px';
+                }
+            });
+        }
+        document.addEventListener('DOMContentLoaded', fitStatCardNumbers);
+        window.addEventListener('resize', fitStatCardNumbers);
     </script>
+
+    @include('partials.floating-widgets')
 </body>
 </html>

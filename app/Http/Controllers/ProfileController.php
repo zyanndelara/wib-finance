@@ -8,10 +8,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use App\Models\AuditLog;
 use SendinBlue\Client\Configuration;
 use SendinBlue\Client\Api\TransactionalEmailsApi;
 use SendinBlue\Client\Model\SendSmtpEmail;
 use GuzzleHttp\Client;
+use OTPHP\TOTP;
 
 class ProfileController extends Controller
 {
@@ -87,9 +89,11 @@ class ProfileController extends Controller
 
         if ($emailChanged) {
             $this->sendBrevoVerification($user->fresh());
+            AuditLog::log('Profile Updated (Email Changed)', 'Profile', 'completed', ['notes' => 'New email: ' . $user->email]);
             return redirect()->route('profile')->with('success', 'Profile updated! Please verify your new email address.');
         }
 
+        AuditLog::log('Profile Updated', 'Profile', 'completed');
         return redirect()->route('profile')->with('success', 'Profile updated successfully!');
     }
 
@@ -122,6 +126,8 @@ class ProfileController extends Controller
         $user->update([
             'password' => Hash::make($request->new_password),
         ]);
+
+        AuditLog::log('Password Changed', 'Profile', 'completed');
 
         return redirect()->route('profile')->with('success', 'Password updated successfully!');
     }
@@ -171,6 +177,15 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        // Log before deletion
+        AuditLog::create([
+            'action'         => 'Account Deleted – ' . $user->email,
+            'module'         => 'Profile',
+            'user_id'        => $user->id,
+            'status'         => 'cleared',
+            'initiated_user' => $user->email,
+        ]);
+
         // Delete user
         $user->delete();
 
@@ -198,5 +213,85 @@ class ProfileController extends Controller
         } catch (\Exception $e) {
             Log::error('Brevo verification email failed: ' . $e->getMessage() . '\n' . $e->getTraceAsString());
         }
+    }
+
+    /**
+     * Generate a 2FA secret and return QR code data for setup modal.
+     */
+    public function setup2fa()
+    {
+        $user = Auth::user();
+
+        if (!$user->two_factor_secret) {
+            $totp = TOTP::generate();
+            $totp->setLabel($user->email);
+            $totp->setIssuer(config('app.name', 'WIBSystem'));
+            $secret = $totp->getSecret();
+            $user->two_factor_secret = encrypt($secret);
+            $user->save();
+        } else {
+            $secret = decrypt($user->two_factor_secret);
+            $totp = TOTP::createFromSecret($secret);
+            $totp->setLabel($user->email);
+            $totp->setIssuer(config('app.name', 'WIBSystem'));
+        }
+
+        $qrCodeUrl = $totp->getProvisioningUri();
+        $qrCode    = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(200)->generate($qrCodeUrl);
+
+        return response()->json([
+            'qr_code' => base64_encode($qrCode),
+            'secret'  => $secret,
+        ]);
+    }
+
+    /**
+     * Confirm and enable 2FA after user scans QR and enters a valid code.
+     */
+    public function confirm2fa(Request $request)
+    {
+        $request->validate(['code' => 'required|string|digits:6']);
+
+        $user   = Auth::user();
+        $secret = decrypt($user->two_factor_secret);
+        $totp   = TOTP::createFromSecret($secret);
+
+        if (!$totp->verify($request->code, null, 1)) {
+            return back()->withErrors(['2fa_code' => 'Invalid code. Please try again.']);
+        }
+
+        $user->two_factor_enabled      = true;
+        $user->two_factor_confirmed_at = now();
+        $user->save();
+
+        AuditLog::log('Two-Factor Authentication Enabled', 'Profile', 'completed');
+
+        return redirect()->route('profile')->with('success', 'Two-Factor Authentication has been enabled!');
+    }
+
+    /**
+     * Disable 2FA for the authenticated user.
+     */
+    public function disable2fa(Request $request)
+    {
+        $request->validate(['password' => 'required']);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['disable_password' => 'The password is incorrect.']);
+        }
+
+        $user->two_factor_secret          = null;
+        $user->two_factor_enabled         = false;
+        $user->two_factor_confirmed_at    = null;
+        $user->two_factor_trusted_devices = null;
+        $user->save();
+
+        AuditLog::log('Two-Factor Authentication Disabled', 'Profile', 'completed');
+
+        return redirect()->route('profile')
+            ->with('success', 'Two-Factor Authentication has been disabled.')
+            ->withoutCookie('wib_2fa_device');
     }
 }

@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Wibsystem</title>
+    <title>Login - When in Baguio Inc.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -569,6 +569,103 @@
             padding: 12px 16px;
         }
 
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+        }
+
+        .toast-success {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(67,96,38,0.18), 0 2px 8px rgba(0,0,0,0.08);
+            padding: 18px 22px;
+            min-width: 320px;
+            max-width: 380px;
+            border-left: 5px solid #436026;
+            opacity: 0;
+            transform: translateY(60px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            pointer-events: none;
+        }
+
+        .toast-success.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .toast-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #436026, #5a7d35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .toast-icon i {
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .toast-body {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #1a1a1a;
+            margin-bottom: 3px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            line-height: 1;
+            flex-shrink: 0;
+            transition: color 0.2s;
+        }
+
+        .toast-close:hover {
+            color: #436026;
+        }
+
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #436026, #5a7d35);
+            border-radius: 0 0 0 12px;
+            width: 100%;
+            transform-origin: left;
+            animation: toastProgress 4s linear forwards;
+        }
+
+        @keyframes toastProgress {
+            from { width: 100%; }
+            to   { width: 0%; }
+        }
+
         .error-message {
             color: #dc3545;
             font-size: 13px;
@@ -633,7 +730,7 @@
                 <div class="login-card">
                     <!-- Logo Icon -->
                     <div class="logo-icon">
-                        <img src="{{ asset('images/logo.png') }}" alt="Wibsystem Logo">
+                        <img src="{{ asset('images/logo.png') }}" alt="When in Baguio Inc. Logo">
                     </div>
 
                     <!-- Login Header -->
@@ -712,7 +809,41 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    @if (session('password_reset_success'))
+    <!-- Toast Notification -->
+    <div class="toast-container">
+        <div class="toast-success" id="resetToast" style="position:relative; overflow:hidden;">
+            <div class="toast-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="toast-body">
+                <div class="toast-title">Password Reset Successful</div>
+                <div class="toast-message">Your password has been changed. You can now sign in with your new password.</div>
+            </div>
+            <button class="toast-close" onclick="dismissToast()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="toast-progress" id="toastProgress"></div>
+        </div>
+    </div>
+    @endif
+
     <script>
+        // Show toast on page load if present
+        const toast = document.getElementById('resetToast');
+        if (toast) {
+            setTimeout(() => toast.classList.add('show'), 100);
+            // Auto-dismiss after 4s
+            setTimeout(() => dismissToast(), 4100);
+        }
+
+        function dismissToast() {
+            if (toast) {
+                toast.classList.remove('show');
+            }
+        }
+
         // Toggle password visibility
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');

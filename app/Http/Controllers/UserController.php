@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\User;
 use App\Mail\WelcomeMail;
 use Illuminate\Http\Request;
@@ -106,13 +107,14 @@ class UserController extends Controller
 
         // Send email with generated password to user
         try {
-            // Mail::to($request->email)->send(new WelcomeMail(
-            //     $fullName,
-            //     $request->email,
-            //     $generatedPassword,
-            //     $request->employee_id
-            // ));
             $this->sendBrevoPassword($user, $generatedPassword);
+
+            AuditLog::log(
+                'New Member Added – ' . $user->email,
+                'Member Management',
+                'completed',
+                ['notes' => 'Role: ' . $user->role]
+            );
             
             return redirect()->route('members.index')
                 ->with('success', value: 'Member added successfully! Password has been auto-generated and sent via email.');
@@ -211,6 +213,13 @@ class UserController extends Controller
 
         $user->update($data);
 
+        AuditLog::log(
+            'Member Updated – ' . $user->email,
+            'Member Management',
+            'completed',
+            ['notes' => 'Role: ' . $finalRole]
+        );
+
         return redirect()->route('members.index')
             ->with('success', 'Member updated successfully!');
     }
@@ -229,6 +238,13 @@ class UserController extends Controller
         // Set status to inactive instead of deleting
         $user->update(['status' => 'inactive']);
 
+        AuditLog::log(
+            'Member Archived – ' . $user->email,
+            'Member Management',
+            'cleared',
+            ['notes' => 'Account set to inactive']
+        );
+
         return redirect()->route('members.index')
             ->with('success', 'Member archived successfully!');
     }
@@ -240,6 +256,13 @@ class UserController extends Controller
     {
         // Set status to active to restore the member
         $user->update(['status' => 'active']);
+
+        AuditLog::log(
+            'Member Restored – ' . $user->email,
+            'Member Management',
+            'completed',
+            ['notes' => 'Account re-activated']
+        );
 
         return redirect()->route('members.index', ['archived' => '1'])
             ->with('success', 'Member restored successfully!');

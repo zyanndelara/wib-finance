@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'prevent.back' => \App\Http\Middleware\PreventBackHistory::class,
         ]);
+        // Track last seen timestamp for all authenticated web requests
+        $middleware->web(append: [
+            \App\Http\Middleware\TrackLastSeen::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

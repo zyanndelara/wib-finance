@@ -17,5 +17,9 @@ class DatabaseSeeder extends Seeder
     {
         // No default users - users must register through the registration form
         // User::factory(10)->create();
+
+        $this->call([
+            MerchantSeeder::class,
+        ]);
     }
 }

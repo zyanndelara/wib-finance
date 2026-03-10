@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Member Management - Wibsystem</title>
+    <title>Member Management - When in Baguio Inc.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -22,8 +22,8 @@
 
         /* Sidebar Styles */
         .sidebar {
-            width: 180px;
-            background: linear-gradient(180deg, #436026 0%, #344d1e 100%);
+            width: 200px;
+            background: linear-gradient(180deg, #2d4016 0%, #3a5220 40%, #2d4016 100%);
             color: white;
             display: flex;
             flex-direction: column;
@@ -31,107 +31,266 @@
             position: fixed;
             left: 0;
             top: 0;
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
             z-index: 1000;
         }
 
         .sidebar-logo {
-            padding: 30px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            position: relative;
-            background: rgba(0, 0, 0, 0.1);
+            padding: 18px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 7px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.15);
         }
 
         .sidebar-logo img {
-            width: 80px;
-            height: 80px;
+            width: 54px;
+            height: 54px;
             border-radius: 50%;
             object-fit: contain;
             transition: transform 0.3s ease;
         }
 
         .sidebar-logo img:hover {
-            transform: scale(1.05);
+            transform: scale(1.07);
+        }
+
+        .sidebar-logo .app-name {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.75);
         }
 
         .sidebar-menu {
             flex: 1;
-            padding: 20px 0;
+            padding: 10px 10px;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        .menu-section-label {
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.38);
+            padding: 10px 8px 4px;
+            user-select: none;
         }
 
         .menu-item {
             display: flex;
             align-items: center;
-            padding: 15px 20px;
-            color: white;
+            gap: 9px;
+            padding: 8px 10px;
+            color: rgba(255, 255, 255, 0.78);
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: all 0.22s ease;
             cursor: pointer;
             border: none;
             background: none;
             width: 100%;
             text-align: left;
-            font-size: 14px;
+            font-size: 12.5px;
+            font-weight: 500;
+            border-radius: 8px;
+        }
+
+        .menu-item .menu-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            transition: all 0.22s ease;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .menu-item:hover {
-            background: rgba(255, 255, 255, 0.15);
-            padding-left: 25px;
-            box-shadow: inset 4px 0 0 #ffd300;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .menu-item:hover .menu-icon {
+            background: rgba(255, 211, 0, 0.18);
+            color: #ffd300;
         }
 
         .menu-item.active {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(255, 211, 0, 0.14);
             color: #ffd300;
-            font-weight: 600;
-            box-shadow: inset 4px 0 0 #ffd300;
-            padding-left: 25px;
+            font-weight: 700;
         }
 
-        .menu-item.active i {
-            color: #ffd300;
+        .menu-item.active .menu-icon {
+            background: #ffd300;
+            color: #2d4016;
         }
 
-        .menu-item i {
-            margin-right: 12px;
-            font-size: 16px;
-            width: 20px;
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.07);
+            margin: 8px 4px;
+        }
+
+        /* Toast Notification Styles */
+        #toastContainer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .custom-toast {
+            min-width: 300px;
+            max-width: 500px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid #28a745;
+            animation: slideIn 0.3s ease-out;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-icon {
+            font-size: 24px;
+            color: #28a745;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            flex: 1;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: color 0.2s;
+        }
+
+        .toast-close:hover {
+            color: #333;
+        }
+
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #28a745;
+            animation: progress 3s linear;
+        }
+
+        @keyframes progress {
+            from {
+                width: 100%;
+            }
+            to {
+                width: 0;
+            }
         }
 
         .sidebar-footer {
-            padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
-            position: relative;
-            background: rgba(0, 0, 0, 0.1);
+            padding: 10px 10px 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.15);
         }
 
         .logout-btn {
             display: flex;
             align-items: center;
-            padding: 12px 20px;
-            background: transparent;
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
+            gap: 9px;
+            padding: 8px 10px;
+            background: rgba(255, 80, 80, 0.1);
+            color: rgba(255, 150, 150, 0.9);
+            border: 1px solid rgba(255, 80, 80, 0.2);
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.22s ease;
             width: 100%;
-            font-size: 14px;
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .logout-btn .menu-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: rgba(255, 80, 80, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            transition: all 0.22s ease;
         }
 
         .logout-btn:hover {
-            background: linear-gradient(135deg, #5a7d33 0%, #436026 100%);
-            border-color: #5a7d33;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(90, 125, 51, 0.4);
+            background: rgba(255, 80, 80, 0.22);
+            border-color: rgba(255, 80, 80, 0.5);
+            color: #ff6b6b;
+            transform: translateX(2px);
         }
 
-        .logout-btn i {
-            margin-right: 10px;
+        .logout-btn:hover .menu-icon {
+            background: rgba(255, 80, 80, 0.3);
         }
 
         /* Mobile Menu Toggle */
@@ -181,7 +340,7 @@
 
         /* Main Content Styles */
         .main-content {
-            margin-left: 180px;
+            margin-left: 200px;
             flex: 1;
             padding: 40px;
             overflow-y: auto;
@@ -815,7 +974,7 @@
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
-                width: 240px;
+                width: 200px;
                 z-index: 1001;
             }
 
@@ -829,21 +988,16 @@
             }
 
             .sidebar-logo {
-                padding: 20px;
+                padding: 18px 16px;
             }
 
             .sidebar-logo img {
-                width: 60px;
-                height: 60px;
+                width: 52px;
+                height: 52px;
             }
 
             .menu-item {
-                padding: 12px 20px;
-            }
-
-            .menu-item:hover,
-            .menu-item.active {
-                padding-left: 25px;
+                padding: 8px 10px;
             }
 
             .stats-grid {
@@ -919,39 +1073,43 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <img src="{{ asset('images/logowhite.png') }}" alt="Logo">
+            <span class="app-name">When in Baguio Inc.</span>
         </div>
 
         <div class="sidebar-menu">
+            <span class="menu-section-label">Main</span>
             <a href="{{ route('dashboard') }}" class="menu-item">
-                <i class="fas fa-home"></i>
+                <span class="menu-icon"><i class="fas fa-home"></i></span>
                 <span>Dashboard</span>
             </a>
             <a href="{{ route('remittance') }}" class="menu-item">
-                <i class="fas fa-file-invoice-dollar"></i>
+                <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
                 <span>Remittance</span>
             </a>
             <a href="{{ route('bank-deposit') }}" class="menu-item">
-                <i class="fas fa-university"></i>
-                <span>Bank & Deposit</span>
+                <span class="menu-icon"><i class="fas fa-university"></i></span>
+                <span>Bank &amp; Deposit</span>
             </a>
+
+            <div class="menu-divider"></div>
+            <span class="menu-section-label">Management</span>
             <a href="{{ route('merchants') }}" class="menu-item">
-                <i class="fas fa-store"></i>
+                <span class="menu-icon"><i class="fas fa-store"></i></span>
                 <span>Merchants</span>
             </a>
             <a href="{{ route('members.index') }}" class="menu-item active">
-                <i class="fas fa-users-cog"></i>
+                <span class="menu-icon"><i class="fas fa-users-cog"></i></span>
                 <span>Member Management</span>
             </a>
             <a href="{{ route('audit-logs') }}" class="menu-item">
-                <i class="fas fa-clipboard-list"></i>
+                <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
                 <span>Audit Logs</span>
             </a>
-            <a href="{{ route('reports') }}" class="menu-item">
-                <i class="fas fa-chart-bar"></i>
-                <span>Reports</span>
-            </a>
+
+            <div class="menu-divider"></div>
+            <span class="menu-section-label">Account</span>
             <a href="{{ route('profile') }}" class="menu-item">
-                <i class="fas fa-user"></i>
+                <span class="menu-icon"><i class="fas fa-user"></i></span>
                 <span>Profile</span>
             </a>
         </div>
@@ -960,7 +1118,7 @@
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
                 <button type="submit" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="menu-icon"><i class="fas fa-sign-out-alt"></i></span>
                     <span>Logout</span>
                 </button>
             </form>
@@ -969,13 +1127,6 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Success Message (excluding archive/restore/add/update messages) -->
-        @if (session('success') && !in_array(session('success'), ['Member archived successfully!', 'Member restored successfully!', 'Member updated successfully!']) && !str_starts_with(session('success'), 'Member added successfully'))
-            <div class="alert-success">
-                <i class="fas fa-check-circle"></i> {{ session('success') }}
-            </div>
-        @endif
-
         <!-- Error Message -->
         @if (session('error'))
             <div class="alert-danger">
@@ -1037,8 +1188,11 @@
                         <select name="role" onchange="this.form.submit()">
                             <option value="">All Roles</option>
                             <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                            <option value="finance_officer_iv" {{ request('role') == 'finance_officer_iv' ? 'selected' : '' }}>Finance Officer IV</option>
+                            <option value="finance_officer_i" {{ request('role') == 'finance_officer_i' ? 'selected' : '' }}>Finance Officer I</option>
+                            <option value="finance_officer_ii" {{ request('role') == 'finance_officer_ii' ? 'selected' : '' }}>Finance Officer II</option>
                             <option value="finance_officer_iii" {{ request('role') == 'finance_officer_iii' ? 'selected' : '' }}>Finance Officer III</option>
+                            <option value="finance_officer_iv" {{ request('role') == 'finance_officer_iv' ? 'selected' : '' }}>Finance Officer IV</option>
+                            <option value="finance_officer_v" {{ request('role') == 'finance_officer_v' ? 'selected' : '' }}>Finance Officer V</option>
                         </select>
                     </div>
                 @endif
@@ -1647,18 +1801,74 @@
             }
         });
 
+        // Toast Notification Function
+        function showToast(message, type = 'success', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'custom-toast';
+            let iconHtml = '<i class="fas fa-check-circle toast-icon"></i>';
+            let borderColor = '#28a745';
+            let progressColor = '#28a745';
+            if (type === 'error') {
+                iconHtml = '<i class="fas fa-exclamation-circle toast-icon" style="color:#dc3545"></i>';
+                borderColor = '#dc3545';
+                progressColor = '#dc3545';
+            } else if (type === 'warning') {
+                iconHtml = '<i class="fas fa-exclamation-triangle toast-icon" style="color:#ffc107"></i>';
+                borderColor = '#ffc107';
+                progressColor = '#ffc107';
+            } else if (type === 'info') {
+                iconHtml = '<i class="fas fa-info-circle toast-icon" style="color:#17a2b8"></i>';
+                borderColor = '#17a2b8';
+                progressColor = '#17a2b8';
+            }
+            toast.style.borderLeftColor = borderColor;
+            toast.innerHTML = `
+                ${iconHtml}
+                <div class="toast-message">${message}</div>
+                <button class="toast-close" aria-label="Close">&times;</button>
+                <div class="toast-progress" style="background:${progressColor}"></div>
+            `;
+            toast.querySelector('.toast-close').onclick = function() {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            };
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+            container.appendChild(toast);
+        }
+
         // Check for success messages on page load
         @if (session('success'))
             @if (session('success') === 'Member archived successfully!')
-                showSuccessModal('Member Archived', 'The member has been archived successfully. Their status has been set to inactive.', 'fa-archive');
+                document.addEventListener('DOMContentLoaded', function() {
+                    showToast('Member archived successfully! Their status has been set to inactive.', 'success');
+                });
             @elseif (session('success') === 'Member restored successfully!')
-                showSuccessModal('Member Restored', 'The member has been restored successfully. Their status has been set to active.', 'fa-undo');
+                document.addEventListener('DOMContentLoaded', function() {
+                    showToast('Member restored successfully! Their status has been set to active.', 'success');
+                });
             @elseif (session('success') === 'Member updated successfully!')
-                showSuccessModal('Member Updated', 'The member information has been updated successfully.', 'fa-check-circle');
+                document.addEventListener('DOMContentLoaded', function() {
+                    showToast('Member information has been updated successfully.', 'success');
+                });
             @elseif (str_starts_with(session('success'), 'Member added successfully'))
-                showSuccessModal('Member Added', 'The new member has been added successfully. Password has been sent via email.', 'fa-user-plus');
+                document.addEventListener('DOMContentLoaded', function() {
+                    showToast('Member added successfully! Password has been sent via email.', 'success');
+                });
+            @else
+                document.addEventListener('DOMContentLoaded', function() {
+                    showToast('{{ session('success') }}', 'success');
+                });
             @endif
         @endif
     </script>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
+
+    @include('partials.floating-widgets')
 </body>
 </html>
