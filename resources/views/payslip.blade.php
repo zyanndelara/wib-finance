@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,7 +31,7 @@
             align-items: center;
             justify-content: space-between;
             z-index: 9999;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .print-btn-bar span {
@@ -95,19 +96,19 @@
 
         .slip-header .company-address {
             font-size: 10px;
-            color: rgba(255,255,255,0.85);
+            color: rgba(255, 255, 255, 0.85);
         }
 
         .slip-header .company-contact {
             font-size: 10px;
-            color: rgba(255,255,255,0.85);
+            color: rgba(255, 255, 255, 0.85);
         }
 
         .slip-header .company-right {
             text-align: right;
             font-size: 10.5px;
             line-height: 1.7;
-            color: rgba(255,255,255,0.9);
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .slip-header .company-right strong {
@@ -393,11 +394,12 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
             gap: 12px;
+            align-items: stretch;
         }
 
         .sig-block {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-rows: auto 42px auto;
             gap: 4px;
         }
 
@@ -407,22 +409,27 @@
             color: #555;
             text-transform: uppercase;
             letter-spacing: 0.3px;
+            text-align: center;
         }
 
         .sig-name {
             font-size: 11.5px;
             font-weight: 700;
             color: #222;
-            padding-top: 2px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            text-align: center;
+            padding: 0 4px 6px;
             border-bottom: 1px solid #aaa;
-            padding-bottom: 18px;
-            min-width: 100px;
+            min-width: 0;
         }
 
         .sig-title {
             font-size: 9.5px;
             color: #666;
             margin-top: 3px;
+            text-align: center;
         }
 
         @media print {
@@ -447,275 +454,295 @@
         }
     </style>
 </head>
+
 <body>
 
-<!-- Print button bar (hidden on print) -->
-<div class="print-btn-bar">
-    <span>&#128196; Rider Payslip — {{ $payroll->rider_name }}</span>
-    <button onclick="window.print()">&#128438; Print Payslip</button>
-</div>
-
-<div class="slip-wrapper">
-
-    <!-- ── COMPANY HEADER ── -->
-    <div class="slip-header">
-        <div class="company-left">
-            <img src="{{ asset('images/logo.png') }}" alt="WIB Logo">
-            <div class="company-info">
-                <div class="company-name">When In Baguio Inc.</div>
-                <div class="company-address">49 Upper P. Burgas, Baguio City</div>
-                <div class="company-contact">financedepartment@whenInbaguio.com</div>
-                <div class="company-contact">(074) 424 0807 | +639176366164</div>
-            </div>
-        </div>
-        <div class="company-right">
-            <div>TIN &nbsp;<strong>613-294-519-00000</strong></div>
-            <div>SEC Reg No. &nbsp;<strong>2022080042402-00</strong></div>
-        </div>
+    <!-- Print button bar (hidden on print) -->
+    <div class="print-btn-bar">
+        <span>&#128196; Rider Payslip — {{ $payroll->rider_name }}</span>
+        <button onclick="window.print()">&#128438; Print Payslip</button>
     </div>
 
-    <!-- ── TITLE BAR ── -->
-    <div class="slip-title-bar">
-        <div class="doc-title">Freelance Delivery Rider Payslip</div>
-        <div class="period-block">
-            <div class="period-field">
-                Month
-                <span class="period-value">{{ \Carbon\Carbon::parse($payroll->created_at)->format('F') }}</span>
-            </div>
-            <div class="period-field">
-                Year
-                <span class="period-value">{{ \Carbon\Carbon::parse($payroll->created_at)->format('Y') }}</span>
-            </div>
-        </div>
-    </div>
+    <div class="slip-wrapper">
 
-    <!-- ── RIDER INFO ── -->
-    <div class="slip-info-grid">
-        <div class="slip-info-left">
-            <div class="info-row">
-                <span class="info-label">Invoice for</span>
-                <span class="info-value">{{ $payroll->rider_name }}</span>
+        <!-- ── COMPANY HEADER ── -->
+        <div class="slip-header">
+            <div class="company-left">
+                <img src="{{ asset('images/logo.png') }}" alt="WIB Logo">
+                <div class="company-info">
+                    <div class="company-name">When In Baguio Inc.</div>
+                    <div class="company-address">49 Upper P. Burgos, Baguio City</div>
+                    <div class="company-contact">financedepartment@whenInbaguio.com</div>
+                    <div class="company-contact">(074) 424 0807 | +639176366164</div>
+                </div>
             </div>
-            <div class="info-row">
-                <span class="info-label">&nbsp;</span>
-                <span class="info-value">&nbsp;</span>
-            </div>
-            <div class="info-row" style="margin-top:4px;">
-                <span class="info-value" style="border:none; color:#888; font-size:10px;">&nbsp;</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Email</span>
-                <span class="info-value">{{ $rider->email ?? '' }}</span>
+            <div class="company-right">
+                <div>TIN &nbsp;<strong>613-294-519-00000</strong></div>
+                <div>SEC Reg No. &nbsp;<strong>2022080042402-00</strong></div>
             </div>
         </div>
-        <div class="slip-info-right">
-            <div class="info-row">
-                <span class="info-label">Contact No.</span>
-                <span class="info-value">{{ $rider->phone_number ?? '' }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">ID Number</span>
-                <span class="info-value">WIBFDR{{ str_pad($riderId, 3, '0', STR_PAD_LEFT) }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Document Number</span>
-                <span class="info-value">{{ 'WIBP' . \Carbon\Carbon::parse($payroll->created_at)->format('y') . \Carbon\Carbon::parse($payroll->created_at)->format('m') . str_pad($payroll->id, 4, '0', STR_PAD_LEFT) }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Tax Identification Number</span>
-                <span class="info-value">&nbsp;</span>
-            </div>
-        </div>
-    </div>
 
-    <!-- ── TRANSACTION TABLE ── -->
-    <div class="slip-table-section">
-        <table class="slip-table">
-            <thead>
-                <tr>
-                    <th style="min-width:95px;">Transaction Date</th>
-                    <th>No. of Deliveries</th>
-                    <th>Total WIB &amp; MANGAN DF</th>
-                    <th>Tips Received</th>
-                    <th>5% Deduction</th>
-                    <th style="min-width:120px;">REMARKS</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($remittances as $remittance)
+        <!-- ── TITLE BAR ── -->
+        <div class="slip-title-bar">
+            <div class="doc-title">Freelance Delivery Rider Payslip</div>
+            <div class="period-block">
+                <div class="period-field">
+                    Month
+                    <span class="period-value">{{ \Carbon\Carbon::parse($payroll->created_at)->format('F') }}</span>
+                </div>
+                <div class="period-field">
+                    Year
+                    <span class="period-value">{{ \Carbon\Carbon::parse($payroll->created_at)->format('Y') }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── RIDER INFO ── -->
+        <div class="slip-info-grid">
+            <div class="slip-info-left">
+                <div class="info-row">
+                    <span class="info-label">Invoice for</span>
+                    <span class="info-value">{{ $payroll->rider_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">&nbsp;</span>
+                    <span class="info-value">&nbsp;</span>
+                </div>
+                <div class="info-row" style="margin-top:4px;">
+                    <span class="info-value" style="border:none; color:#888; font-size:10px;">&nbsp;</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">{{ $rider->email ?? '' }}</span>
+                </div>
+            </div>
+            <div class="slip-info-right">
+                <div class="info-row">
+                    <span class="info-label">Contact No.</span>
+                    <span class="info-value">{{ $rider->phone_number ?? '' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">ID Number</span>
+                    <span class="info-value">WIBFDR{{ str_pad($riderId, 3, '0', STR_PAD_LEFT) }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Document Number</span>
+                    <span
+                        class="info-value">{{ 'WIBP' . \Carbon\Carbon::parse($payroll->created_at)->format('y') . \Carbon\Carbon::parse($payroll->created_at)->format('m') . str_pad($payroll->id, 4, '0', STR_PAD_LEFT) }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tax Identification Number</span>
+                    <span class="info-value">&nbsp;</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TRANSACTION TABLE ── -->
+        <div class="slip-table-section">
+            <table class="slip-table">
+                <thead>
                     <tr>
-                        <td>{{ \Carbon\Carbon::parse($remittance->remittance_date)->format('m/d/Y') }}</td>
-                        <td>{{ number_format($remittance->total_deliveries) }}</td>
-                        <td style="text-align:right;">{{ number_format($remittance->total_delivery_fee, 2) }}</td>
-                        <td style="text-align:right;">{{ number_format($remittance->total_tips ?? 0, 2) }}</td>
-                        <td style="text-align:right;">{{ number_format($remittance->total_delivery_fee * 0.05, 2) }}</td>
-                        <td>{{ $remittance->remarks ?? '' }}</td>
+                        <th style="min-width:95px;">Transaction Date</th>
+                        <th>No. of Deliveries</th>
+                        <th>Total WIB &amp; MANGAN DF</th>
+                        <th>Tips Received</th>
+                        <th>5% Deduction</th>
+                        <th style="min-width:120px;">REMARKS</th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" style="text-align:center; color:#888; padding:14px; font-style:italic;">No remittances found for this pay period.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody>
+                    @forelse($remittances as $remittance)
+                        <tr>
+                            <td>{{ \Carbon\Carbon::parse($remittance->remittance_date)->format('m/d/Y') }}</td>
+                            <td>{{ number_format($remittance->total_deliveries) }}</td>
+                            <td style="text-align:right;">{{ number_format($remittance->total_delivery_fee, 2) }}</td>
+                            <td style="text-align:right;">{{ number_format($remittance->total_tips ?? 0, 2) }}</td>
+                            <td style="text-align:right;">
+                                {{ number_format($remittance->total_delivery_fee * 0.05, 2) }}</td>
+                            <td>{{ $remittance->remarks ?? '' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" style="text-align:center; color:#888; padding:14px; font-style:italic;">
+                                No remittances found for this pay period.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-    <!-- ── SUMMARY SECTION ── -->
-    <div class="slip-summary">
-        <div class="slip-summary-left">
-            <div class="notes-label">Notes:</div>
-            <div style="height:14px;"></div>
-            <div class="stat-row">
-                <span class="stat-label">Total Deliveries Made</span>
-                <span class="stat-value">{{ number_format($totalDeliveries) }}</span>
+        <!-- ── SUMMARY SECTION ── -->
+        <div class="slip-summary">
+            <div class="slip-summary-left">
+                <div class="notes-label">Notes:</div>
+                <div style="height:14px;"></div>
+                <div class="stat-row">
+                    <span class="stat-label">Total Deliveries Made</span>
+                    <span class="stat-value">{{ number_format($totalDeliveries) }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Total Tips Received</span>
+                    <span class="stat-value">&#8369;{{ number_format($totalTips, 2) }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Monthly Performance Incentive</span>
+                    <span class="stat-value">&#8369;{{ number_format($monthlyPerformanceIncentive, 2) }}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">26 days renumeration</span>
+                    <span class="stat-value">&#8369;{{ number_format($renumeration26Days, 2) }}</span>
+                </div>
+                <div class="stat-row" style="margin-top:4px; border-top:1px solid #ddd; padding-top:4px;">
+                    <span class="stat-label"><strong>ADDA DF</strong></span>
+                    <span class="stat-value" style="color:#436026; text-align:right;">
+                        @if (!empty($addaDfEntries))
+                            <span
+                                style="display:block; color:#6b7280; font-size:10px; font-weight:500; margin-bottom:4px;">
+                                @foreach ($addaDfEntries as $entry)
+                                    @if (isset($entry['amount']) && isset($entry['date']))
+                                        <span style="display:block; margin-bottom:1px;">
+                                            &#8369;{{ number_format((float) $entry['amount'], 2) }}
+                                            <span
+                                                style="color:#888; font-size:9px;">{{ \Carbon\Carbon::parse($entry['date'])->format('n/d/y') }}</span>
+                                        </span>
+                                    @endif
+                                @endforeach
+                            </span>
+                        @endif
+                        <strong>&#8369;{{ number_format($addaDf, 2) }}</strong>
+                    </span>
+                </div>
             </div>
-            <div class="stat-row">
-                <span class="stat-label">Total Tips Received</span>
-                <span class="stat-value">&#8369;{{ number_format($totalTips, 2) }}</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">Monthly Performance Incentive</span>
-                <span class="stat-value">&#8369;{{ number_format($payroll->incentives ?? 0, 2) }}</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">26 days renumeration</span>
-                <span class="stat-value">&#8369;0.00</span>
-            </div>
-            <div class="stat-row" style="margin-top:4px; border-top:1px solid #ddd; padding-top:4px;">
-                <span class="stat-label"><strong>ADDA DF</strong></span>
-                <span class="stat-value" style="color:#436026;"><strong>&#8369;{{ number_format($payroll->base_salary, 2) }}</strong>
-                    &nbsp;<span style="color:#888; font-weight:400; font-size:10px;">{{ \Carbon\Carbon::parse($payroll->created_at)->format('n/d/y') }}</span>
-                </span>
+            <div class="slip-summary-right">
+                <div class="sum-row">
+                    <span class="sum-label">Subtotal</span>
+                    <span class="sum-value">&#8369;{{ number_format($subtotal, 2) }}</span>
+                </div>
+                <div class="sum-row">
+                    <span class="sum-label">Platform Fee(5%)</span>
+                    <span class="sum-value" style="color:#dc3545;">&#8369;{{ number_format($platformFee, 2) }}</span>
+                </div>
+                <div class="sum-row">
+                    <span class="sum-label">Deductions</span>
+                    <span class="sum-value"
+                        style="color:#dc3545;">&#8369;{{ number_format($totalDeductions, 2) }}</span>
+                </div>
             </div>
         </div>
-        <div class="slip-summary-right">
-            <div class="sum-row">
-                <span class="sum-label">Subtotal</span>
-                <span class="sum-value">&#8369;{{ number_format($subtotal, 2) }}</span>
-            </div>
-            <div class="sum-row">
-                <span class="sum-label">Platform Fee(5%)</span>
-                <span class="sum-value" style="color:#dc3545;">&#8369;{{ number_format($platformFee, 2) }}</span>
-            </div>
-            <div class="sum-row">
-                <span class="sum-label">Deductions</span>
-                <span class="sum-value" style="color:#dc3545;">&#8369;{{ number_format($totalDeductions, 2) }}</span>
-            </div>
+
+        <!-- ── NET PAY ── -->
+        <div class="net-pay-bar">
+            Total: &#8369;{{ number_format($computedTotal, 2) }}
         </div>
-    </div>
 
-    <!-- ── NET PAY ── -->
-    <div class="net-pay-bar">
-        &#8369;{{ number_format($payroll->net_salary, 2) }}
-    </div>
-
-    <!-- ── MODE OF PAYMENT ── -->
-    <div class="slip-payment">
-        <div class="payment-title">Mode of Payment</div>
-        <div class="payment-options">
-            <div class="payment-option">
-                <div class="checkbox">{!! $payroll->mode_of_payment === 'cash' ? '&#10003;' : '&nbsp;' !!}</div>
-                CASH
-            </div>
-            <div class="payment-option">
-                <div class="checkbox">{!! $payroll->mode_of_payment !== 'cash' ? '&#10003;' : '&nbsp;' !!}</div>
-                Bank Transfer
+        <!-- ── MODE OF PAYMENT ── -->
+        <div class="slip-payment">
+            <div class="payment-title">Mode of Payment</div>
+            <div class="payment-options">
+                <div class="payment-option">
+                    <div class="checkbox">{!! $payroll->mode_of_payment === 'cash' ? '&#10003;' : '&nbsp;' !!}</div>
+                    CASH
+                </div>
+                <div class="payment-option">
+                    <div class="checkbox">{!! $payroll->mode_of_payment !== 'cash' ? '&#10003;' : '&nbsp;' !!}</div>
+                    Bank Transfer
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- ── BANK TRANSFER TABLE ── -->
-    @if($payroll->mode_of_payment !== 'cash')
-    <div style="padding: 0 0 0 0;">
-        <table class="bank-table">
-            <thead>
-                <tr>
-                    <th>Ref. No.</th>
-                    <th>Bank/Digital Wallet</th>
-                    <th>Account Name</th>
-                    <th>Account Number</th>
-                    <th>Amount</th>
-                    <th>Transfer Fee</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>{{ $payroll->rider_name }}</td>
-                    <td>&nbsp;</td>
-                    <td style="text-align:right;">&#8369;{{ number_format($payroll->net_salary, 2) }}</td>
-                    <td style="text-align:center;">0</td>
-                    <td>{{ \Carbon\Carbon::parse($payroll->created_at)->format('m/d/Y') }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    @else
-    <div style="padding: 0;">
-        <table class="bank-table">
-            <thead>
-                <tr>
-                    <th>Ref. No.</th>
-                    <th>Bank/Digital Wallet</th>
-                    <th>Account Name</th>
-                    <th>Account Number</th>
-                    <th>Amount</th>
-                    <th>Transfer Fee</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    @endif
+        <!-- ── BANK TRANSFER TABLE ── -->
+        @if ($payroll->mode_of_payment !== 'cash')
+            <div style="padding: 0 0 0 0;">
+                <table class="bank-table">
+                    <thead>
+                        <tr>
+                            <th>Ref. No.</th>
+                            <th>Bank/Digital Wallet</th>
+                            <th>Account Name</th>
+                            <th>Account Number</th>
+                            <th>Amount</th>
+                            <th>Transfer Fee</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>{{ $payroll->rider_name }}</td>
+                            <td>&nbsp;</td>
+                            <td style="text-align:right;">&#8369;{{ number_format($computedTotal, 2) }}</td>
+                            <td style="text-align:center;">0</td>
+                            <td>{{ \Carbon\Carbon::parse($payroll->created_at)->format('m/d/Y') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div style="padding: 0;">
+                <table class="bank-table">
+                    <thead>
+                        <tr>
+                            <th>Ref. No.</th>
+                            <th>Bank/Digital Wallet</th>
+                            <th>Account Name</th>
+                            <th>Account Number</th>
+                            <th>Amount</th>
+                            <th>Transfer Fee</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        @endif
 
-    <!-- ── SIGNATURES ── -->
-    <div class="slip-signatures">
-        <div class="sig-block">
-            <div class="sig-label">Prepared By:</div>
-            <div class="sig-name">&nbsp;</div>
-            <div class="sig-title">WIB Finance Officer</div>
+        <!-- ── SIGNATURES ── -->
+        <div class="slip-signatures">
+            <div class="sig-block">
+                <div class="sig-label">Prepared By:</div>
+                <div class="sig-name">{{ $generatedBy->name ?? 'WIB Finance Officer' }}</div>
+                <div class="sig-title">WIB Finance Officer</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-label">Released By:</div>
+                <div class="sig-name">{{ $generatedBy->name ?? 'WIB Finance Officer' }}</div>
+                <div class="sig-title">WIB Finance Officer</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-label">Received By:</div>
+                <div class="sig-name">{{ $payroll->rider_name }}</div>
+                <div class="sig-title">Freelance Delivery Rider</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-label">Approved By:</div>
+                <div class="sig-name">Joyce Ann R. Gonzales</div>
+                <div class="sig-title">WIB Finance Manager</div>
+            </div>
         </div>
-        <div class="sig-block">
-            <div class="sig-label">Released By:</div>
-            <div class="sig-name">&nbsp;</div>
-            <div class="sig-title">WIB Finance Officer</div>
-        </div>
-        <div class="sig-block">
-            <div class="sig-label">Received By:</div>
-            <div class="sig-name">{{ $payroll->rider_name }}</div>
-            <div class="sig-title">Freelance Delivery Rider</div>
-        </div>
-        <div class="sig-block">
-            <div class="sig-label">Approved By:</div>
-            <div class="sig-name">&nbsp;</div>
-            <div class="sig-title">WIB Finance Manager</div>
-        </div>
-    </div>
 
-</div><!-- end .slip-wrapper -->
+    </div><!-- end .slip-wrapper -->
 
-<script>
-    // Auto-print when the page loads
-    window.addEventListener('load', function () {
-        // Small delay so styles fully render
-        setTimeout(function () {
-            window.print();
-        }, 600);
-    });
-</script>
+    <script>
+        // Auto-print when the page loads
+        window.addEventListener('load', function() {
+            // Small delay so styles fully render
+            setTimeout(function() {
+                window.print();
+            }, 600);
+        });
+    </script>
 
 </body>
+
 </html>

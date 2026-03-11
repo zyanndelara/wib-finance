@@ -7,6 +7,7 @@ use App\Models\Rider;
 use App\Models\RiderPayroll;
 use App\Models\RiderDeduction;
 use App\Models\Remittance;
+use App\Models\Merchant;
 use Illuminate\Http\Request;
 
 class RiderController extends Controller
@@ -24,7 +25,22 @@ class RiderController extends Controller
             ->orderBy('rider_name')->orderBy('date', 'desc')
             ->get();
         $remittances = Remittance::with('rider')->latest()->paginate(10);
-        
+        $riderRemittanceDateMap = Remittance::query()
+            ->select('rider_id', 'remittance_date')
+            ->whereNotNull('remittance_date')
+            ->get()
+            ->groupBy('rider_id')
+            ->map(function ($items) {
+                return $items->pluck('remittance_date')
+                    ->map(function ($date) {
+                        return \Carbon\Carbon::parse($date)->toDateString();
+                    })
+                    ->unique()
+                    ->values()
+                    ->all();
+            })
+            ->toArray();
+
         // Calculate counts and collections — scoped to selected date (default: today)
         $statsDate = $request->get('stats_date', today()->toDateString());
         $statsDateParsed = \Carbon\Carbon::parse($statsDate)->toDateString();
@@ -87,44 +103,47 @@ class RiderController extends Controller
         $digitalCollection = Remittance::whereDate('remittance_date', $statsDateParsed)
             ->whereIn('mode_of_payment', ['bank', 'gcash'])
             ->sum('total_collection');
-        
+
         // Handle AJAX requests for pagination
         if ($request->ajax()) {
             $type = $request->get('type', 'remittances');
-            
+
             // Handle Payroll Pagination
             if ($type === 'payroll') {
                 $tableRows = '';
                 foreach ($payrolls as $payroll) {
                     $paymentBadgeStyle = $payroll->mode_of_payment === 'cash' ? 'background: #d4edda; color: #155724;' : 'background: #d1ecf1; color: #0c5460;';
-                    
+
                     $tableRows .= '<tr class="payroll-row">';
                     $tableRows .= '<td><strong>' . htmlspecialchars($payroll->rider_id) . '</strong></td>';
                     $tableRows .= '<td>' . htmlspecialchars($payroll->rider_name) . '</td>';
                     $tableRows .= '<td>₱' . number_format($payroll->base_salary, 2) . '</td>';
                     $tableRows .= '<td>₱' . number_format($payroll->incentives ?? 0, 2) . '</td>';
+                    $tableRows .= '<td>₱' . number_format($payroll->renumeration_26_days ?? 0, 2) . '</td>';
+                    $tableRows .= '<td>₱' . number_format($payroll->adda_df ?? 0, 2) . '</td>';
+                    $tableRows .= '<td>' . ($payroll->adda_df_date ? \Carbon\Carbon::parse($payroll->adda_df_date)->format('M d, Y') : 'N/A') . '</td>';
                     $tableRows .= '<td><strong style="color: #436026;">₱' . number_format($payroll->net_salary, 2) . '</strong></td>';
                     $tableRows .= '<td>' . htmlspecialchars($payroll->salary_schedule) . '</td>';
                     $tableRows .= '<td><span style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; ' . $paymentBadgeStyle . '">' . strtoupper($payroll->mode_of_payment) . '</span></td>';
                     $tableRows .= '<td>' . $payroll->created_at->format('M d, Y') . '</td>';
                     $tableRows .= '</tr>';
                 }
-                
+
                 $paginationHtml = $this->generatePaginationHtml($payrolls, 'payroll');
-                
+
                 return response()->json([
                     'success' => true,
                     'tableRows' => $tableRows,
                     'pagination' => $paginationHtml
                 ]);
             }
-            
+
             // Handle Deductions Pagination
             if ($type === 'deductions') {
                 $tableRows = '';
                 foreach ($deductions as $deduction) {
                     $remarks = $deduction->remarks ?? 'N/A';
-                    
+
                     $tableRows .= '<tr class="deduction-row">';
                     $tableRows .= '<td><strong>' . htmlspecialchars($deduction->rider_id) . '</strong></td>';
                     $tableRows .= '<td>' . htmlspecialchars($deduction->rider_name) . '</td>';
@@ -134,16 +153,16 @@ class RiderController extends Controller
                     $tableRows .= '<td>' . $deduction->created_at->format('M d, Y h:i A') . '</td>';
                     $tableRows .= '</tr>';
                 }
-                
+
                 $paginationHtml = $this->generatePaginationHtml($deductions, 'deductions');
-                
+
                 return response()->json([
                     'success' => true,
                     'tableRows' => $tableRows,
                     'pagination' => $paginationHtml
                 ]);
             }
-            
+
             // Handle Remittances Pagination (default)
             $tableRows = '';
             foreach ($remittances as $remittance) {
@@ -152,7 +171,7 @@ class RiderController extends Controller
                 $statusClass = $remittance->status === 'confirmed' ? 'cleared' : $remittance->status;
                 $statusText = $remittance->status === 'confirmed' ? 'Cleared' : ucfirst($remittance->status);
                 $remarks = $remittance->remarks ? '<span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="' . htmlspecialchars($remittance->remarks) . '">' . htmlspecialchars($remittance->remarks) . '</span>' : '<span style="color: #999; font-style: italic;">No remarks</span>';
-                
+
                 $tableRows .= '<tr>';
                 $tableRows .= '<td><strong>' . htmlspecialchars($riderName) . '</strong></td>';
                 $tableRows .= '<td style="text-align: center; font-weight: 600; color: #436026;">' . $remittance->total_deliveries . '</td>';
@@ -166,17 +185,19 @@ class RiderController extends Controller
                 $tableRows .= '<td style="max-width: 250px;">' . $remarks . '</td>';
                 $tableRows .= '</tr>';
             }
-            
+
             $paginationHtml = $this->generatePaginationHtml($remittances, 'remittances');
-            
+
             return response()->json([
                 'success' => true,
                 'tableRows' => $tableRows,
                 'pagination' => $paginationHtml
             ]);
         }
-        
-        return view('remittance', compact('riders', 'payrolls', 'deductions', 'deductionsByRider', 'allDeductionsFlat', 'remittances', 'nonRemittingRiderCount', 'clearedCount', 'cashCollection', 'digitalCollection', 'statsDate', 'statsDateParsed', 'blockedRiderIds', 'clearedRiderIds'));
+
+        $merchants = Merchant::where('status', 'active')->orderBy('name')->get(['id', 'name']);
+
+        return view('remittance', compact('riders', 'payrolls', 'deductions', 'deductionsByRider', 'allDeductionsFlat', 'remittances', 'nonRemittingRiderCount', 'clearedCount', 'cashCollection', 'digitalCollection', 'statsDate', 'statsDateParsed', 'blockedRiderIds', 'clearedRiderIds', 'riderRemittanceDateMap', 'merchants'));
     }
 
     public function store(Request $request)
@@ -253,7 +274,7 @@ class RiderController extends Controller
     {
         $paginationHtml = '<div style="color: #666; font-size: 14px;">Showing ' . $paginator->firstItem() . ' to ' . $paginator->lastItem() . ' of ' . $paginator->total() . ' entries</div>';
         $paginationHtml .= '<div style="display: flex; gap: 5px;">';
-        
+
         // Previous button
         if ($paginator->onFirstPage()) {
             $paginationHtml .= '<button disabled style="padding: 8px 12px; background: #e0e0e0; color: #999; border: none; border-radius: 6px; cursor: not-allowed; font-size: 13px; font-weight: 600;"><i class="fas fa-chevron-left"></i> Previous</button>';
@@ -261,7 +282,7 @@ class RiderController extends Controller
             $url = $paginator->previousPageUrl() . '&type=' . $type;
             $paginationHtml .= '<a href="' . $url . '" class="pagination-link-' . $type . '" data-page="' . ($paginator->currentPage() - 1) . '" style="padding: 8px 12px; background: linear-gradient(135deg, #436026 0%, #5a7d33 100%); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\'; this.style.boxShadow=\'0 4px 8px rgba(67, 96, 38, 0.3)\'" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\'"><i class="fas fa-chevron-left"></i> Previous</a>';
         }
-        
+
         // Page numbers
         foreach ($paginator->getUrlRange(1, $paginator->lastPage()) as $page => $url) {
             $url = $url . '&type=' . $type;
@@ -271,7 +292,7 @@ class RiderController extends Controller
                 $paginationHtml .= '<a href="' . $url . '" class="pagination-link-' . $type . '" data-page="' . $page . '" style="padding: 8px 14px; background: #f8f9fa; color: #436026; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; min-width: 40px; text-align: center; transition: all 0.2s;" onmouseover="this.style.background=\'#e9ecef\'; this.style.borderColor=\'#436026\'" onmouseout="this.style.background=\'#f8f9fa\'; this.style.borderColor=\'#dee2e6\'">' . $page . '</a>';
             }
         }
-        
+
         // Next button
         if ($paginator->hasMorePages()) {
             $url = $paginator->nextPageUrl() . '&type=' . $type;
@@ -279,9 +300,9 @@ class RiderController extends Controller
         } else {
             $paginationHtml .= '<button disabled style="padding: 8px 12px; background: #e0e0e0; color: #999; border: none; border-radius: 6px; cursor: not-allowed; font-size: 13px; font-weight: 600;">Next <i class="fas fa-chevron-right"></i></button>';
         }
-        
+
         $paginationHtml .= '</div>';
-        
+
         return $paginationHtml;
     }
 }

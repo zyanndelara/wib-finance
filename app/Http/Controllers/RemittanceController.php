@@ -34,9 +34,13 @@ class RemittanceController extends Controller
             throw $e;
         }
 
+        // Mangan deliveries add on top of main deliveries
+        $manganDeliveries = (int) ($request->mangan_total_deliveries ?? 0);
+        $combinedDeliveries = (int) $request->total_deliveries + $manganDeliveries;
+
         $remittanceData = [
             'rider_id' => $request->rider_id,
-            'total_deliveries' => $request->total_deliveries,
+            'total_deliveries' => $combinedDeliveries,
             'total_delivery_fee' => $request->total_delivery_fee,
             'total_remit' => $request->total_remit,
             'total_tips' => $request->total_tips ?? 0,
@@ -47,6 +51,14 @@ class RemittanceController extends Controller
             'remittance_date' => $request->filled('remittance_date')
                 ? \Carbon\Carbon::parse($request->remittance_date)->toDateString()
                 : today()->toDateString(),
+            // Mangan App fields
+            'mangan_merchant_name'         => $request->mangan_merchant_name ?: null,
+            'mangan_total_deliveries'      => $manganDeliveries ?: 0,
+            'mangan_total_amount'          => $request->mangan_total_amount ?? 0,
+            'mangan_df'                    => $request->mangan_df ?? 0,
+            'mangan_gt'                    => $request->mangan_gt ?? 0,
+            'mangan_tips'                  => $request->mangan_tips ?? 0,
+            'mangan_receipt_non_partners'  => $request->mangan_receipt_non_partners ?? 0,
         ];
 
         // Handle file upload

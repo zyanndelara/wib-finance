@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -44,6 +45,17 @@ class AuthController extends Controller {
      */
     public function login(Request $request)
     {
+        $emailInput = strtolower(trim((string) $request->input('email', '')));
+        $throttleKey = ($emailInput !== '' ? $emailInput : 'guest') . '|' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            return back()->withErrors([
+                'email' => "Too many login attempts. Please try again in {$seconds} seconds.",
+            ])->onlyInput('email');
+        }
+
         // Validate input with custom messages
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|max:255',
@@ -57,6 +69,8 @@ class AuthController extends Controller {
         ]);
 
         if ($validator->fails()) {
+            RateLimiter::hit($throttleKey, 60);
+
             return back()
                 ->withErrors($validator)
                 ->withInput($request->only('email'));
@@ -70,8 +84,10 @@ class AuthController extends Controller {
 
         // Check if user exists
         $user = User::where('email', $credentials['email'])->first();
-        
+
         if (!$user) {
+            RateLimiter::hit($throttleKey, 60);
+
             return back()->withErrors([
                 'email' => 'No account found with this email address.',
             ])->onlyInput('email');
@@ -81,6 +97,7 @@ class AuthController extends Controller {
         $remember = $request->has('remember');
 
         if (Auth::attempt($credentials, $remember)) {
+            RateLimiter::clear($throttleKey);
             $request->session()->regenerate();
 
             // If 2FA is enabled, hold the user in a pending session and redirect to challenge
@@ -119,6 +136,8 @@ class AuthController extends Controller {
                 }
             return redirect()->intended('/dashboard')->with('success', 'Welcome back, ' . Auth::user()->name . '!');
         }
+
+        RateLimiter::hit($throttleKey, 60);
 
         return back()->withErrors([
             'password' => 'Incorrect password. Please try again.',

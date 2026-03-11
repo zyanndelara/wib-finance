@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -88,10 +89,13 @@
         }
 
         @keyframes pulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: scale(1);
                 opacity: 1;
             }
+
             50% {
                 transform: scale(1.1);
                 opacity: 0.8;
@@ -130,12 +134,16 @@
         }
 
         @keyframes floatSlow {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: translateY(0px) translateX(0px);
             }
+
             33% {
                 transform: translateY(-20px) translateX(10px);
             }
+
             66% {
                 transform: translateY(10px) translateX(-10px);
             }
@@ -183,6 +191,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -190,9 +199,12 @@
         }
 
         @keyframes float {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: translateY(0px);
             }
+
             50% {
                 transform: translateY(-15px);
             }
@@ -224,6 +236,7 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -247,7 +260,7 @@
             position: relative;
             z-index: 1;
             border-radius: 50%;
-            
+
         }
 
         .login-header {
@@ -269,6 +282,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -287,6 +301,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -341,7 +356,7 @@
             color: #2d4019;
         }
 
-        .form-control:focus ~ .input-icon {
+        .form-control:focus~.input-icon {
             color: #436026;
             transform: scale(1.1);
         }
@@ -382,7 +397,7 @@
             transform: translateY(-1px);
         }
 
-        .form-control:focus + .input-icon {
+        .form-control:focus+.input-icon {
             color: #436026;
         }
 
@@ -515,12 +530,16 @@
         }
 
         @keyframes blink {
-            0%, 20% {
+
+            0%,
+            20% {
                 opacity: 0;
             }
+
             50% {
                 opacity: 1;
             }
+
             100% {
                 opacity: 0;
             }
@@ -583,7 +602,7 @@
             gap: 14px;
             background: #fff;
             border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(67,96,38,0.18), 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 32px rgba(67, 96, 38, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
             padding: 18px 22px;
             min-width: 320px;
             max-width: 380px;
@@ -662,8 +681,13 @@
         }
 
         @keyframes toastProgress {
-            from { width: 100%; }
-            to   { width: 0%; }
+            from {
+                width: 100%;
+            }
+
+            to {
+                width: 0%;
+            }
         }
 
         .error-message {
@@ -712,6 +736,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="split-container">
         <!-- Right Section - Branding -->
@@ -739,70 +764,56 @@
                         <p>Sign in to continue</p>
                     </div>
 
-                <!-- Login Form -->
-                <form action="{{ route('login') ?? '#' }}" method="POST">
-                    @csrf
+                    <!-- Login Form -->
+                    <form action="{{ route('login') ?? '#' }}" method="POST">
+                        @csrf
 
-                    <!-- Email Field -->
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <div class="input-wrapper">
-                            <input 
-                                type="email" 
-                                class="form-control" 
-                                id="email" 
-                                name="email" 
-                                placeholder="Enter your email address"
-                                value="{{ old('email') }}"
-                                required
-                            >
-                            <i class="fas fa-envelope input-icon"></i>
+                        <!-- Email Field -->
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <div class="input-wrapper">
+                                <input type="email" class="form-control" id="email" name="email"
+                                    placeholder="Enter your email address" value="{{ old('email') }}" required>
+                                <i class="fas fa-envelope input-icon"></i>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Password Field -->
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <div class="input-wrapper">
-                            <input 
-                                type="password" 
-                                class="form-control" 
-                                id="password" 
-                                name="password" 
-                                placeholder="Enter your password"
-                                required
-                                style="padding-right: 45px;"
-                            >
-                            <i class="fas fa-lock input-icon"></i>
-                            <i class="fas fa-eye toggle-password" id="togglePassword" title="Show password"></i>
+                        <!-- Password Field -->
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="input-wrapper">
+                                <input type="password" class="form-control" id="password" name="password"
+                                    placeholder="Enter your password" required style="padding-right: 45px;">
+                                <i class="fas fa-lock input-icon"></i>
+                                <i class="fas fa-eye toggle-password" id="togglePassword" title="Show password"></i>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Error Message -->
-                    @if ($errors->any())
-                        <div class="alert alert-danger compact" style="margin-top: -12px;">
-                            <i class="fas fa-exclamation-circle"></i> Incorrect email or password. Please try again.
-                        </div>
-                    @endif
+                        <!-- Error Message -->
+                        @if ($errors->any())
+                            <div class="alert alert-danger compact" style="margin-top: -12px;">
+                                <i class="fas fa-exclamation-circle"></i> Incorrect email or password. Please try again.
+                            </div>
+                        @endif
 
-                    <!-- Remember Me & Forgot Password -->
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="remember" name="remember">
-                            <label class="form-check-label" for="remember">
-                                Remember me
-                            </label>
+                        <!-- Remember Me & Forgot Password -->
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                                <label class="form-check-label" for="remember">
+                                    Remember me
+                                </label>
+                            </div>
+                            <div class="forgot-password">
+                                <a href="{{ route('password.request') ?? '#' }}">Forgot password?</a>
+                            </div>
                         </div>
-                        <div class="forgot-password">
-                            <a href="{{ route('password.request') ?? '#' }}">Forgot password?</a>
-                        </div>
-                    </div>
 
-                    <!-- Login Button -->
-                    <button type="submit" class="btn-login" id="loginBtn">
-                        <span class="btn-text">Sign In</span>
-                    </button>
-                </form>
+                        <!-- Login Button -->
+                        <button type="submit" class="btn-login" id="loginBtn">
+                            <span class="btn-text">Sign In</span>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -811,22 +822,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
     @if (session('password_reset_success'))
-    <!-- Toast Notification -->
-    <div class="toast-container">
-        <div class="toast-success" id="resetToast" style="position:relative; overflow:hidden;">
-            <div class="toast-icon">
-                <i class="fas fa-check"></i>
+        <!-- Toast Notification -->
+        <div class="toast-container">
+            <div class="toast-success" id="resetToast" style="position:relative; overflow:hidden;">
+                <div class="toast-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="toast-body">
+                    <div class="toast-title">Password Reset Successful</div>
+                    <div class="toast-message">Your password has been changed. You can now sign in with your new
+                        password.</div>
+                </div>
+                <button class="toast-close" onclick="dismissToast()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="toast-progress" id="toastProgress"></div>
             </div>
-            <div class="toast-body">
-                <div class="toast-title">Password Reset Successful</div>
-                <div class="toast-message">Your password has been changed. You can now sign in with your new password.</div>
-            </div>
-            <button class="toast-close" onclick="dismissToast()">
-                <i class="fas fa-times"></i>
-            </button>
-            <div class="toast-progress" id="toastProgress"></div>
         </div>
-    </div>
     @endif
 
     <script>
@@ -853,11 +865,11 @@
                 // Toggle the type attribute
                 const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 passwordInput.setAttribute('type', type);
-                
+
                 // Toggle the eye icon
                 this.classList.toggle('fa-eye');
                 this.classList.toggle('fa-eye-slash');
-                
+
                 // Update tooltip text
                 this.setAttribute('title', type === 'password' ? 'Show password' : 'Hide password');
             });
@@ -872,12 +884,14 @@
                 // Add loading state
                 loginBtn.classList.add('loading');
                 loginBtn.disabled = true;
-                
+
                 // Update button text with animated dots
                 const btnText = loginBtn.querySelector('.btn-text');
-                btnText.innerHTML = 'Signing In<span class="loading-dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>';
+                btnText.innerHTML =
+                    'Signing In<span class="loading-dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>';
             });
         }
     </script>
 </body>
+
 </html>

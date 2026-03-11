@@ -1,14 +1,19 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-    @if(auth()->user()->force_password_change && auth()->user()->role !== 'admin')
-    <div id="forceChangeModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;">
-        <div style="background:white;padding:32px 32px 24px 32px;border-radius:18px;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(67,96,38,0.18);display:flex;flex-direction:column;align-items:center;">
-            <h2 style="margin-bottom:8px;font-size:1.35rem;font-weight:700;color:#222;text-align:center;">Change Your Password</h2>
+@if (auth()->user()->force_password_change && auth()->user()->role !== 'admin')
+    <div id="forceChangeModal"
+        style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;">
+        <div
+            style="background:white;padding:32px 32px 24px 32px;border-radius:18px;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(67,96,38,0.18);display:flex;flex-direction:column;align-items:center;">
+            <h2 style="margin-bottom:8px;font-size:1.35rem;font-weight:700;color:#222;text-align:center;">Change Your
+                Password</h2>
             <hr style="width:100%;margin-bottom:16px;border:0;border-top:1px solid #e0e0e0;">
             <div style="margin-bottom:18px;text-align:center;color:#444;font-size:0.92rem;line-height:1.3;">
-                Protect your account with a strong, secure password.<br>Make sure it's hard to guess and easy for you to remember.
+                Protect your account with a strong, secure password.<br>Make sure it's hard to guess and easy for you to
+                remember.
             </div>
-            <form method="POST" action="{{ route('force.password.change') }}" style="width:100%;display:flex;flex-direction:column;gap:18px;">
+            <form method="POST" action="{{ route('force.password.change') }}"
+                style="width:100%;display:flex;flex-direction:column;gap:18px;">
                 @csrf
                 @if ($errors->has('new_password'))
                     <div style="color:#d32f2f;font-size:0.95rem;margin-bottom:8px;text-align:center;">
@@ -26,19 +31,24 @@
                     </div>
                 @endif
                 <div style="position:relative;width:100%;">
-                    <input type="password" name="new_password" id="new_password" required placeholder="Enter new password" style="width:100%;padding:14px 16px;border:0;background:#e0e0e0;border-radius:12px;font-size:1.08rem;color:#222;outline:none;">
+                    <input type="password" name="new_password" id="new_password" required
+                        placeholder="Enter new password"
+                        style="width:100%;padding:14px 16px;border:0;background:#e0e0e0;border-radius:12px;font-size:1.08rem;color:#222;outline:none;">
                     <!-- Eye icon removed -->
                 </div>
                 <div style="position:relative;width:100%;">
-                    <input type="password" name="new_password_confirmation" id="new_password_confirmation" required placeholder="Confirm Password" style="width:100%;padding:14px 16px;border:0;background:#e0e0e0;border-radius:12px;font-size:1.08rem;color:#222;outline:none;">
+                    <input type="password" name="new_password_confirmation" id="new_password_confirmation" required
+                        placeholder="Confirm Password"
+                        style="width:100%;padding:14px 16px;border:0;background:#e0e0e0;border-radius:12px;font-size:1.08rem;color:#222;outline:none;">
                     <!-- Eye icon removed -->
                 </div>
-                    @if ($errors->has('new_password') && $errors->first('new_password') === 'The new password confirmation does not match.')
-                        <div style="color:#d32f2f;font-size:0.95rem;margin-bottom:8px;text-align:center;">
-                            Passwords do not match.
-                        </div>
-                    @endif
-                    <button type="submit" style="background:#436026;color:white;padding:14px 0;font-size:1.15rem;font-weight:700;border:none;border-radius:8px;width:100%;margin-top:8px;box-shadow:0 2px 8px rgba(67,96,38,0.08);transition:background 0.2s;cursor:pointer;">Confirm</button>
+                @if ($errors->has('new_password') && $errors->first('new_password') === 'The new password confirmation does not match.')
+                    <div style="color:#d32f2f;font-size:0.95rem;margin-bottom:8px;text-align:center;">
+                        Passwords do not match.
+                    </div>
+                @endif
+                <button type="submit"
+                    style="background:#436026;color:white;padding:14px 0;font-size:1.15rem;font-weight:700;border:none;border-radius:8px;width:100%;margin-top:8px;box-shadow:0 2px 8px rgba(67,96,38,0.08);transition:background 0.2s;cursor:pointer;">Confirm</button>
             </form>
         </div>
         <!-- Eye icon toggle script removed -->
@@ -47,22 +57,28 @@
         // Prevent interaction with dashboard until password is changed
         document.body.style.overflow = 'hidden';
     </script>
-    @endif
-    @if(session('force_password_change_success'))
-        <div id="passwordSuccessModal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:2100;display:flex;align-items:center;justify-content:center;">
-            <div style="background:white;padding:32px 32px 24px 32px;border-radius:18px;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(67,96,38,0.18);display:flex;flex-direction:column;align-items:center;">
-                <h2 style="margin-bottom:8px;font-size:1.35rem;font-weight:700;color:#436026;text-align:center;">Password Changed Successfully</h2>
-                <hr style="width:100%;margin-bottom:16px;border:0;border-top:1px solid #e0e0e0;">
-                <div style="margin-bottom:18px;text-align:center;color:#444;font-size:1rem;line-height:1.3;">
-                    Your password has been updated. You can now continue using your account securely.
-                </div>
-                <button onclick="document.getElementById('passwordSuccessModal').style.display='none';document.body.style.overflow='auto';" style="background:#436026;color:white;padding:14px 0;font-size:1.15rem;font-weight:700;border:none;border-radius:8px;width:100%;margin-top:8px;box-shadow:0 2px 8px rgba(67,96,38,0.08);transition:background 0.2s;cursor:pointer;">OK</button>
+@endif
+@if (session('force_password_change_success'))
+    <div id="passwordSuccessModal"
+        style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:2100;display:flex;align-items:center;justify-content:center;">
+        <div
+            style="background:white;padding:32px 32px 24px 32px;border-radius:18px;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(67,96,38,0.18);display:flex;flex-direction:column;align-items:center;">
+            <h2 style="margin-bottom:8px;font-size:1.35rem;font-weight:700;color:#436026;text-align:center;">Password
+                Changed Successfully</h2>
+            <hr style="width:100%;margin-bottom:16px;border:0;border-top:1px solid #e0e0e0;">
+            <div style="margin-bottom:18px;text-align:center;color:#444;font-size:1rem;line-height:1.3;">
+                Your password has been updated. You can now continue using your account securely.
             </div>
+            <button
+                onclick="document.getElementById('passwordSuccessModal').style.display='none';document.body.style.overflow='auto';"
+                style="background:#436026;color:white;padding:14px 0;font-size:1.15rem;font-weight:700;border:none;border-radius:8px;width:100%;margin-top:8px;box-shadow:0 2px 8px rgba(67,96,38,0.08);transition:background 0.2s;cursor:pointer;">OK</button>
         </div>
-        <script>
-            document.body.style.overflow = 'hidden';
-        </script>
-    @endif
+    </div>
+    <script>
+        document.body.style.overflow = 'hidden';
+    </script>
+@endif
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -611,6 +627,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -722,6 +739,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Mobile Menu Toggle -->
     <button class="mobile-menu-toggle" onclick="toggleSidebar()">
@@ -873,8 +891,9 @@
             <h3>
                 <span>Orders by Month Trend</span>
                 <select class="chart-filter" id="ordersByMonthYear" onchange="updateOrdersByMonth(this.value)">
-                    @foreach($chartYears as $yr)
-                    <option value="{{ $yr }}" {{ $loop->first ? 'selected' : '' }}>{{ $yr }}</option>
+                    @foreach ($chartYears as $yr)
+                        <option value="{{ $yr }}" {{ $loop->first ? 'selected' : '' }}>{{ $yr }}
+                        </option>
                     @endforeach
                 </select>
             </h3>
@@ -1001,10 +1020,10 @@
             // Update chart data based on view (daily/weekly/monthly)
             // This is a placeholder - implement actual data fetching logic
             console.log('Funds and Outflows view changed to:', view);
-            
+
             // Example: Update chart labels based on period
             let labels;
-            switch(view) {
+            switch (view) {
                 case 'daily':
                     labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                     break;
@@ -1015,7 +1034,7 @@
                     labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                     break;
             }
-            
+
             // Update chart with new labels
             expenseBalanceChart.data.labels = labels;
             expenseBalanceChart.update();
@@ -1046,22 +1065,32 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false },
+                    legend: {
+                        display: false
+                    },
                     tooltip: {
                         callbacks: {
                             label: function(ctx) {
-                                return ctx.parsed.y === 0
-                                    ? ' No data'
-                                    : ' ₱' + ctx.parsed.y.toLocaleString('en-PH', {minimumFractionDigits: 2});
+                                return ctx.parsed.y === 0 ?
+                                    ' No data' :
+                                    ' ₱' + ctx.parsed.y.toLocaleString('en-PH', {
+                                        minimumFractionDigits: 2
+                                    });
                             }
                         }
                     }
                 },
                 scales: {
-                    x: { grid: { display: false } },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
                     y: {
                         beginAtZero: true,
-                        grid: { color: '#e5e5e5' },
+                        grid: {
+                            color: '#e5e5e5'
+                        },
                         ticks: {
                             callback: function(value) {
                                 return '₱' + value.toLocaleString('en-PH');
@@ -1082,10 +1111,10 @@
             // This is a placeholder - implement actual data fetching logic
             // You can update the chart data based on the selected period
             console.log('Sales trend period changed to:', period);
-            
+
             // Example: Update chart labels based on period
             let labels;
-            switch(period) {
+            switch (period) {
                 case 'daily':
                     labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                     break;
@@ -1099,7 +1128,7 @@
                     labels = ['2020', '2021', '2022', '2023', '2024', '2025', '2026'];
                     break;
             }
-            
+
             // Update chart with new labels
             salesTrendChart.data.labels = labels;
             salesTrendChart.update();
@@ -1118,7 +1147,7 @@
             const sidebar = document.getElementById('sidebar');
             const toggleBtn = document.querySelector('.mobile-menu-toggle');
             const overlay = document.getElementById('sidebarOverlay');
-            
+
             if (window.innerWidth <= 768) {
                 if (!sidebar.contains(event.target) && !toggleBtn.contains(event.target)) {
                     sidebar.classList.remove('active');
@@ -1147,4 +1176,5 @@
 
     @include('partials.floating-widgets')
 </body>
+
 </html>

@@ -21,6 +21,13 @@ class Remittance extends Model
         'status',
         'remarks',
         'remittance_date',
+        'mangan_merchant_name',
+        'mangan_total_deliveries',
+        'mangan_total_amount',
+        'mangan_df',
+        'mangan_gt',
+        'mangan_tips',
+        'mangan_receipt_non_partners',
     ];
 
     protected $casts = [

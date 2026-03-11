@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -1612,11 +1612,14 @@
     <!-- Main Content -->
     <div class="main-content">
         <h1 style="font-size: 22px; font-weight: 800; margin-bottom: 0; color: #111827; letter-spacing: -0.3px;">
-            Remittance Management</h1>
+            Remittance Managemen</h1>
         <div class="user-indicator" style="justify-content: flex-end; margin-bottom: 16px;">
             <div class="user-info">
                 <span class="user-name">{{ auth()->user()->name }}</span>
-                <span class="user-role">{{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}</span>
+                <span class="user-role">{{ auth()->user()->role }}</span>
+                <!-- <span class="user-email">{{ auth()->user()->email }}</span> -->
+                <span class="user-phone">{{ auth()->user()->phone }}</span>
+                <!-- <span class="user-role">{{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}</span> -->
             </div>
             <a href="{{ route('profile') }}" class="user-avatar">
                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
@@ -1804,7 +1807,6 @@
         <div class="remit-tabs" id="remitTabs">
             <button class="remit-tab-btn active" data-tab="overview">Remittance Overview</button>
             <button class="remit-tab-btn" data-tab="payroll">Rider's Payroll</button>
-            <button class="remit-tab-btn" data-tab="deductions">Deductions</button>
         </div>
 
 
@@ -2025,6 +2027,44 @@
                                         style="flex: 2; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                    <label style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">26 days
+                                        renumeration:</label>
+                                    <input type="number" name="renumeration_26_days" step="0.01"
+                                        style="flex: 2; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                    <label style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">ADDA
+                                        DF:</label>
+                                    <div style="flex: 2; display: flex; flex-direction: column; gap: 8px;">
+                                        <div id="addaDfRows" style="display:flex; flex-direction:column; gap:8px;">
+                                            <div class="adda-df-row" style="display:flex; gap:8px;">
+                                                <input type="number" class="adda-df-amount" step="0.01"
+                                                    placeholder="Amount"
+                                                    style="flex: 1; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
+                                                <input type="date" class="adda-df-date"
+                                                    style="flex: 1; min-width: 160px; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
+                                                <button type="button" class="adda-df-remove"
+                                                    onclick="removeAddaDfRow(this)"
+                                                    style="display:none; background:#dc3545; color:#fff; border:none; border-radius:8px; padding:7px 12px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;">
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div
+                                            style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                                            <small id="addaDfSummary" style="color:#6c757d; font-size:12px;">Total
+                                                ADDA DF: ₱0.00</small>
+                                            <button type="button" onclick="applyAddaDf()"
+                                                style="background:#436026; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">
+                                                <i class="fas fa-plus"></i> Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="adda_df" value="">
+                                <input type="hidden" name="adda_df_date" value="">
+                                <input type="hidden" name="adda_df_entries" value="[]">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                                     <label style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">Salary
                                         Schedule:</label>
                                     <select name="salary_schedule"
@@ -2055,509 +2095,716 @@
                                     style="flex: 2; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
                             </div>
                             <div style="display: flex; justify-content: flex-end;">
-                                <button type="submit" id="payrollSubmitBtn"
+                                <button type="button" id="payrollSubmitBtn" onclick="openPayrollDeductionsModal()"
                                     style="background: #436026; color: #fff; font-size: 15px; font-weight: 600; padding: 8px 22px; border: none; border-radius: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
                                     <i class="fas fa-briefcase"></i> Confirm Payroll
                                 </button>
                             </div>
                         </form>
+
+                        {{-- Payroll Deductions Modal --}}
+                        <div id="payrollDeductionsModal"
+                            style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;">
+                            <div
+                                style="background:#fff; border-radius:16px; padding:0; max-width:600px; width:96%; box-shadow:0 16px 60px rgba(0,0,0,0.25); overflow:hidden; max-height:92vh; display:flex; flex-direction:column;">
+
+                                {{-- Header --}}
+                                <div
+                                    style="background:linear-gradient(135deg,#2d5f0e 0%,#5a7d35 100%); color:#fff; padding:20px 26px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+                                    <div style="display:flex; align-items:center; gap:14px;">
+                                        <div
+                                            style="width:44px; height:44px; border-radius:12px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">
+                                            <i class="fas fa-receipt"></i>
+                                        </div>
+                                        <div>
+                                            <div style="font-size:17px; font-weight:800; letter-spacing:0.2px;">
+                                                Deductions</div>
+                                            <div
+                                                style="font-size:12px; opacity:0.8; margin-top:2px; display:flex; align-items:center; gap:5px;">
+                                                <i class="fas fa-user" style="font-size:10px;"></i>
+                                                <span id="payrollDeductionRiderName" style="font-weight:600;"></span>
+                                                <span style="opacity:0.6; margin:0 4px;">·</span>
+                                                <span style="opacity:0.75;">Optional — leave empty to skip</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="closePayrollDeductionsModal()"
+                                        style="background:rgba(255,255,255,0.18); border:none; color:#fff; width:34px; height:34px; border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; transition:background 0.2s;"
+                                        onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+                                        onmouseout="this.style.background='rgba(255,255,255,0.18)'">&times;</button>
+                                </div>
+
+                                {{-- Column Headers --}}
+                                <div
+                                    style="display:grid; grid-template-columns:1fr 140px 36px; gap:8px; padding:10px 22px 6px; background:#f5f9f2; border-bottom:1px solid #e2ead9; flex-shrink:0;">
+                                    <div
+                                        style="font-size:11px; font-weight:700; color:#436026; text-transform:uppercase; letter-spacing:0.5px;">
+                                        Description / Remarks</div>
+                                    <div
+                                        style="font-size:11px; font-weight:700; color:#436026; text-transform:uppercase; letter-spacing:0.5px;">
+                                        Amount (₱)</div>
+                                    <div></div>
+                                </div>
+
+                                {{-- Rows --}}
+                                <div style="padding:14px 22px; overflow-y:auto; flex:1;">
+                                    <div id="payrollDeductionRows"
+                                        style="display:flex; flex-direction:column; gap:8px;">
+                                        <div class="payroll-deduction-row"
+                                            style="display:grid; grid-template-columns:1fr 140px 36px; gap:8px; align-items:center;">
+                                            <input type="text" class="pd-remarks"
+                                                placeholder="e.g. Cash shortage, Equipment damage..."
+                                                style="width:100%; font-size:13px; padding:9px 12px; border-radius:8px; border:1.5px solid #d1d5db; background:#fff; box-sizing:border-box; transition:border-color 0.2s;"
+                                                onfocus="this.style.borderColor='#436026'"
+                                                onblur="this.style.borderColor='#d1d5db'">
+                                            <input type="number" class="pd-amount" step="0.01" min="0.01"
+                                                placeholder="0.00"
+                                                style="width:100%; font-size:13px; padding:9px 12px; border-radius:8px; border:1.5px solid #d1d5db; background:#fff; box-sizing:border-box; transition:border-color 0.2s;"
+                                                onfocus="this.style.borderColor='#436026'"
+                                                onblur="this.style.borderColor='#d1d5db'"
+                                                oninput="updatePayrollDeductionTotal()">
+                                            <button type="button" class="pd-remove-btn"
+                                                onclick="removePayrollDeductionRow(this)"
+                                                style="display:none; width:36px; height:36px; background:#fee2e2; color:#dc3545; border:1.5px solid #fca5a5; border-radius:8px; font-size:14px; cursor:pointer; display:flex !important; align-items:center; justify-content:center; visibility:hidden;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <button type="button" onclick="addPayrollDeductionRow()"
+                                        style="margin-top:12px; background:#f0f7eb; color:#436026; border:1.5px dashed #aacb87; border-radius:8px; padding:9px 18px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:7px; width:100%; justify-content:center; transition:background 0.2s;"
+                                        onmouseover="this.style.background='#e3f0d8'"
+                                        onmouseout="this.style.background='#f0f7eb'">
+                                        <i class="fas fa-plus-circle"></i> Add Another Row
+                                    </button>
+                                </div>
+
+                                {{-- Footer --}}
+                                <div
+                                    style="padding:14px 22px; background:#f9fafb; border-top:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <span style="font-size:12px; color:#6c757d; font-weight:500;">Total
+                                            Deductions:</span>
+                                        <span id="payrollDeductionTotal"
+                                            style="font-size:15px; font-weight:800; color:#dc3545;">₱0.00</span>
+                                    </div>
+                                    <div style="display:flex; gap:10px;">
+                                        <button type="button" onclick="closePayrollDeductionsModal()"
+                                            style="padding:10px 22px; border:1.5px solid #d1d5db; border-radius:8px; background:#fff; color:#6c757d; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;"
+                                            onmouseover="this.style.borderColor='#9ca3af';this.style.color='#374151'"
+                                            onmouseout="this.style.borderColor='#d1d5db';this.style.color='#6c757d'">
+                                            Cancel
+                                        </button>
+                                        <button type="button" id="payrollDeductionConfirmBtn"
+                                            onclick="submitPayrollWithDeductions()"
+                                            style="padding:10px 24px; border:none; border-radius:8px; background:linear-gradient(135deg,#436026,#5a7d35); color:#fff; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 2px 8px rgba(67,96,38,0.3); transition:opacity 0.2s;"
+                                            onmouseover="this.style.opacity='0.9'"
+                                            onmouseout="this.style.opacity='1'">
+                                            <i class="fas fa-check"></i> Submit
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="remit-tab-content" id="tabDeductions" style="display:none;">
-                    <script>
-                        // Toast Notification Function
-                        function showToast(message, type = 'success', duration = 3000) {
-                            const container = document.getElementById('toastContainer');
-                            const toast = document.createElement('div');
-                            toast.className = 'custom-toast';
-                            let iconHtml = '<i class="fas fa-check-circle toast-icon"></i>';
-                            let borderColor = '#28a745';
-                            let progressColor = '#28a745';
-                            if (type === 'error') {
-                                iconHtml = '<i class="fas fa-exclamation-circle toast-icon" style="color:#dc3545"></i>';
-                                borderColor = '#dc3545';
-                                progressColor = '#dc3545';
-                            } else if (type === 'warning') {
-                                iconHtml = '<i class="fas fa-exclamation-triangle toast-icon" style="color:#ffc107"></i>';
-                                borderColor = '#ffc107';
-                                progressColor = '#ffc107';
-                            } else if (type === 'info') {
-                                iconHtml = '<i class="fas fa-info-circle toast-icon" style="color:#17a2b8"></i>';
-                                borderColor = '#17a2b8';
-                                progressColor = '#17a2b8';
-                            }
-                            toast.style.borderLeftColor = borderColor;
-                            toast.innerHTML = `
+                <script>
+                    const riderRemittanceDateMap = @json($riderRemittanceDateMap ?? []);
+
+                    // Toast Notification Function
+                    function showToast(message, type = 'success', duration = 3000) {
+                        const container = document.getElementById('toastContainer');
+                        const toast = document.createElement('div');
+                        toast.className = 'custom-toast';
+                        let iconHtml = '<i class="fas fa-check-circle toast-icon"></i>';
+                        let borderColor = '#28a745';
+                        let progressColor = '#28a745';
+                        if (type === 'error') {
+                            iconHtml = '<i class="fas fa-exclamation-circle toast-icon" style="color:#dc3545"></i>';
+                            borderColor = '#dc3545';
+                            progressColor = '#dc3545';
+                        } else if (type === 'warning') {
+                            iconHtml = '<i class="fas fa-exclamation-triangle toast-icon" style="color:#ffc107"></i>';
+                            borderColor = '#ffc107';
+                            progressColor = '#ffc107';
+                        } else if (type === 'info') {
+                            iconHtml = '<i class="fas fa-info-circle toast-icon" style="color:#17a2b8"></i>';
+                            borderColor = '#17a2b8';
+                            progressColor = '#17a2b8';
+                        }
+                        toast.style.borderLeftColor = borderColor;
+                        toast.innerHTML = `
                                 ${iconHtml}
                                 <div class="toast-message">${message}</div>
                                 <button class="toast-close" aria-label="Close">&times;</button>
                                 <div class="toast-progress" style="background:${progressColor}"></div>
                             `;
-                            // Close button handler
-                            toast.querySelector('.toast-close').onclick = function() {
-                                toast.style.opacity = '0';
-                                setTimeout(() => toast.remove(), 300);
-                            };
-                            // Auto-dismiss
-                            setTimeout(() => {
-                                toast.style.opacity = '0';
-                                setTimeout(() => toast.remove(), 300);
-                            }, duration);
-                            container.appendChild(toast);
-                        }
-                        document.getElementById('payrollForm').addEventListener('submit', async function(e) {
-                            e.preventDefault();
-                            const btn = document.getElementById('payrollSubmitBtn');
-                            const form = e.target;
+                        // Close button handler
+                        toast.querySelector('.toast-close').onclick = function() {
+                            toast.style.opacity = '0';
+                            setTimeout(() => toast.remove(), 300);
+                        };
+                        // Auto-dismiss
+                        setTimeout(() => {
+                            toast.style.opacity = '0';
+                            setTimeout(() => toast.remove(), 300);
+                        }, duration);
+                        container.appendChild(toast);
+                    }
 
-                            // Validate form fields before submitting
-                            const riderId = form.querySelector('[name="rider_id"]').value.trim();
-                            const riderName = form.querySelector('[name="rider_name"]').value.trim();
-                            const baseSalary = form.querySelector('[name="base_salary"]').value;
-                            const salarySchedule = form.querySelector('[name="salary_schedule"]').value;
-                            const modeOfPayment = form.querySelector('[name="mode_of_payment"]').value;
-                            const netSalary = form.querySelector('[name="net_salary"]').value;
+                    function addAddaDfRow() {
+                        const rows = document.getElementById('addaDfRows');
+                        if (!rows) return;
 
-                            // Check for empty required fields
-                            if (!riderId) {
-                                showToast('Please select a rider from the Rider Queue first', 'warning');
-                                return;
-                            }
-                            if (!riderName) {
-                                showToast('Please select a rider from the Rider Queue first', 'warning');
-                                return;
-                            }
-                            if (!baseSalary) {
-                                showToast('Please enter Base Salary', 'warning');
-                                return;
-                            }
-                            if (!salarySchedule) {
-                                showToast('Please select Salary Schedule', 'warning');
-                                return;
-                            }
-                            if (!modeOfPayment) {
-                                showToast('Please select Mode of Payment', 'warning');
-                                return;
-                            }
-                            if (!netSalary) {
-                                showToast('Please enter Net Salary', 'warning');
-                                return;
-                            }
-
-                            btn.disabled = true;
-                            btn.style.opacity = 0.7;
-                            const data = new FormData(form);
-                            const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-                            try {
-                                const res = await fetch('/rider-payroll', {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRF-TOKEN': csrf
-                                    },
-                                    body: data
-                                });
-
-                                console.log('Response status:', res.status);
-                                console.log('Response ok:', res.ok);
-
-                                if (res.ok) {
-                                    const responseData = await res.json();
-                                    form.reset();
-                                    showToast('Payroll saved! Opening payslip...', 'success');
-
-                                    // Compute the date range for this payroll schedule
-                                    const [fromDate, toDate] = getPayrollDateRange(salarySchedule);
-                                    const payrollId = responseData.payroll && responseData.payroll.id ? responseData.payroll
-                                        .id : '';
-
-                                    // Open the payslip in a new tab
-                                    if (payrollId) {
-                                        let payslipUrl = '/rider-payroll/' + payrollId + '/payslip';
-                                        if (fromDate && toDate) {
-                                            payslipUrl += '?from_date=' + fromDate + '&to_date=' + toDate;
-                                        }
-                                        setTimeout(() => {
-                                            window.open(payslipUrl, '_blank');
-                                            window.location.reload();
-                                        }, 500);
-                                    } else {
-                                        setTimeout(() => {
-                                            window.location.reload();
-                                        }, 1500);
-                                    }
-                                } else {
-                                    let errorMsg = 'Failed to save payroll.';
-                                    const responseText = await res.text();
-                                    console.log('Error response:', responseText);
-
-                                    try {
-                                        const errorData = JSON.parse(responseText);
-                                        console.log('Parsed error data:', errorData);
-
-                                        if (errorData && errorData.message) {
-                                            errorMsg = errorData.message;
-                                        } else if (errorData && errorData.errors) {
-                                            // Format validation errors nicely
-                                            const errors = errorData.errors;
-                                            errorMsg = Object.keys(errors).map(field => {
-                                                return field + ': ' + errors[field].join(', ');
-                                            }).join(' | ');
-                                        }
-                                    } catch (jsonErr) {
-                                        console.error('Error parsing response:', jsonErr);
-                                        errorMsg = 'Server error: ' + responseText.substring(0, 100);
-                                    }
-                                    showToast(errorMsg, 'error');
-                                }
-                            } catch (err) {
-                                console.error('Network error:', err);
-                                showToast('Network error: ' + err.message, 'error');
-                            }
-
-                            btn.disabled = false;
-                            btn.style.opacity = 1;
-                        });
-
-                        /**
-                         * Returns [fromDate, toDate] (YYYY-MM-DD strings) for a given salary schedule,
-                         * relative to today.  Used to filter the remittances shown on the payslip.
-                         */
-                        function getPayrollDateRange(schedule) {
-                            const now = new Date();
-                            const pad = n => String(n).padStart(2, '0');
-                            const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-
-                            // Day-of-week: 0=Sun,1=Mon,...,6=Sat
-                            const dow = now.getDay();
-
-                            if (schedule === 'Mon-Thur/Friday payout') {
-                                // Monday → Thursday of the current week
-                                const monday = new Date(now);
-                                monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
-                                const thursday = new Date(monday);
-                                thursday.setDate(monday.getDate() + 3);
-                                return [fmt(monday), fmt(thursday)];
-                            }
-
-                            if (schedule === 'Fri-Sun/Monday payout') {
-                                // Friday → Sunday (look back to the most recent Friday)
-                                const friday = new Date(now);
-                                const daysToFriday = (dow + 2) % 7; // days since last Friday
-                                friday.setDate(now.getDate() - daysToFriday);
-                                const sunday = new Date(friday);
-                                sunday.setDate(friday.getDate() + 2);
-                                return [fmt(friday), fmt(sunday)];
-                            }
-
-                            if (schedule === 'Mon-Sun/Monday payout') {
-                                // Monday → Sunday of the previous (just finished) week
-                                const thisMonday = new Date(now);
-                                thisMonday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
-                                const prevMonday = new Date(thisMonday);
-                                prevMonday.setDate(thisMonday.getDate() - 7);
-                                const prevSunday = new Date(thisMonday);
-                                prevSunday.setDate(thisMonday.getDate() - 1);
-                                return [fmt(prevMonday), fmt(prevSunday)];
-                            }
-
-                            // "Cut off payout" — 1st–15th or 16th–end of current month
-                            const day = now.getDate();
-                            if (day <= 15) {
-                                const start = new Date(now.getFullYear(), now.getMonth(), 1);
-                                const end = new Date(now.getFullYear(), now.getMonth(), 15);
-                                return [fmt(start), fmt(end)];
-                            } else {
-                                const start = new Date(now.getFullYear(), now.getMonth(), 16);
-                                const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                                return [fmt(start), fmt(end)];
-                            }
-                        }
-                    </script>
-                    <div class="details-header">Deductions</div>
-
-                    {{-- Rider info card --}}
-                    <div
-                        style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #f5f9f2 0%, #edf5e8 100%); border: 1px solid #d6eacc; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="width: 36px; height: 36px; border-radius: 50%; background: #436026; color: #fff; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center;"
-                                id="deductionRiderAvatar">?</div>
-                            <div>
-                                <div
-                                    style="font-size: 11px; color: #6c757d; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px;">
-                                    Selected Rider</div>
-                                <div style="font-size: 14px; font-weight: 700; color: #1a1a1a;"
-                                    id="deductionRiderNameDisplay">No rider selected</div>
-                            </div>
-                        </div>
-                        <button type="button" id="addDeductionBtn" onclick="toggleDeductionForm()"
-                            style="background: #436026; color: #fff; font-size: 12px; font-weight: 600; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.12);"
-                            onmouseover="this.style.background='#5a7d35'"
-                            onmouseout="this.style.background='#436026'">
-                            <i class="fas fa-plus"></i> Add Deduction
-                        </button>
-                    </div>
-
-                    {{-- Two-column layout: form + staged list --}}
-                    <div style="display: flex; gap: 14px; align-items: flex-start;">
-
-                        {{-- Add deduction input form (collapsible) --}}
-                        <div id="deductionFormPanel"
-                            style="display: none; flex: 1; min-width: 0; background: #fff; border: 1px solid #d6eacc; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(67,96,38,0.07);">
-                            <div
-                                style="font-size: 13px; font-weight: 700; color: #436026; margin-bottom: 14px; display: flex; align-items: center; gap: 7px;">
-                                <i class="fas fa-minus-circle"></i> New Deduction Entry
-                            </div>
-                            <form id="deductionsForm" onsubmit="addDeductionToList(event)">
-                                <input type="hidden" name="rider_id">
-                                <input type="hidden" name="rider_name">
-                                <div style="display: flex; flex-direction: column; gap: 12px;">
-                                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                                        <label style="font-size: 13px; font-weight: 600; color: #1a1a1a;">Deduction
-                                            <span style="color:#dc3545;">*</span></label>
-                                        <input type="text" id="deductionRemarks" name="remarks"
-                                            placeholder="e.g. Cash shortage, Equipment damage..."
-                                            style="width: 100%; font-size: 13px; padding: 8px 10px; border-radius: 5px; border: 1px solid #d1d5db; background: #fff; transition: border-color 0.2s; box-sizing: border-box;"
-                                            onfocus="this.style.borderColor='#436026'"
-                                            onblur="this.style.borderColor='#d1d5db'">
-                                    </div>
-                                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                                        <label style="font-size: 13px; font-weight: 600; color: #1a1a1a;">Amount <span
-                                                style="color:#dc3545;">*</span></label>
-                                        <input type="number" id="deductionAmount" name="amount" step="0.01"
-                                            min="0.01" placeholder="0.00"
-                                            style="width: 100%; font-size: 13px; padding: 8px 10px; border-radius: 5px; border: 1px solid #d1d5db; background: #fff; transition: border-color 0.2s; box-sizing: border-box;"
-                                            onfocus="this.style.borderColor='#436026'"
-                                            onblur="this.style.borderColor='#d1d5db'">
-                                    </div>
-                                </div>
-                                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-                                    <button type="button" onclick="toggleDeductionForm()"
-                                        style="background: #fff; color: #6c757d; font-size: 13px; font-weight: 600; padding: 8px 18px; border: 1px solid #d1d5db; border-radius: 5px; cursor: pointer;"
-                                        onmouseover="this.style.borderColor='#adb5bd'"
-                                        onmouseout="this.style.borderColor='#d1d5db'">
-                                        Cancel
-                                    </button>
-                                    <button type="submit"
-                                        style="background: #436026; color: #fff; font-size: 13px; font-weight: 600; padding: 8px 22px; border: none; border-radius: 5px; display: flex; align-items: center; gap: 7px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
-                                        onmouseover="this.style.background='#5a7d35'"
-                                        onmouseout="this.style.background='#436026'">
-                                        <i class="fas fa-plus"></i> Add to List
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-
-                        {{-- Staged deductions list --}}
-                        <div id="pendingDeductionsList"
-                            style="display: none; flex: 1; min-width: 0; background: #fff; border: 1px solid #d6eacc; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(67,96,38,0.07);">
-                            <div
-                                style="background: linear-gradient(135deg, #436026 0%, #5a7d35 100%); color: #fff; padding: 10px 16px; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: space-between;">
-                                <span><i class="fas fa-list"></i> Deductions to Submit</span>
-                                <span id="pendingDeductionCount"
-                                    style="background: rgba(255,255,255,0.25); border-radius: 10px; padding: 2px 10px; font-size: 12px;">0
-                                    items</span>
-                            </div>
-                            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                                <thead>
-                                    <tr style="background: #f5f9f2; border-bottom: 1px solid #d6eacc;">
-                                        <th
-                                            style="padding: 8px 14px; text-align: left; font-weight: 600; color: #436026;">
-                                            #</th>
-                                        <th
-                                            style="padding: 8px 14px; text-align: left; font-weight: 600; color: #436026;">
-                                            Deduction</th>
-                                        <th
-                                            style="padding: 8px 14px; text-align: right; font-weight: 600; color: #436026;">
-                                            Amount</th>
-                                        <th
-                                            style="padding: 8px 14px; text-align: center; font-weight: 600; color: #436026;">
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pendingDeductionsTbody"></tbody>
-                                <tfoot>
-                                    <tr style="background: #f5f9f2; border-top: 2px solid #d6eacc;">
-                                        <td colspan="2"
-                                            style="padding: 10px 14px; font-weight: 700; color: #436026;">Total</td>
-                                        <td style="padding: 10px 14px; text-align: right; font-weight: 700; color: #dc3545;"
-                                            id="pendingDeductionsTotal">₱0.00</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <div style="padding: 12px 14px; display: flex; justify-content: flex-end;">
-                                <button type="button" onclick="showDeductionConfirmModal()"
-                                    style="background: #dc3545; color: #fff; font-size: 13px; font-weight: 600; padding: 9px 22px; border: none; border-radius: 6px; display: flex; align-items: center; gap: 7px; cursor: pointer; box-shadow: 0 2px 6px rgba(220,53,69,0.3);"
-                                    onmouseover="this.style.background='#c82333'"
-                                    onmouseout="this.style.background='#dc3545'">
-                                    <i class="fas fa-save"></i> Submit All Deductions
+                        const row = document.createElement('div');
+                        row.className = 'adda-df-row';
+                        row.style.display = 'flex';
+                        row.style.gap = '8px';
+                        row.innerHTML = `
+                                <input type="number" class="adda-df-amount" step="0.01" placeholder="Amount"
+                                    style="flex: 1; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
+                                <input type="date" class="adda-df-date"
+                                    style="flex: 1; min-width: 160px; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
+                                <button type="button" class="adda-df-remove" onclick="removeAddaDfRow(this)"
+                                    style="background:#dc3545; color:#fff; border:none; border-radius:8px; padding:7px 12px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;">
+                                    Remove
                                 </button>
-                            </div>
-                        </div>
+                            `;
+                        rows.appendChild(row);
+                        enforceAddaDfDateInputRules();
+                        updateAddaDfRemoveButtons();
+                    }
 
-                    </div>{{-- end two-column --}}
+                    function removeAddaDfRow(buttonEl) {
+                        const row = buttonEl ? buttonEl.closest('.adda-df-row') : null;
+                        if (!row) return;
 
-                    {{-- Confirmation modal --}}
-                    <div id="deductionConfirmModal"
-                        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999; align-items:center; justify-content:center;">
-                        <div
-                            style="background:#fff; border-radius:12px; padding:28px 28px 22px; max-width:400px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.18); text-align:center;">
-                            <div
-                                style="width:56px;height:56px;border-radius:50%;background:#fff3cd;color:#e0a800;font-size:26px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
-                                <i class="fas fa-exclamation-triangle"></i></div>
-                            <div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:8px;">Confirm Submit
-                            </div>
-                            <div style="font-size:13px;color:#6c757d;margin-bottom:6px;">You are about to save <strong
-                                    id="confirmDeductionCount">0</strong> deduction(s) for:</div>
-                            <div style="font-size:14px;font-weight:700;color:#436026;margin-bottom:6px;"
-                                id="confirmDeductionRider"></div>
-                            <div style="font-size:15px;font-weight:700;color:#dc3545;margin-bottom:20px;">Total: <span
-                                    id="confirmDeductionTotal"></span></div>
-                            <div style="display:flex;gap:10px;justify-content:center;">
-                                <button type="button" onclick="closeDeductionConfirmModal()"
-                                    style="padding:9px 22px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#6c757d;font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
-                                <button type="button" id="confirmDeductionBtn" onclick="submitAllDeductions()"
-                                    style="padding:9px 22px;border:none;border-radius:6px;background:#dc3545;color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;"><i
-                                        class="fas fa-check"></i> Yes, Submit</button>
-                            </div>
-                        </div>
-                    </div>
+                        const rows = document.querySelectorAll('#addaDfRows .adda-df-row');
+                        if (rows.length <= 1) {
+                            row.querySelector('.adda-df-amount').value = '';
+                            row.querySelector('.adda-df-date').value = '';
+                        } else {
+                            row.remove();
+                        }
 
-                    <script>
-                        // ── Staged deductions list ────────────────────────────────────────
-                        let pendingDeductions = [];
+                        updateAddaDfRemoveButtons();
+                        consolidateAddaDfEntries(false);
+                    }
 
-                        function addDeductionToList(e) {
-                            e.preventDefault();
-                            const form = document.getElementById('deductionsForm');
+                    function updateAddaDfRemoveButtons() {
+                        const rows = document.querySelectorAll('#addaDfRows .adda-df-row');
+                        rows.forEach((row, idx) => {
+                            const removeBtn = row.querySelector('.adda-df-remove');
+                            if (!removeBtn) return;
+                            removeBtn.style.display = rows.length > 1 ? '' : 'none';
+                        });
+                    }
+
+                    function getScheduleDateRuleText(schedule) {
+                        if (schedule === 'Mon-Thur/Friday payout') {
+                            return 'Monday through Friday';
+                        }
+                        if (schedule === 'Fri-Sun/Monday payout') {
+                            return 'Friday through Monday';
+                        }
+                        if (schedule === 'Mon-Sun/Monday payout') {
+                            return 'any day of the week';
+                        }
+                        if (schedule === 'Cut off payout') {
+                            return '15th day or last day of month';
+                        }
+                        return 'a valid schedule date';
+                    }
+
+                    function isAddaDfDateAllowedBySchedule(dateRaw, schedule) {
+                        if (!dateRaw || !schedule) {
+                            return false;
+                        }
+
+                        const selectedDate = new Date(dateRaw + 'T00:00:00');
+                        const dayOfWeek = selectedDate.getDay(); // 0=Sun ... 6=Sat
+
+                        // Disallow exact payout day/date
+                        if (schedule === 'Mon-Thur/Friday payout') {
+                            // Friday is payout day (5)
+                            return dayOfWeek >= 1 && dayOfWeek <= 4; // Monday-Thursday only
+                        }
+                        if (schedule === 'Fri-Sun/Monday payout') {
+                            // Monday is payout day (2)
+                            return dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0; // Fri, Sat, Sun only
+                        }
+                        if (schedule === 'Mon-Sun/Monday payout') {
+                            // Monday is payout day (2)
+                            return dayOfWeek !== 2; // Any day except Monday
+                        }
+                        if (schedule === 'Cut off payout') {
+                            const day = selectedDate.getDate();
+                            const lastDayOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)
+                                .getDate();
+                            // Disallow 15th and last day
+                            return day !== 15 && day !== lastDayOfMonth;
+                        }
+                        return true;
+                    }
+
+                    function consolidateAddaDfEntries(showErrors = true) {
+                        const form = document.getElementById('payrollForm');
+                        if (!form) return false;
+
+                        const salarySchedule = form.querySelector('[name="salary_schedule"]').value;
+                        if (!salarySchedule) {
+                            if (showErrors) showToast('Please select Salary Schedule first', 'warning');
+                            return false;
+                        }
+
+                        const amountInputs = form.querySelectorAll('.adda-df-amount');
+                        const dateInputs = form.querySelectorAll('.adda-df-date');
+
+                        let total = 0;
+                        let latestDate = '';
+                        const entries = [];
+
+                        for (let i = 0; i < amountInputs.length; i++) {
+                            const amountRaw = (amountInputs[i].value || '').trim();
+                            const dateRaw = (dateInputs[i].value || '').trim();
+
+                            // Skip completely empty trailing rows.
+                            if (!amountRaw && !dateRaw) {
+                                continue;
+                            }
+
+                            if (!amountRaw) {
+                                if (showErrors) showToast('Please enter ADDA DF amount for each filled date row', 'warning');
+                                return false;
+                            }
+                            if (!dateRaw) {
+                                if (showErrors) showToast('Please select ADDA DF date for each filled amount row', 'warning');
+                                return false;
+                            }
+
+                            if (!isAddaDfDateAllowedBySchedule(dateRaw, salarySchedule)) {
+                                if (showErrors) {
+                                    showToast('ADDA DF date must match salary schedule: ' + getScheduleDateRuleText(salarySchedule),
+                                        'warning');
+                                }
+                                return false;
+                            }
+
                             const riderId = form.querySelector('[name="rider_id"]').value.trim();
-                            const riderName = form.querySelector('[name="rider_name"]').value.trim();
-                            const remarks = document.getElementById('deductionRemarks').value.trim();
-                            const amount = parseFloat(document.getElementById('deductionAmount').value);
-
-                            if (!riderId || !riderName) {
-                                showToast('Please select a rider from the Rider Queue first', 'warning');
-                                return;
-                            }
-                            if (!remarks) {
-                                showToast('Please enter a deduction description', 'warning');
-                                return;
-                            }
-                            if (!amount || amount <= 0) {
-                                showToast('Please enter a valid Amount', 'warning');
-                                return;
+                            const riderDates = riderRemittanceDateMap[String(riderId)] || [];
+                            if (!riderDates.includes(dateRaw)) {
+                                if (showErrors) showToast('Cannot add ADDA DF: no remittance record found for selected date',
+                                    'warning');
+                                return false;
                             }
 
-                            pendingDeductions.push({
-                                rider_id: riderId,
-                                rider_name: riderName,
-                                remarks: remarks,
-                                amount: amount,
-                                date: new Date().toISOString().split('T')[0]
+                            const amountNum = parseFloat(amountRaw);
+                            if (!amountNum || amountNum <= 0) {
+                                if (showErrors) showToast('ADDA DF amount must be greater than 0', 'warning');
+                                return false;
+                            }
+
+                            total += amountNum;
+                            if (!latestDate || dateRaw > latestDate) {
+                                latestDate = dateRaw;
+                            }
+                            entries.push({
+                                amount: Number(amountNum.toFixed(2)),
+                                date: dateRaw
+                            });
+                        }
+
+                        // If no ADDA DF entries, set hidden fields to empty and allow form submission
+                        if (total <= 0 || !latestDate) {
+                            form.querySelector('[name="adda_df"]').value = '';
+                            form.querySelector('[name="adda_df_date"]').value = '';
+                            form.querySelector('[name="adda_df_entries"]').value = '[]';
+                            const summary = document.getElementById('addaDfSummary');
+                            if (summary) {
+                                summary.textContent = 'Total ADDA DF: ₱0.00';
+                            }
+                            return true;
+                        }
+
+                        form.querySelector('[name="adda_df"]').value = total.toFixed(2);
+                        form.querySelector('[name="adda_df_date"]').value = latestDate;
+                        form.querySelector('[name="adda_df_entries"]').value = JSON.stringify(entries);
+
+                        const summary = document.getElementById('addaDfSummary');
+                        if (summary) {
+                            summary.textContent = 'Total ADDA DF: ₱' + total.toLocaleString('en-PH', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+
+                        return true;
+                    }
+
+                    function applyAddaDf() {
+                        const ok = consolidateAddaDfEntries(true);
+                        if (!ok) {
+                            return;
+                        }
+
+                        addAddaDfRow();
+                        showToast('ADDA DF entry added. You can add more rows.', 'success');
+
+                        const rows = document.querySelectorAll('#addaDfRows .adda-df-row');
+                        const lastRow = rows[rows.length - 1];
+                        const amountInput = lastRow ? lastRow.querySelector('.adda-df-amount') : null;
+                        if (amountInput) amountInput.focus();
+
+                        updateAddaDfRemoveButtons();
+                    }
+
+                    const payrollFormEl = document.getElementById('payrollForm');
+                    const salaryScheduleEl = payrollFormEl ? payrollFormEl.querySelector('[name="salary_schedule"]') : null;
+
+                    function enforceAddaDfDateInputRules() {
+                        if (!payrollFormEl || !salaryScheduleEl) return;
+
+                        const dateInputs = payrollFormEl.querySelectorAll('.adda-df-date');
+                        dateInputs.forEach(input => {
+                            if (!input || input.dataset.scheduleBound === '1') return;
+                            input.dataset.scheduleBound = '1';
+
+                            input.addEventListener('change', function() {
+                                const selectedSchedule = salaryScheduleEl.value;
+                                if (!selectedSchedule || !this.value) return;
+
+                                if (!isAddaDfDateAllowedBySchedule(this.value, selectedSchedule)) {
+                                    this.value = '';
+                                    showToast(
+                                        'ADDA DF date must match salary schedule: ' + getScheduleDateRuleText(
+                                            selectedSchedule),
+                                        'warning'
+                                    );
+                                    this.focus();
+                                }
+                            });
+                        });
+                    }
+
+                    if (salaryScheduleEl) {
+                        salaryScheduleEl.addEventListener('change', function() {
+                            const dateInputs = payrollFormEl.querySelectorAll('.adda-df-date');
+                            let clearedCount = 0;
+                            dateInputs.forEach(input => {
+                                if (input.value && !isAddaDfDateAllowedBySchedule(input.value, salaryScheduleEl
+                                        .value)) {
+                                    input.value = '';
+                                    clearedCount++;
+                                }
                             });
 
-                            renderPendingDeductions();
-                            document.getElementById('deductionRemarks').value = '';
-                            document.getElementById('deductionAmount').value = '';
-                            document.getElementById('deductionRemarks').focus();
-                            showToast('Added to list. You can add more or submit all.', 'info');
+                            if (clearedCount > 0) {
+                                showToast(
+                                    'Some ADDA DF dates were cleared because they do not match the selected salary schedule.',
+                                    'info');
+                            }
+                        });
+                    }
+
+                    enforceAddaDfDateInputRules();
+
+                    function openPayrollDeductionsModal() {
+                        const form = document.getElementById('payrollForm');
+
+                        if (!consolidateAddaDfEntries(true)) return;
+
+                        const riderId = form.querySelector('[name="rider_id"]').value.trim();
+                        const riderName = form.querySelector('[name="rider_name"]').value.trim();
+                        const baseSalary = form.querySelector('[name="base_salary"]').value;
+                        const renumeration26Days = form.querySelector('[name="renumeration_26_days"]').value;
+                        const salarySchedule = form.querySelector('[name="salary_schedule"]').value;
+                        const modeOfPayment = form.querySelector('[name="mode_of_payment"]').value;
+                        const netSalary = form.querySelector('[name="net_salary"]').value;
+
+                        if (!riderId || !riderName) {
+                            showToast('Please select a rider from the Rider Queue first', 'warning');
+                            return;
+                        }
+                        if (!baseSalary) {
+                            showToast('Please enter Base Salary', 'warning');
+                            return;
+                        }
+                        if (!renumeration26Days) {
+                            showToast('Please enter 26 days renumeration', 'warning');
+                            return;
+                        }
+                        if (!salarySchedule) {
+                            showToast('Please select Salary Schedule', 'warning');
+                            return;
+                        }
+                        if (!modeOfPayment) {
+                            showToast('Please select Mode of Payment', 'warning');
+                            return;
+                        }
+                        if (!netSalary) {
+                            showToast('Please enter Net Salary', 'warning');
+                            return;
                         }
 
-                        function renderPendingDeductions() {
-                            const tbody = document.getElementById('pendingDeductionsTbody');
-                            const panel = document.getElementById('pendingDeductionsList');
-                            const countEl = document.getElementById('pendingDeductionCount');
-                            const totalEl = document.getElementById('pendingDeductionsTotal');
+                        // Set rider name in modal header
+                        document.getElementById('payrollDeductionRiderName').textContent = riderName;
 
-                            if (!pendingDeductions.length) {
-                                panel.style.display = 'none';
+                        // Reset deduction rows to a single empty row
+                        const rowsContainer = document.getElementById('payrollDeductionRows');
+                        rowsContainer.innerHTML = buildDeductionRowHtml(false);
+                        updatePayrollDeductionTotal();
+
+                        // Reset confirm button
+                        const confirmBtn = document.getElementById('payrollDeductionConfirmBtn');
+                        confirmBtn.disabled = false;
+                        confirmBtn.innerHTML = '<i class="fas fa-check"></i> Submit';
+
+                        document.getElementById('payrollDeductionsModal').style.display = 'flex';
+                        setTimeout(() => rowsContainer.querySelector('.pd-remarks') && rowsContainer.querySelector('.pd-remarks')
+                            .focus(), 80);
+                    }
+
+                    function closePayrollDeductionsModal() {
+                        document.getElementById('payrollDeductionsModal').style.display = 'none';
+                    }
+
+                    function buildDeductionRowHtml(showRemove) {
+                        return `<div class="payroll-deduction-row" style="display:grid; grid-template-columns:1fr 140px 36px; gap:8px; align-items:center;">
+                                <input type="text" class="pd-remarks" placeholder="e.g. Cash shortage, Equipment damage..."
+                                    style="width:100%; font-size:13px; padding:9px 12px; border-radius:8px; border:1.5px solid #d1d5db; background:#fff; box-sizing:border-box; transition:border-color 0.2s;"
+                                    onfocus="this.style.borderColor='#436026'" onblur="this.style.borderColor='#d1d5db'">
+                                <input type="number" class="pd-amount" step="0.01" min="0.01" placeholder="0.00"
+                                    style="width:100%; font-size:13px; padding:9px 12px; border-radius:8px; border:1.5px solid #d1d5db; background:#fff; box-sizing:border-box; transition:border-color 0.2s;"
+                                    onfocus="this.style.borderColor='#436026'" onblur="this.style.borderColor='#d1d5db'"
+                                    oninput="updatePayrollDeductionTotal()">
+                                <button type="button" class="pd-remove-btn" onclick="removePayrollDeductionRow(this)"
+                                    style="width:36px; height:36px; background:#fee2e2; color:#dc3545; border:1.5px solid #fca5a5; border-radius:8px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; visibility:${showRemove ? 'visible' : 'hidden'}; transition:background 0.2s;"
+                                    onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>`;
+                    }
+
+                    function addPayrollDeductionRow() {
+                        const container = document.getElementById('payrollDeductionRows');
+                        container.insertAdjacentHTML('beforeend', buildDeductionRowHtml(true));
+                        updatePayrollDeductionRemoveButtons();
+                        container.lastElementChild.querySelector('.pd-remarks').focus();
+                    }
+
+                    function removePayrollDeductionRow(btn) {
+                        const rows = document.querySelectorAll('#payrollDeductionRows .payroll-deduction-row');
+                        if (rows.length <= 1) {
+                            const row = btn.closest('.payroll-deduction-row');
+                            row.querySelector('.pd-remarks').value = '';
+                            row.querySelector('.pd-amount').value = '';
+                        } else {
+                            btn.closest('.payroll-deduction-row').remove();
+                        }
+                        updatePayrollDeductionRemoveButtons();
+                        updatePayrollDeductionTotal();
+                    }
+
+                    function updatePayrollDeductionRemoveButtons() {
+                        const rows = document.querySelectorAll('#payrollDeductionRows .payroll-deduction-row');
+                        rows.forEach(row => {
+                            const b = row.querySelector('.pd-remove-btn');
+                            if (b) b.style.visibility = rows.length > 1 ? 'visible' : 'hidden';
+                        });
+                    }
+
+                    function updatePayrollDeductionTotal() {
+                        const inputs = document.querySelectorAll('#payrollDeductionRows .pd-amount');
+                        let total = 0;
+                        inputs.forEach(inp => {
+                            const v = parseFloat(inp.value);
+                            if (v > 0) total += v;
+                        });
+                        const el = document.getElementById('payrollDeductionTotal');
+                        if (el) el.textContent = '₱' + total.toLocaleString('en-PH', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    }
+
+                    async function submitPayrollWithDeductions() {
+                        // Gather deduction rows, skip completely empty ones
+                        const rows = document.querySelectorAll('#payrollDeductionRows .payroll-deduction-row');
+                        const deductions = [];
+                        for (const row of rows) {
+                            const remarks = (row.querySelector('.pd-remarks').value || '').trim();
+                            const amountRaw = (row.querySelector('.pd-amount').value || '').trim();
+                            if (!remarks && !amountRaw) continue;
+                            if (remarks && !amountRaw) {
+                                showToast('Please enter an amount for: ' + remarks, 'warning');
+                                return;
+                            }
+                            if (!remarks && amountRaw) {
+                                showToast('Please enter a description for amount: ' + amountRaw, 'warning');
+                                return;
+                            }
+                            const amount = parseFloat(amountRaw);
+                            if (amount <= 0) {
+                                showToast('Deduction amount must be greater than 0', 'warning');
+                                return;
+                            }
+                            deductions.push({
+                                remarks,
+                                amount
+                            });
+                        }
+
+                        const confirmBtn = document.getElementById('payrollDeductionConfirmBtn');
+                        confirmBtn.disabled = true;
+                        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+                        const form = document.getElementById('payrollForm');
+                        const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                        const data = new FormData(form);
+                        const salarySchedule = form.querySelector('[name="salary_schedule"]').value;
+                        const riderId = form.querySelector('[name="rider_id"]').value.trim();
+                        const riderName = form.querySelector('[name="rider_name"]').value.trim();
+
+                        try {
+                            // 1. Save payroll
+                            const res = await fetch('/rider-payroll', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': csrf
+                                },
+                                body: data
+                            });
+
+                            if (!res.ok) {
+                                let errorMsg = 'Failed to save payroll.';
+                                try {
+                                    const errorData = await res.json();
+                                    if (errorData && errorData.message) errorMsg = errorData.message;
+                                    else if (errorData && errorData.errors) {
+                                        errorMsg = Object.keys(errorData.errors).map(f => f + ': ' + errorData.errors[f].join(', '))
+                                            .join(' | ');
+                                    }
+                                } catch {}
+                                showToast(errorMsg, 'error');
+                                confirmBtn.disabled = false;
+                                confirmBtn.innerHTML = '<i class="fas fa-check"></i> Submit';
                                 return;
                             }
 
-                            panel.style.display = 'block';
-                            countEl.textContent = pendingDeductions.length + ' item' + (pendingDeductions.length > 1 ? 's' : '');
+                            const responseData = await res.json();
+                            const payrollId = responseData.payroll && responseData.payroll.id ? responseData.payroll.id : '';
 
-                            let total = 0;
-                            tbody.innerHTML = pendingDeductions.map((d, i) => {
-                                total += d.amount;
-                                return `<tr style="border-bottom:1px solid #f0f0f0;">
-                        <td style="padding:9px 14px;color:#6c757d;">${i + 1}</td>
-                        <td style="padding:9px 14px;">${d.remarks}</td>
-                        <td style="padding:9px 14px;text-align:right;color:#dc3545;font-weight:600;">- ₱${d.amount.toFixed(2)}</td>
-                        <td style="padding:9px 14px;text-align:center;">
-                            <button type="button" onclick="removeDeductionItem(${i})" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:14px;padding:2px 6px;" title="Remove"><i class="fas fa-times"></i></button>
-                        </td>
-                    </tr>`;
-                            }).join('');
-
-                            totalEl.textContent = '₱' + total.toFixed(2);
-                        }
-
-                        function removeDeductionItem(index) {
-                            pendingDeductions.splice(index, 1);
-                            renderPendingDeductions();
-                        }
-
-                        function showDeductionConfirmModal() {
-                            if (!pendingDeductions.length) return;
-                            let total = pendingDeductions.reduce((s, d) => s + d.amount, 0);
-                            document.getElementById('confirmDeductionCount').textContent = pendingDeductions.length;
-                            document.getElementById('confirmDeductionRider').textContent = pendingDeductions[0].rider_name;
-                            document.getElementById('confirmDeductionTotal').textContent = '₱' + total.toFixed(2);
-                            const modal = document.getElementById('deductionConfirmModal');
-                            modal.style.display = 'flex';
-                        }
-
-                        function closeDeductionConfirmModal() {
-                            document.getElementById('deductionConfirmModal').style.display = 'none';
-                        }
-
-                        async function submitAllDeductions() {
-                            const btn = document.getElementById('confirmDeductionBtn');
-                            btn.disabled = true;
-                            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-                            const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                            let saved = 0,
-                                failed = 0;
-
-                            for (const d of pendingDeductions) {
-                                try {
-                                    const fd = new FormData();
-                                    fd.append('rider_id', d.rider_id);
-                                    fd.append('rider_name', d.rider_name);
-                                    fd.append('remarks', d.remarks);
-                                    fd.append('amount', d.amount);
-                                    fd.append('date', d.date);
-                                    const res = await fetch('/rider-deductions', {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRF-TOKEN': csrf
-                                        },
-                                        body: fd
-                                    });
-                                    res.ok ? saved++ : failed++;
-                                } catch {
-                                    failed++;
+                            // 2. Save deductions if any
+                            if (deductions.length > 0) {
+                                const today = new Date().toISOString().split('T')[0];
+                                let dSaved = 0,
+                                    dFailed = 0;
+                                for (const d of deductions) {
+                                    try {
+                                        const fd = new FormData();
+                                        fd.append('rider_id', riderId);
+                                        fd.append('rider_name', riderName);
+                                        fd.append('remarks', d.remarks);
+                                        fd.append('amount', d.amount);
+                                        fd.append('date', today);
+                                        const dr = await fetch('/rider-deductions', {
+                                            method: 'POST',
+                                            headers: {
+                                                'X-CSRF-TOKEN': csrf
+                                            },
+                                            body: fd
+                                        });
+                                        dr.ok ? dSaved++ : dFailed++;
+                                    } catch {
+                                        dFailed++;
+                                    }
+                                }
+                                if (dFailed > 0) {
+                                    showToast(dSaved + ' deduction(s) saved, ' + dFailed + ' failed.', dSaved > 0 ? 'warning' :
+                                        'error');
                                 }
                             }
 
-                            closeDeductionConfirmModal();
-                            btn.disabled = false;
-                            btn.innerHTML = '<i class="fas fa-check"></i> Yes, Submit';
+                            // 3. Close modal, reset form, open payslip
+                            closePayrollDeductionsModal();
+                            form.reset();
+                            showToast('Payroll saved! Opening payslip...', 'success');
 
-                            if (failed === 0) {
-                                pendingDeductions = [];
-                                renderPendingDeductions();
-                                toggleDeductionForm(true);
-                                showToast(saved + ' deduction(s) saved! Refreshing...', 'success');
-                                setTimeout(() => window.location.reload(), 1500);
+                            const [fromDate, toDate] = getPayrollDateRange(salarySchedule);
+                            if (payrollId) {
+                                let payslipUrl = '/rider-payroll/' + payrollId + '/payslip';
+                                if (fromDate && toDate) payslipUrl += '?from_date=' + fromDate + '&to_date=' + toDate;
+                                setTimeout(() => {
+                                    window.open(payslipUrl, '_blank');
+                                    window.location.reload();
+                                }, 500);
                             } else {
-                                showToast(saved + ' saved, ' + failed + ' failed. Check and try again.', 'error');
+                                setTimeout(() => window.location.reload(), 1500);
                             }
+
+                        } catch (err) {
+                            showToast('Network error: ' + err.message, 'error');
+                            confirmBtn.disabled = false;
+                            confirmBtn.innerHTML = '<i class="fas fa-check"></i> Submit';
                         }
-                    </script>
-                </div>
+                    }
+
+                    /**
+                     * Returns [fromDate, toDate] (YYYY-MM-DD strings) for a given salary schedule,
+                     * relative to today.  Used to filter the remittances shown on the payslip.
+                     */
+                    function getPayrollDateRange(schedule) {
+                        const now = new Date();
+                        const pad = n => String(n).padStart(2, '0');
+                        const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+                        // Day-of-week: 0=Sun,1=Mon,...,6=Sat
+                        const dow = now.getDay();
+
+                        if (schedule === 'Mon-Thur/Friday payout') {
+                            // Monday → Thursday of the current week
+                            const monday = new Date(now);
+                            monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+                            const thursday = new Date(monday);
+                            thursday.setDate(monday.getDate() + 3);
+                            return [fmt(monday), fmt(thursday)];
+                        }
+
+                        if (schedule === 'Fri-Sun/Monday payout') {
+                            // Friday → Sunday (look back to the most recent Friday)
+                            const friday = new Date(now);
+                            const daysToFriday = (dow + 2) % 7; // days since last Friday
+                            friday.setDate(now.getDate() - daysToFriday);
+                            const sunday = new Date(friday);
+                            sunday.setDate(friday.getDate() + 2);
+                            return [fmt(friday), fmt(sunday)];
+                        }
+
+                        if (schedule === 'Mon-Sun/Monday payout') {
+                            // Monday → Sunday of the previous (just finished) week
+                            const thisMonday = new Date(now);
+                            thisMonday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+                            const prevMonday = new Date(thisMonday);
+                            prevMonday.setDate(thisMonday.getDate() - 7);
+                            const prevSunday = new Date(thisMonday);
+                            prevSunday.setDate(thisMonday.getDate() - 1);
+                            return [fmt(prevMonday), fmt(prevSunday)];
+                        }
+
+                        // "Cut off payout" — 1st–15th or 16th–end of current month
+                        const day = now.getDate();
+                        if (day <= 15) {
+                            const start = new Date(now.getFullYear(), now.getMonth(), 1);
+                            const end = new Date(now.getFullYear(), now.getMonth(), 15);
+                            return [fmt(start), fmt(end)];
+                        } else {
+                            const start = new Date(now.getFullYear(), now.getMonth(), 16);
+                            const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                            return [fmt(start), fmt(end)];
+                        }
+                    }
+                </script>
                 <script>
                     // Tab switching functionality
                     document.querySelectorAll('.remit-tab-btn').forEach(btn => {
@@ -2572,8 +2819,6 @@
                                 document.getElementById('tabOverview').style.display = '';
                             } else if (this.dataset.tab === 'payroll') {
                                 document.getElementById('tabPayroll').style.display = '';
-                            } else if (this.dataset.tab === 'deductions') {
-                                document.getElementById('tabDeductions').style.display = '';
                             }
                         });
                     });
@@ -3161,6 +3406,9 @@
                                     <th>Rider Name</th>
                                     <th>Base Salary</th>
                                     <th>Incentives</th>
+                                    <th>26 Days Renumeration</th>
+                                    <th>ADDA DF</th>
+                                    <th>ADDA DF Date</th>
                                     <th>Net Salary</th>
                                     <th>Salary Schedule</th>
                                     <th>Payment Mode</th>
@@ -3174,6 +3422,10 @@
                                         <td>{{ $payroll->rider_name }}</td>
                                         <td>₱{{ number_format($payroll->base_salary, 2) }}</td>
                                         <td>₱{{ number_format($payroll->incentives ?? 0, 2) }}</td>
+                                        <td>₱{{ number_format($payroll->renumeration_26_days ?? 0, 2) }}</td>
+                                        <td>₱{{ number_format($payroll->adda_df ?? 0, 2) }}</td>
+                                        <td>{{ $payroll->adda_df_date ? \Carbon\Carbon::parse($payroll->adda_df_date)->format('M d, Y') : 'N/A' }}
+                                        </td>
                                         <td><strong
                                                 style="color: #436026;">₱{{ number_format($payroll->net_salary, 2) }}</strong>
                                         </td>
@@ -3528,12 +3780,12 @@
 
     <!-- Remit Modal -->
     <div class="modal-overlay" id="remitModal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content"
+            style="max-width: 640px; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden;">
             <div class="modal-header">
                 <h3><i class="fas fa-money-bill-wave"></i> Remittance Form</h3>
-
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 20px 25px;">
                 <form id="remitForm" enctype="multipart/form-data">
                     <input type="hidden" id="remitRiderId" name="rider_id">
                     <input type="hidden" id="remitRiderName" name="rider_name">
@@ -3548,7 +3800,7 @@
                         <div class="form-group">
                             <label for="totalDeliveries"><i class="fas fa-box"></i> Total Deliveries</label>
                             <input type="number" id="totalDeliveries" name="total_deliveries" placeholder="0"
-                                min="0" required>
+                                min="0" oninput="updateCombinedDeliveries()" required>
                         </div>
                         <div class="form-group">
                             <label for="totalDeliveryFee"><i class="fas fa-dollar-sign"></i> Total Delivery
@@ -3591,6 +3843,130 @@
                         <textarea id="remarks" name="remarks" placeholder="Enter any remarks here" rows="3"
                             style="width: 100%; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; padding: 10px; resize: vertical;"></textarea>
                     </div>
+
+                    {{-- ── Mangan App Section ── --}}
+                    <div
+                        style="margin-bottom: 16px; border: 2px solid #e5e7eb; border-radius: 10px; overflow: hidden;">
+                        {{-- Toggle Button --}}
+                        <button type="button" onclick="toggleManganSection()" id="addManganBtn"
+                            style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; background: linear-gradient(135deg, #f0f7ed 0%, #e6f3df 100%); border: none; cursor: pointer; font-family: 'Inter', Arial, sans-serif; color: #2d4016; font-size: 14px; font-weight: 700; transition: background 0.2s;"
+                            onmouseover="this.style.background='linear-gradient(135deg, #e6f3df 0%, #d9ecce 100%)'"
+                            onmouseout="this.style.background='linear-gradient(135deg, #f0f7ed 0%, #e6f3df 100%)'">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span
+                                    style="width: 26px; height: 26px; border-radius: 7px; background: #436026; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">
+                                    <i class="fas fa-utensils"></i>
+                                </span>
+                                Add Mangan
+                                <span id="manganBadge"
+                                    style="display: none; background: #436026; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; letter-spacing: 0.3px;"></span>
+                            </div>
+                            <i id="manganChevron" class="fas fa-chevron-down"
+                                style="color: #436026; font-size: 12px; transition: transform 0.25s;"></i>
+                        </button>
+
+                        {{-- Inline Mangan Form --}}
+                        <div id="manganInlineForm"
+                            style="display: none; padding: 16px; background: #fafdf8; border-top: 1px solid #d6eacc;">
+
+                            {{-- Rider name --}}
+                            <div class="form-group" style="margin-bottom: 14px;">
+                                <label style="font-size: 13px;"><i class="fas fa-user"></i> Rider Name</label>
+                                <input type="text" id="manganRiderNameDisplay" readonly
+                                    style="width: 100%; background: #f1f5f0; cursor: not-allowed; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; color: #436026; font-weight: 600; box-sizing: border-box;">
+                            </div>
+
+                            {{-- Merchant Name --}}
+                            <div class="form-group" style="margin-bottom: 14px; position: relative;">
+                                <label style="font-size: 13px;"><i class="fas fa-store"></i> Merchant Name</label>
+                                <input type="text" id="manganMerchantInput" placeholder="Search merchant name..."
+                                    autocomplete="off" oninput="filterManganMerchants(this.value)"
+                                    onkeydown="manganMerchantKeydown(event)"
+                                    style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
+                                    onfocus="this.style.borderColor='#436026'; filterManganMerchants(this.value)"
+                                    onblur="setTimeout(hideManganDropdown, 150)">
+                                <div id="manganMerchantDropdown"
+                                    style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:2px solid #86b562; border-radius:8px; max-height:180px; overflow-y:auto; z-index:9999; box-shadow:0 4px 12px rgba(0,0,0,0.12); margin-top:2px;">
+                                </div>
+                            </div>
+
+
+
+                            {{-- Amount + DF --}}
+                            <div
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size: 13px;"><i class="fas fa-peso-sign"></i> Total
+                                        Amount</label>
+                                    <input type="number" id="manganTotalAmount" placeholder="0.00" min="0"
+                                        step="0.01"
+                                        style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
+                                        onfocus="this.style.borderColor='#436026'"
+                                        onblur="this.style.borderColor='#e9ecef'">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size: 13px;"><i class="fas fa-truck"></i> DF <span
+                                            style="font-weight:400; color:#6c757d;">(Delivery Fee)</span></label>
+                                    <input type="number" id="manganDf" placeholder="0.00" min="0"
+                                        step="0.01"
+                                        style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
+                                        onfocus="this.style.borderColor='#436026'"
+                                        onblur="this.style.borderColor='#e9ecef'">
+                                </div>
+                            </div>
+
+                            {{-- GT + Tips --}}
+                            <div
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size: 13px;"><i class="fas fa-calculator"></i> GT <span
+                                            style="font-weight:400; color:#6c757d;">(Grand Total)</span></label>
+                                    <input type="number" id="manganGt" placeholder="0.00" min="0"
+                                        step="0.01"
+                                        style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
+                                        onfocus="this.style.borderColor='#436026'"
+                                        onblur="this.style.borderColor='#e9ecef'">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label style="font-size: 13px;"><i class="fas fa-hand-holding-usd"></i> Tips <span
+                                            style="font-weight:400; color:#6c757d;">(Mangan)</span></label>
+                                    <input type="number" id="manganTips" placeholder="0.00" min="0"
+                                        step="0.01"
+                                        style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
+                                        onfocus="this.style.borderColor='#436026'"
+                                        onblur="this.style.borderColor='#e9ecef'">
+                                </div>
+                            </div>
+
+                            {{-- Receipt Non-Partners --}}
+                            <div class="form-group" style="margin-bottom: 14px;">
+                                <label style="font-size: 13px;"><i class="fas fa-receipt"></i> Receipt <span
+                                        style="font-weight:400; color:#6c757d;">(Non-Partners)</span></label>
+                                <input type="number" id="manganReceiptNonPartners" placeholder="0.00"
+                                    min="0" step="0.01"
+                                    style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
+                                    onfocus="this.style.borderColor='#436026'"
+                                    onblur="this.style.borderColor='#e9ecef'">
+                            </div>
+
+                            {{-- Add Entry Button --}}
+                            <div style="display: flex; justify-content: flex-end; padding-top: 4px;">
+                                <button type="button" onclick="addManganEntry()"
+                                    style="display: flex; align-items: center; gap: 8px; padding: 9px 22px; background: linear-gradient(135deg, #436026 0%, #5a7d33 100%); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(67,96,38,0.25); transition: all 0.2s; font-family: 'Inter', Arial, sans-serif;"
+                                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 14px rgba(67,96,38,0.35)'"
+                                    onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(67,96,38,0.25)'">
+                                    <i class="fas fa-plus-circle"></i> Add Entry
+                                </button>
+                            </div>
+
+                            {{-- Saved Entries List --}}
+                            <div id="manganEntriesList"
+                                style="display: none; margin-top: 14px; flex-direction: column; gap: 8px;"></div>
+                        </div>
+                        <input type="hidden" id="manganEntriesJson" name="mangan_entries">
+                    </div>
+                    {{-- End Mangan App Section --}}
+
                     <div class="form-group">
                         <label for="remitPhoto"><i class="fas fa-camera"></i> Attach Remit Photo</label>
                         <input type="file" id="remitPhoto" name="remit_photo" accept="image/*"
@@ -3599,6 +3975,7 @@
                             <i class="fas fa-info-circle"></i> Upload proof of remittance (optional)
                         </small>
                     </div>
+
                 </form>
             </div>
             <div class="modal-footer">
@@ -3608,6 +3985,214 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Merchant list for Mangan App search
+        const manganMerchants = @json($merchants->pluck('name')->values());
+
+        let manganDropdownIndex = -1;
+
+        function filterManganMerchants(query) {
+            const dropdown = document.getElementById('manganMerchantDropdown');
+            const q = query.trim().toLowerCase();
+            updateManganBadge();
+            if (!q) {
+                hideManganDropdown();
+                return;
+            }
+            const matches = manganMerchants.filter(n => n.toLowerCase().includes(q));
+            if (matches.length === 0) {
+                hideManganDropdown();
+                return;
+            }
+            manganDropdownIndex = -1;
+            dropdown.innerHTML = matches.map((name, i) =>
+                `<div data-index="${i}" onclick="selectManganMerchant('${name.replace(/'/g, "\\'")}')"
+                    style="padding:9px 14px; font-size:14px; cursor:pointer; color:#2d4016; border-bottom:1px solid #f0f7ed;"
+                    onmouseover="this.style.background='#f0f7ed'" onmouseout="this.style.background=''">` +
+                `<i class="fas fa-store" style="margin-right:8px; color:#86b562; font-size:12px;"></i>${name}</div>`
+            ).join('');
+            dropdown.style.display = 'block';
+        }
+
+        function selectManganMerchant(name) {
+            document.getElementById('manganMerchantInput').value = name;
+            document.getElementById('manganMerchantInput').style.borderColor = '#436026';
+            hideManganDropdown();
+            updateManganBadge();
+        }
+
+        function hideManganDropdown() {
+            const dropdown = document.getElementById('manganMerchantDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            manganDropdownIndex = -1;
+        }
+
+        function manganMerchantKeydown(e) {
+            const dropdown = document.getElementById('manganMerchantDropdown');
+            if (!dropdown || dropdown.style.display === 'none') return;
+            const items = dropdown.querySelectorAll('div[data-index]');
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                manganDropdownIndex = Math.min(manganDropdownIndex + 1, items.length - 1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                manganDropdownIndex = Math.max(manganDropdownIndex - 1, 0);
+            } else if (e.key === 'Enter' && manganDropdownIndex >= 0) {
+                e.preventDefault();
+                items[manganDropdownIndex].click();
+                return;
+            } else if (e.key === 'Escape') {
+                hideManganDropdown();
+                return;
+            } else {
+                return;
+            }
+            items.forEach((el, i) => el.style.background = i === manganDropdownIndex ? '#e6f3df' : '');
+        }
+
+        function toggleManganSection() {
+            const form = document.getElementById('manganInlineForm');
+            const chevron = document.getElementById('manganChevron');
+            const isOpen = form.style.display !== 'none';
+            form.style.display = isOpen ? 'none' : 'block';
+            chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+            if (!isOpen) {
+                const riderName = document.getElementById('remitRiderName').value;
+                const display = document.getElementById('manganRiderNameDisplay');
+                if (display) display.value = riderName;
+            }
+        }
+
+        function closeManganModal() {
+            const form = document.getElementById('manganInlineForm');
+            const chevron = document.getElementById('manganChevron');
+            if (form) form.style.display = 'none';
+            if (chevron) chevron.style.transform = '';
+        }
+
+        function updateCombinedDeliveries() {
+            const main = parseInt(document.getElementById('totalDeliveries').value) || 0;
+            const current = parseInt(document.getElementById('manganDeliveries') ? document.getElementById(
+                'manganDeliveries').value : 0) || 0;
+            const saved = manganEntries.reduce((sum, e) => sum + (parseInt(e.deliveries) || 0), 0);
+            const el = document.getElementById('combinedDeliveriesCount');
+            if (el) el.textContent = main + current + saved;
+            updateManganBadge();
+        }
+
+        function updateManganBadge() {
+            const badge = document.getElementById('manganBadge');
+            if (!badge) return;
+            if (manganEntries.length > 0) {
+                badge.textContent = manganEntries.length + (manganEntries.length === 1 ? ' entry' : ' entries');
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Mangan entries list
+        let manganEntries = [];
+
+        function addManganEntry() {
+            const merchant = (document.getElementById('manganMerchantInput').value || '').trim();
+            const amount = parseFloat(document.getElementById('manganTotalAmount').value) || 0;
+            const df = parseFloat(document.getElementById('manganDf').value) || 0;
+            const gt = parseFloat(document.getElementById('manganGt').value) || 0;
+            const tips = parseFloat(document.getElementById('manganTips').value) || 0;
+            const receipt = parseFloat(document.getElementById('manganReceiptNonPartners').value) || 0;
+
+            if (!merchant && amount === 0) {
+                showToast('Please fill in at least the Merchant Name or Total Amount before adding.', 'warning');
+                return;
+            }
+
+            manganEntries.push({
+                merchant,
+                deliveries: 1,
+                amount,
+                df,
+                gt,
+                tips,
+                receipt
+            });
+
+            // Increment total deliveries by 1
+            const totalDeliveriesEl = document.getElementById('totalDeliveries');
+            totalDeliveriesEl.value = (parseInt(totalDeliveriesEl.value) || 0) + 1;
+
+            syncManganEntriesJson();
+            renderManganEntries();
+
+            // Reset input fields
+            document.getElementById('manganMerchantInput').value = '';
+            document.getElementById('manganTotalAmount').value = '';
+            document.getElementById('manganDf').value = '';
+            document.getElementById('manganGt').value = '';
+            document.getElementById('manganTips').value = '';
+            document.getElementById('manganReceiptNonPartners').value = '';
+            updateManganBadge();
+            showToast('Mangan entry added.', 'success');
+            closeManganModal();
+        }
+
+        function removeManganEntry(index) {
+            manganEntries.splice(index, 1);
+
+            // Decrement total deliveries by 1
+            const totalDeliveriesEl = document.getElementById('totalDeliveries');
+            const current = parseInt(totalDeliveriesEl.value) || 0;
+            if (current > 0) totalDeliveriesEl.value = current - 1;
+
+            syncManganEntriesJson();
+            renderManganEntries();
+            updateManganBadge();
+        }
+
+        function syncManganEntriesJson() {
+            const el = document.getElementById('manganEntriesJson');
+            if (el) el.value = JSON.stringify(manganEntries);
+            // Also update legacy single-entry hidden fields from first entry (for backward compat)
+            if (manganEntries.length > 0) {
+                document.getElementById('manganMerchantInput').dataset.savedMerchant = manganEntries[0].merchant;
+            }
+        }
+
+        function renderManganEntries() {
+            const list = document.getElementById('manganEntriesList');
+            if (!list) return;
+            if (manganEntries.length === 0) {
+                list.style.display = 'none';
+                list.innerHTML = '';
+                return;
+            }
+            list.style.display = 'flex';
+            list.innerHTML = manganEntries.map((e, i) => `
+                <div style="background: #f0f7ed; border: 1.5px solid #86b562; border-radius: 8px; padding: 10px 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 12px; font-weight: 700; color: #2d4016; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-utensils" style="font-size: 10px;"></i>
+                            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${e.merchant || '—'}</span>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; color: #436026;">
+                            <span style="background:#fff; border:1px solid #d6eacc; border-radius:5px; padding:2px 8px;"><b>${e.deliveries}</b> deliveries</span>
+                            <span style="background:#fff; border:1px solid #d6eacc; border-radius:5px; padding:2px 8px;">Amt: ₱${e.amount.toFixed(2)}</span>
+                            <span style="background:#fff; border:1px solid #d6eacc; border-radius:5px; padding:2px 8px;">DF: ₱${e.df.toFixed(2)}</span>
+                            <span style="background:#fff; border:1px solid #d6eacc; border-radius:5px; padding:2px 8px;">GT: ₱${e.gt.toFixed(2)}</span>
+                            <span style="background:#fff; border:1px solid #d6eacc; border-radius:5px; padding:2px 8px;">Tips: ₱${e.tips.toFixed(2)}</span>
+                            <span style="background:#fff; border:1px solid #d6eacc; border-radius:5px; padding:2px 8px;">Receipt: ₱${e.receipt.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeManganEntry(${i})"
+                        style="flex-shrink:0; background:#fee2e2; color:#dc3545; border:1.5px solid #fca5a5; border-radius:7px; width:30px; height:30px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;"
+                        onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+    </script>
 
     <!-- Message Modal -->
     <div class="modal-overlay" id="messageModal">
@@ -3903,18 +4488,43 @@
             `;
 
             paginatedRemittances.forEach((remittance, index) => {
-                const date = new Date(remittance.created_at);
+                const recordDateRaw = remittance.remittance_date || remittance.created_at;
+                const date = new Date(recordDateRaw);
                 const formattedDate = date.toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                    day: 'numeric'
                 });
 
-                const statusColor = remittance.status === 'confirmed' ? '#28a745' : '#ffc107';
-                const statusBg = remittance.status === 'confirmed' ? '#d4edda' : '#fff3cd';
-                const statusText = remittance.status === 'confirmed' ? 'CLEARED' : remittance.status.toUpperCase();
+                const remitDateStr = remittance.remittance_date ? remittance.remittance_date.substring(0, 10) : '';
+                const submittedDateStr = remittance.created_at ? remittance.created_at.substring(0, 10) : '';
+                let isLateSubmission = false;
+                let lateDays = 0;
+                if (remitDateStr && submittedDateStr) {
+                    const remitDateOnly = new Date(remitDateStr + 'T00:00:00');
+                    const submittedDateOnly = new Date(submittedDateStr + 'T00:00:00');
+                    lateDays = Math.floor((submittedDateOnly - remitDateOnly) / (1000 * 60 * 60 * 24));
+                    isLateSubmission = lateDays > 0;
+                }
+
+                const submittedDateLabel = submittedDateStr ? new Date(submittedDateStr + 'T00:00:00')
+                    .toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    }) : 'Unknown date';
+
+                let statusColor = remittance.status === 'confirmed' ? '#28a745' : '#ffc107';
+                let statusBg = remittance.status === 'confirmed' ? '#d4edda' : '#fff3cd';
+                let statusText = remittance.status === 'confirmed' ? 'CLEARED' : remittance.status.toUpperCase();
+                let statusSubText = '';
+
+                if (isLateSubmission) {
+                    statusColor = '#c92a2a';
+                    statusBg = '#ffe3e3';
+                    statusText = 'LATE REMITTED';
+                    statusSubText = submittedDateLabel;
+                }
 
                 const paymentColor = remittance.mode_of_payment === 'cash' ? '#28a745' : '#007bff';
                 const paymentBg = remittance.mode_of_payment === 'cash' ? '#d4edda' : '#cfe2ff';
@@ -3934,7 +4544,8 @@
                         </td>
                         <td style="padding: 12px; text-align: center;">
                             <span style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${statusBg}; color: ${statusColor};">
-                                ${statusText}
+                                <span style="display:block; line-height:1.2;">${statusText}</span>
+                                ${statusSubText ? `<span style="display:block; margin-top:2px; font-size:10px; font-style:italic; font-weight:500; line-height:1.2;">${statusSubText}</span>` : ''}
                             </span>
                         </td>
                         <td style="padding: 12px; font-size: 13px; color: #333; max-width: 250px;">
@@ -4030,7 +4641,8 @@
             } else {
                 // Filter remittances by the selected date
                 filteredRiderRemittances = currentRiderRemittances.filter(remittance => {
-                    const remittanceDate = new Date(remittance.created_at);
+                    const remittanceDateRaw = remittance.remittance_date || remittance.created_at;
+                    const remittanceDate = new Date(remittanceDateRaw);
                     const filterDate = new Date(selectedDate);
 
                     // Compare only the date part (ignore time)
@@ -4533,12 +5145,25 @@
             document.getElementById('remitRiderId').value = riderId;
             document.getElementById('remitRiderName').value = riderName;
             document.getElementById('displayRiderName').value = riderName;
+
+            // Reset Mangan entries
+            closeManganModal();
+            manganEntries = [];
+            syncManganEntriesJson();
+            renderManganEntries();
+            updateManganBadge();
+
             document.getElementById('totalDeliveries').focus();
         }
 
         function closeRemitModal() {
             document.getElementById('remitModal').classList.remove('active');
             document.getElementById('remitForm').reset();
+            closeManganModal();
+            manganEntries = [];
+            syncManganEntriesJson();
+            renderManganEntries();
+            updateManganBadge();
         }
 
         // Calculate Total Remit (Total Delivery Fee - 5%)
@@ -4695,7 +5320,7 @@
                         return response.text().then(text => {
                             throw new Error(
                                 `Server returned non-JSON response: ${response.status} ${response.statusText}`
-                                );
+                            );
                         });
                     }
                 })
@@ -4746,7 +5371,7 @@
                         return response.text().then(text => {
                             throw new Error(
                                 `Server returned non-JSON response: ${response.status} ${response.statusText}`
-                                );
+                            );
                         });
                     }
                 })
@@ -5901,6 +6526,8 @@
             let detailRows = '';
             let totalBase = 0,
                 totalIncentives = 0,
+                totalRenumeration26Days = 0,
+                totalAddaDf = 0,
                 totalNet = 0,
                 rowNum = 0;
 
@@ -5911,10 +6538,13 @@
                 const riderName = cells[1] ? cells[1].innerText.trim() : '';
                 const base = cells[2] ? cells[2].innerText.trim() : '';
                 const incentive = cells[3] ? cells[3].innerText.trim() : '';
-                const net = cells[4] ? cells[4].innerText.trim() : '';
-                const schedule = cells[5] ? cells[5].innerText.trim() : '';
-                const mode = cells[6] ? cells[6].innerText.trim() : '';
-                const dateCreated = cells[7] ? cells[7].innerText.trim() : '';
+                const renumeration26Days = cells[4] ? cells[4].innerText.trim() : '';
+                const addaDf = cells[5] ? cells[5].innerText.trim() : '';
+                const addaDfDate = cells[6] ? cells[6].innerText.trim() : '';
+                const net = cells[7] ? cells[7].innerText.trim() : '';
+                const schedule = cells[8] ? cells[8].innerText.trim() : '';
+                const mode = cells[9] ? cells[9].innerText.trim() : '';
+                const dateCreated = cells[10] ? cells[10].innerText.trim() : '';
 
                 // Apply filters
                 if (riderFilter !== 'all' && riderName !== riderFilter) return;
@@ -5928,9 +6558,13 @@
                 rowNum++;
                 const baseNum = parseFloat(base.replace(/[₱,]/g, '')) || 0;
                 const incentiveNum = parseFloat(incentive.replace(/[₱,]/g, '')) || 0;
+                const renumerationNum = parseFloat(renumeration26Days.replace(/[₱,]/g, '')) || 0;
+                const addaDfNum = parseFloat(addaDf.replace(/[₱,]/g, '')) || 0;
                 const netNum = parseFloat(net.replace(/[₱,]/g, '')) || 0;
                 totalBase += baseNum;
                 totalIncentives += incentiveNum;
+                totalRenumeration26Days += renumerationNum;
+                totalAddaDf += addaDfNum;
                 totalNet += netNum;
 
                 const modeBadge = mode ?
@@ -5943,6 +6577,9 @@
                     <td><strong>${riderName}</strong></td>
                     <td style="text-align:right">${base}</td>
                     <td style="text-align:right">${incentive}</td>
+                    <td style="text-align:right">${renumeration26Days}</td>
+                    <td style="text-align:right">${addaDf}</td>
+                    <td style="font-size:12px;color:#6b7280">${addaDfDate}</td>
                     <td style="text-align:right;font-weight:700;color:#436026">${net}</td>
                     <td>${schedule}</td>
                     <td style="text-align:center">${modeBadge}</td>
@@ -6108,6 +6745,9 @@
                 <th>Rider Name</th>
                 <th style="text-align:right">Base Salary</th>
                 <th style="text-align:right">Incentives</th>
+                <th style="text-align:right">26 Days Renumeration</th>
+                <th style="text-align:right">ADDA DF</th>
+                <th>ADDA DF Date</th>
                 <th style="text-align:right">Net Salary</th>
                 <th>Schedule</th>
                 <th style="text-align:center">Mode</th>
@@ -6118,6 +6758,9 @@
                 <td colspan="3" style="text-align:right;letter-spacing:0.5px">TOTALS</td>
                 <td style="text-align:right">&#8369;${totalBase.toLocaleString('en-PH',{minimumFractionDigits:2})}</td>
                 <td style="text-align:right">&#8369;${totalIncentives.toLocaleString('en-PH',{minimumFractionDigits:2})}</td>
+                <td style="text-align:right">&#8369;${totalRenumeration26Days.toLocaleString('en-PH',{minimumFractionDigits:2})}</td>
+                <td style="text-align:right">&#8369;${totalAddaDf.toLocaleString('en-PH',{minimumFractionDigits:2})}</td>
+                <td></td>
                 <td style="text-align:right">&#8369;${totalNet.toLocaleString('en-PH',{minimumFractionDigits:2})}</td>
                 <td colspan="3"></td>
             </tr></tfoot>

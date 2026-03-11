@@ -24,7 +24,7 @@ Route::get('/email/verify/{id}/{hash}', [ProfileController::class, 'verifyEmail'
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1'); // Max 5 attempts per minute
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
@@ -79,7 +79,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
     Route::post('/riders', [RiderController::class, 'store'])->name('riders.store');
     Route::put('/riders/{rider}', [RiderController::class, 'update'])->name('riders.update');
     Route::delete('/riders/{rider}', [RiderController::class, 'destroy'])->name('riders.destroy');
-    
+
     // Remittance Routes
     Route::post('/remittances', [RemittanceController::class, 'store'])->name('remittances.store');
     Route::post('/rider-payroll', [RiderPayrollController::class, 'store'])->name('rider-payroll.store');
@@ -136,29 +136,29 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
     Route::get('/bank-deposit', function (\Illuminate\Http\Request $request) {
         // Determine the date to filter by
         $filterDate = $request->filled('date') ? $request->date : now()->format('Y-m-d');
-        
+
         // Get individual remittances for the specified date
         $query = \App\Models\Remittance::with('rider')
             ->whereIn('status', ['pending', 'confirmed'])
             ->whereDate('created_at', $filterDate);
-        
+
         // Apply search filter
         if ($request->filled('search')) {
             $query->whereHas('rider', function($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%');
             });
         }
-        
+
         // Apply status filter
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-        
+
         $remittances = $query->latest()->paginate(10)->withQueryString();
-        
+
         // Get rider summary data - total remit per rider for the specified date
         $riderSummaryQuery = \App\Models\Remittance::with('rider')
-            ->selectRaw('rider_id, 
+            ->selectRaw('rider_id,
                          COUNT(*) as total_transactions,
                          SUM(total_remit) as total_remit_amount,
                          SUM(total_collection) as total_collection_amount,
@@ -166,14 +166,14 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
             ->whereIn('status', ['pending', 'confirmed'])
             ->whereDate('created_at', $filterDate)
             ->groupBy('rider_id');
-            
+
         // Apply search filter to summary
         if ($request->filled('search')) {
             $riderSummaryQuery->whereHas('rider', function($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%');
             });
         }
-        
+
         // Apply sorting
         if ($request->filled('sort')) {
             switch ($request->sort) {
@@ -196,22 +196,22 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         } else {
             $riderSummaryQuery->orderByRaw('MAX(created_at) DESC');
         }
-        
+
         $riderSummaries = $riderSummaryQuery->get();
-        
+
         // Calculate overall statistics for the specified date
         $totalExpectedRemit = \App\Models\Remittance::whereIn('status', ['pending', 'confirmed'])
             ->whereDate('created_at', $filterDate)
             ->sum('total_remit');
-        
+
         $totalCashCollected = \App\Models\Remittance::whereIn('status', ['pending', 'confirmed'])
             ->whereDate('created_at', $filterDate)
             ->sum('total_collection');
-        
+
         $clearedCount = \App\Models\Remittance::where('status', 'confirmed')
             ->whereDate('created_at', $filterDate)
             ->count();
-            
+
         $pendingCount = \App\Models\Remittance::where('status', 'pending')
             ->whereDate('created_at', $filterDate)
             ->count();
@@ -286,7 +286,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
             }
         }
         $validatingDates = array_values(array_unique($validatingDates));
-        
+
         return view('bank-deposit', compact('remittances', 'riderSummaries', 'totalExpectedRemit', 'totalCashCollected', 'clearedCount', 'pendingCount', 'confirmedCashCollected', 'filterDate', 'totalDiscrepancy', 'totalChange', 'discrepancyDates', 'validatingDates', 'changeDates'));
     })->name('bank-deposit');
 
@@ -453,6 +453,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
     Route::get('/merchants', [MerchantController::class, 'index'])->name('merchants');
     Route::post('/merchants', [MerchantController::class, 'store'])->name('merchants.store');
     Route::put('/merchants/{merchant}', [MerchantController::class, 'update'])->name('merchants.update');
+    Route::post('/merchants/bulk-update', [MerchantController::class, 'bulkUpdate'])->name('merchants.bulk-update');
     Route::delete('/merchants/{merchant}', [MerchantController::class, 'destroy'])->name('merchants.destroy');
 
     // Member Management Routes
