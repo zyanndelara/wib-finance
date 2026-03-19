@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('remittances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('rider_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('rider_id');
+            $table->index('rider_id');
             $table->integer('total_deliveries');
             $table->decimal('total_delivery_fee', 10, 2);
             $table->decimal('total_remit', 10, 2);

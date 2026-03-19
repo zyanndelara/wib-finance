@@ -23,7 +23,8 @@ class DailyRemittanceReset extends Command
         $this->info("Running daily remittance reset for log date: {$logDate}");
 
         // 1. Find riders who existed on $logDate and did NOT submit any remittance that day
-        $nonRemittingRiders = Rider::whereDate('created_at', '<=', $logDate)
+        $nonRemittingRiders = Rider::whereDate('date_created', '<=', $logDate)
+            ->where('status', 'active')
             ->whereDoesntHave('remittances', function ($q) use ($logDate) {
                 $q->whereDate('created_at', $logDate);
             })->get();

@@ -44,6 +44,9 @@ class RiderPayrollController extends Controller
         } elseif ($salarySchedule === 'Cut off payout') {
             // 15th or last day of month
             $remittancesQuery->whereRaw('(DAY(remittance_date) = 15 OR DAY(remittance_date) = DAY(LAST_DAY(remittance_date)))');
+        } elseif ($salarySchedule === 'Select Date') {
+            // Custom date range - no day-of-week filter needed
+            // The date range is already applied via $fromDate and $toDate above
         }
 
         $remittances     = $remittancesQuery->get();

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -20,327 +20,14 @@
             background: #e8e8e8;
         }
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: 200px;
-            background: linear-gradient(180deg, #2d4016 0%, #3a5220 40%, #2d4016 100%);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
-            z-index: 1000;
-        }
+                @include('partials.app-sidebar-styles')
+        @include('partials.app-page-background-styles')
 
-        .sidebar-logo {
-            padding: 18px 16px 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 7px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.15);
-        }
 
-        .sidebar-logo img {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar-logo img:hover {
-            transform: scale(1.07);
-        }
-
-        .sidebar-logo .app-name {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.75);
-        }
-
-        .sidebar-menu {
-            flex: 1;
-            padding: 10px 10px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .sidebar-menu::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .sidebar-menu::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar-menu::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
-
-        .menu-section-label {
-            font-size: 9.5px;
-            font-weight: 700;
-            letter-spacing: 1.4px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.38);
-            padding: 10px 8px 4px;
-            user-select: none;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 10px;
-            color: rgba(255, 255, 255, 0.78);
-            text-decoration: none;
-            transition: all 0.22s ease;
-            cursor: pointer;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            font-size: 12.5px;
-            font-weight: 500;
-            border-radius: 8px;
-        }
-
-        .menu-item .menu-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            background: rgba(255, 255, 255, 0.08);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-            transition: all 0.22s ease;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .menu-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .menu-item:hover .menu-icon {
-            background: rgba(255, 211, 0, 0.18);
-            color: #ffd300;
-        }
-
-        .menu-item.active {
-            background: rgba(255, 211, 0, 0.14);
-            color: #ffd300;
-            font-weight: 700;
-        }
-
-        .menu-item.active .menu-icon {
-            background: #ffd300;
-            color: #2d4016;
-        }
-
-        .menu-divider {
-            height: 1px;
-            background: rgba(255, 255, 255, 0.07);
-            margin: 8px 4px;
-        }
-
-        /* Toast Notification Styles */
-        #toastContainer {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .custom-toast {
-            min-width: 300px;
-            max-width: 500px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-left: 4px solid #28a745;
-            animation: slideIn 0.3s ease-out;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .toast-icon {
-            font-size: 24px;
-            color: #28a745;
-            flex-shrink: 0;
-        }
-
-        .toast-message {
-            flex: 1;
-            color: #333;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .toast-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #999;
-            cursor: pointer;
-            padding: 0;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: color 0.2s;
-        }
-
-        .toast-close:hover {
-            color: #333;
-        }
-
-        .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: #28a745;
-            animation: progress 3s linear;
-        }
-
-        @keyframes progress {
-            from {
-                width: 100%;
-            }
-            to {
-                width: 0;
-            }
-        }
-
-        .sidebar-footer {
-            padding: 10px 10px 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.15);
-        }
-
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 10px;
-            background: rgba(255, 80, 80, 0.1);
-            color: rgba(255, 150, 150, 0.9);
-            border: 1px solid rgba(255, 80, 80, 0.2);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.22s ease;
-            width: 100%;
-            font-size: 12.5px;
-            font-weight: 600;
-        }
-
-        .logout-btn .menu-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            background: rgba(255, 80, 80, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-            transition: all 0.22s ease;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 80, 80, 0.22);
-            border-color: rgba(255, 80, 80, 0.5);
-            color: #ff6b6b;
-            transform: translateX(2px);
-        }
-
-        .logout-btn:hover .menu-icon {
-            background: rgba(255, 80, 80, 0.3);
-        }
-
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1100;
-            background: #436026;
-            color: white;
-            border: none;
-            padding: 12px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .mobile-menu-toggle:hover {
-            background: #5a7d33;
-            transform: scale(1.05);
-        }
-
-        .mobile-menu-toggle i {
-            font-size: 20px;
-        }
-
-        /* Mobile Overlay */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
 
         /* Main Content Styles */
         .main-content {
-            margin-left: 200px;
+            margin-left: 230px;
             flex: 1;
             padding: 40px;
             overflow-y: auto;
@@ -551,6 +238,104 @@
             border-left: 4px solid #28a745;
         }
 
+        /* Toast Notification */
+        #toastContainer {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: min(420px, calc(100vw - 24px));
+            pointer-events: none;
+        }
+
+        .custom-toast {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            background: #ffffff;
+            border-left: 4px solid #28a745;
+            border-radius: 8px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            animation: toastSlideIn 0.25s ease-out;
+            transition: opacity 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .toast-icon {
+            color: #28a745;
+            font-size: 18px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            flex: 1;
+            min-width: 0;
+            color: #1f2937;
+            font-size: 13px;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .toast-close {
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: -1px;
+            padding: 0;
+        }
+
+        .toast-close:hover {
+            color: #1f2937;
+        }
+
+        .toast-progress {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 3px;
+            width: 100%;
+            animation: toastProgress 3s linear forwards;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                transform: translateX(24px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes toastProgress {
+            from {
+                width: 100%;
+            }
+
+            to {
+                width: 0;
+            }
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .stats-grid {
@@ -566,7 +351,7 @@
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
-                width: 200px;
+                width: 230px;
                 z-index: 1001;
             }
 
@@ -577,6 +362,21 @@
             .main-content {
                 margin-left: 0;
                 padding: 80px 20px 20px 20px;
+            }
+
+            #toastContainer {
+                right: 12px;
+                left: 12px;
+                bottom: 12px;
+                width: auto;
+            }
+
+            .custom-toast {
+                padding: 11px 12px;
+            }
+
+            .toast-message {
+                font-size: 12px;
             }
 
             .sidebar-logo {
@@ -650,90 +450,18 @@
                 font-size: 12px;
             }
         }
+
+        @include('partials.user-indicator-styles')
     </style>
 </head>
 <body>
-    <!-- Mobile Menu Toggle -->
-    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
-
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-logo">
-            <img src="{{ asset('images/logowhite.png') }}" alt="Logo">
-            <span class="app-name">When in Baguio Inc.</span>
-        </div>
-
-        <div class="sidebar-menu">
-            <span class="menu-section-label">Main</span>
-            <a href="{{ route('dashboard') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-home"></i></span>
-                <span>Dashboard</span>
-            </a>
-            <a href="{{ route('remittance') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-                <span>Remittance</span>
-            </a>
-            <a href="{{ route('bank-deposit') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-university"></i></span>
-                <span>Bank &amp; Deposit</span>
-            </a>
-
-            <div class="menu-divider"></div>
-            <span class="menu-section-label">Management</span>
-            <a href="{{ route('merchants') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-store"></i></span>
-                <span>Merchants</span>
-            </a>
-            <a href="{{ route('members.index') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-users-cog"></i></span>
-                <span>Member Management</span>
-            </a>
-            <a href="{{ route('audit-logs') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
-                <span>Audit Logs</span>
-            </a>
-            <a href="{{ route('reports') }}" class="menu-item active">
-                <span class="menu-icon"><i class="fas fa-chart-bar"></i></span>
-                <span>Reports</span>
-            </a>
-
-            <div class="menu-divider"></div>
-            <span class="menu-section-label">Account</span>
-            <a href="{{ route('profile') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-user"></i></span>
-                <span>Profile</span>
-            </a>
-        </div>
-
-        <div class="sidebar-footer">
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="logout-btn">
-                    <span class="menu-icon"><i class="fas fa-sign-out-alt"></i></span>
-                    <span>Logout</span>
-                </button>
-            </form>
-        </div>
-    </div>
+    @include('partials.app-sidebar', ['activePage' => ''])
 
     <!-- Main Content -->
     <div class="main-content">
         <div class="content-header">
             <h1>Reports & Analytics</h1>
-            <div class="user-indicator">
-                <div class="user-info">
-                    <span class="user-name">{{ auth()->user()->name }}</span>
-                    <span class="user-role">{{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}</span>
-                </div>
-                <a href="{{ route('profile') }}" class="user-avatar">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                </a>
-            </div>
+            @include('partials.user-indicator')
         </div>
 
         <!-- Stats Cards -->
@@ -876,7 +604,13 @@
 
         // Toast Notification Function
         function showToast(message, type = 'success', duration = 3000) {
-            const container = document.getElementById('toastContainer');
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                document.body.appendChild(container);
+            }
+
             const toast = document.createElement('div');
             toast.className = 'custom-toast';
             let iconHtml = '<i class="fas fa-check-circle toast-icon"></i>';
@@ -902,6 +636,12 @@
                 <button class="toast-close" aria-label="Close">&times;</button>
                 <div class="toast-progress" style="background:${progressColor}"></div>
             `;
+
+            const progressBar = toast.querySelector('.toast-progress');
+            if (progressBar) {
+                progressBar.style.animationDuration = `${duration}ms`;
+            }
+
             toast.querySelector('.toast-close').onclick = function() {
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 300);

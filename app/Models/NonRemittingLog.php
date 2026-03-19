@@ -18,6 +18,6 @@ class NonRemittingLog extends Model
 
     public function rider()
     {
-        return $this->belongsTo(Rider::class);
+        return $this->belongsTo(Rider::class, 'rider_id', 'driver_id');
     }
 }

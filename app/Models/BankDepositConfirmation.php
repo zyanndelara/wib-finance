@@ -34,7 +34,7 @@ class BankDepositConfirmation extends Model
 
     public function rider(): BelongsTo
     {
-        return $this->belongsTo(Rider::class);
+        return $this->belongsTo(Rider::class, 'rider_id', 'driver_id');
     }
 
     public function confirmedBy(): BelongsTo

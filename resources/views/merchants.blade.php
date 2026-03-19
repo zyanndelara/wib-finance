@@ -22,329 +22,14 @@
             background: #e8e8e8;
         }
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: 200px;
-            background: linear-gradient(180deg, #2d4016 0%, #3a5220 40%, #2d4016 100%);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
-            z-index: 1000;
-        }
+                @include('partials.app-sidebar-styles')
+        @include('partials.app-page-background-styles')
 
-        .sidebar-logo {
-            padding: 18px 16px 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 7px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.15);
-        }
 
-        .sidebar-logo img {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar-logo img:hover {
-            transform: scale(1.07);
-        }
-
-        .sidebar-logo .app-name {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.75);
-        }
-
-        .sidebar-menu {
-            flex: 1;
-            padding: 10px 10px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .sidebar-menu::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .sidebar-menu::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar-menu::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
-
-        .menu-section-label {
-            font-size: 9.5px;
-            font-weight: 700;
-            letter-spacing: 1.4px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.38);
-            padding: 10px 8px 4px;
-            user-select: none;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 10px;
-            color: rgba(255, 255, 255, 0.78);
-            text-decoration: none;
-            transition: all 0.22s ease;
-            cursor: pointer;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            font-size: 12.5px;
-            font-weight: 500;
-            border-radius: 8px;
-        }
-
-        .menu-item .menu-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            background: rgba(255, 255, 255, 0.08);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-            transition: all 0.22s ease;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .menu-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .menu-item:hover .menu-icon {
-            background: rgba(255, 211, 0, 0.18);
-            color: #ffd300;
-        }
-
-        .menu-item.active {
-            background: rgba(255, 211, 0, 0.14);
-            color: #ffd300;
-            font-weight: 700;
-        }
-
-        .menu-item.active .menu-icon {
-            background: #ffd300;
-            color: #2d4016;
-        }
-
-        .menu-divider {
-            height: 1px;
-            background: rgba(255, 255, 255, 0.07);
-            margin: 8px 4px;
-        }
-
-        /* Toast Notification Styles */
-        #toastContainer {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .custom-toast {
-            min-width: 300px;
-            max-width: 500px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-left: 4px solid #28a745;
-            animation: slideIn 0.3s ease-out;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .toast-icon {
-            font-size: 24px;
-            color: #28a745;
-            flex-shrink: 0;
-        }
-
-        .toast-message {
-            flex: 1;
-            color: #333;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .toast-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #999;
-            cursor: pointer;
-            padding: 0;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: color 0.2s;
-        }
-
-        .toast-close:hover {
-            color: #333;
-        }
-
-        .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: #28a745;
-            animation: progress 3s linear;
-        }
-
-        @keyframes progress {
-            from {
-                width: 100%;
-            }
-
-            to {
-                width: 0;
-            }
-        }
-
-        .sidebar-footer {
-            padding: 10px 10px 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.15);
-        }
-
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 10px;
-            background: rgba(255, 80, 80, 0.1);
-            color: rgba(255, 150, 150, 0.9);
-            border: 1px solid rgba(255, 80, 80, 0.2);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.22s ease;
-            width: 100%;
-            font-size: 12.5px;
-            font-weight: 600;
-        }
-
-        .logout-btn .menu-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            background: rgba(255, 80, 80, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-            transition: all 0.22s ease;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 80, 80, 0.22);
-            border-color: rgba(255, 80, 80, 0.5);
-            color: #ff6b6b;
-            transform: translateX(2px);
-        }
-
-        .logout-btn:hover .menu-icon {
-            background: rgba(255, 80, 80, 0.3);
-        }
-
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1100;
-            background: #436026;
-            color: white;
-            border: none;
-            padding: 12px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .mobile-menu-toggle:hover {
-            background: #5a7d33;
-            transform: scale(1.05);
-        }
-
-        .mobile-menu-toggle i {
-            font-size: 20px;
-        }
-
-        /* Mobile Overlay */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
 
         /* Main Content Styles */
         .main-content {
-            margin-left: 200px;
+            margin-left: 230px;
             flex: 1;
             padding: 40px;
             overflow-y: auto;
@@ -462,7 +147,7 @@
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
-                width: 200px;
+                width: 230px;
                 z-index: 1001;
             }
 
@@ -743,87 +428,19 @@
             border-color: #357a3a;
             box-shadow: 0 0 0 3px rgba(53, 122, 58, .08);
         }
+
+        @include('partials.user-indicator-styles')
     </style>
 </head>
 
 <body>
-    <!-- Mobile Menu Toggle -->
-    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
-
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-logo">
-            <img src="{{ asset('images/logowhite.png') }}" alt="Logo">
-            <span class="app-name">When in Baguio Inc.</span>
-        </div>
-
-        <div class="sidebar-menu">
-            <span class="menu-section-label">Main</span>
-            <a href="{{ route('dashboard') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-home"></i></span>
-                <span>Dashboard</span>
-            </a>
-            <a href="{{ route('remittance') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-                <span>Remittance</span>
-            </a>
-            <a href="{{ route('bank-deposit') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-university"></i></span>
-                <span>Bank &amp; Deposit</span>
-            </a>
-
-            <div class="menu-divider"></div>
-            <span class="menu-section-label">Management</span>
-            <a href="{{ route('merchants') }}" class="menu-item active">
-                <span class="menu-icon"><i class="fas fa-store"></i></span>
-                <span>Merchants</span>
-            </a>
-            <a href="{{ route('members.index') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-users-cog"></i></span>
-                <span>Member Management</span>
-            </a>
-            <a href="{{ route('audit-logs') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
-                <span>Audit Logs</span>
-            </a>
-
-            <div class="menu-divider"></div>
-            <span class="menu-section-label">Account</span>
-            <a href="{{ route('profile') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-user"></i></span>
-                <span>Profile</span>
-            </a>
-        </div>
-
-        <div class="sidebar-footer">
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="logout-btn">
-                    <span class="menu-icon"><i class="fas fa-sign-out-alt"></i></span>
-                    <span>Logout</span>
-                </button>
-            </form>
-        </div>
-    </div>
+    @include('partials.app-sidebar', ['activePage' => 'merchants'])
 
     <!-- Main Content -->
     <div class="main-content">
         <div class="content-header">
             <h1>Merchant &amp; Partner Hub</h1>
-            <div class="user-indicator">
-                <div class="user-info">
-                    <span class="user-name">{{ auth()->user()->name }}</span>
-                    <span class="user-role">{{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}</span>
-                </div>
-                <a href="{{ route('profile') }}" class="user-avatar">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                </a>
-            </div>
+            @include('partials.user-indicator')
         </div>
 
         <!-- ── Stat Cards ── -->
@@ -1420,9 +1037,14 @@
                             <label
                                 style="display:block;font-size:13px;color:#555;margin-bottom:5px;font-weight:600;">Merchant
                                 Name <span style="color:#dc3545;">*</span></label>
-                            <input type="text" name="name" class="modal-input" placeholder="e.g. Storely"
+                            <input type="text" id="add_merchant_name" name="name" class="modal-input" placeholder="e.g. Storely"
+                                oninput="checkDuplicateMerchantName()"
                                 required
                                 style="width:100%;border:1px solid #ddd;border-radius:7px;padding:9px 12px;font-size:14px;outline:none;">
+                            <div id="addDuplicateHint"
+                                style="display:none;margin-top:6px;font-size:12px;color:#dc3545;font-weight:600;">
+                                This merchant is already added.
+                            </div>
                         </div>
                         <div>
                             <label
@@ -1892,6 +1514,27 @@
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
         }
+
+        function normalizeMerchantName(name) {
+            return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase();
+        }
+
+        function merchantNameExists(name) {
+            const target = normalizeMerchantName(name);
+            if (!target) return false;
+            return Object.values(merchantsData).some(m => normalizeMerchantName(m.name) === target);
+        }
+
+        function checkDuplicateMerchantName() {
+            const input = document.getElementById('add_merchant_name');
+            const hint = document.getElementById('addDuplicateHint');
+            if (!input || !hint) return false;
+
+            const duplicated = merchantNameExists(input.value);
+            hint.style.display = duplicated ? 'block' : 'none';
+            input.style.borderColor = duplicated ? '#dc3545' : '#ddd';
+            return duplicated;
+        }
         // Close on backdrop click
         ['addModal', 'editModal', 'deleteModal'].forEach(id => {
             document.getElementById(id).addEventListener('click', function(e) {
@@ -1979,11 +1622,16 @@
             document.getElementById('addMerchantForm').reset();
             resetItemRows('add');
             updateCommissionLabel('add');
+            checkDuplicateMerchantName();
             openModal('addModal');
         }
 
         async function submitAddMerchant(e) {
             e.preventDefault();
+            if (checkDuplicateMerchantName()) {
+                showToast('This merchant is already added.', 'warning');
+                return;
+            }
             const btn = document.getElementById('addSubmitBtn');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
@@ -2010,8 +1658,15 @@
                     },
                     body: fd,
                 });
+                if (!resp.ok) {
+                    const errData = await resp.json().catch(() => ({}));
+                    const msg = errData.errors ? Object.values(errData.errors).flat().join(' ') : (errData.message ||
+                        'An error occurred.');
+                    showToast(msg, 'error');
+                    return;
+                }
                 const data = await resp.json();
-                if (data.success) {
+                if (data.success && data.merchant) {
                     const added = data.merchant;
                     merchantsData[added.id] = added;
                     insertMerchantRow(added);
@@ -2020,12 +1675,15 @@
                     closeModal('addModal');
                     e.target.reset();
                     showToast(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
                 } else {
                     const msg = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message ||
                         'An error occurred.');
                     showToast(msg, 'error');
                 }
-            } catch {
+            } catch (error) {
                 showToast('Network error. Please try again.', 'error');
             } finally {
                 btn.disabled = false;
@@ -2297,14 +1955,14 @@
             tr.dataset.type = m.type;
             tr.dataset.status = m.status;
             const cells = tr.cells;
-            // Cell 1 – Merchant name + address
-            cells[1].innerHTML =
+            // Cell 0 - Merchant name + address
+            cells[0].innerHTML =
                 `<div style="display:flex;align-items:center;gap:10px;"><div style="width:38px;height:38px;border-radius:10px;background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-store" style="font-size:15px;color:#3b6e2f;"></i></div><div><div style="font-weight:700;font-size:14px;color:#111827;">${escHtml(m.name)}</div>${m.address ? `<div style="font-size:11px;color:#9ca3af;margin-top:1px;">${escHtml(String(m.address).substring(0,40))}${m.address.length>40?'…':''}</div>` : ''}</div></div>`;
-            // Cell 2 – Type badge
+            // Cell 1 - Type badge
             const typeSt = m.type === 'partner' ? 'background:#dcfce7;color:#166534;' : 'background:#fef9c3;color:#854d0e;';
-            cells[2].innerHTML =
+            cells[1].innerHTML =
                 `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;${typeSt}">${_ucfirst(m.type)}</span>`;
-            // Cell 3 – Commission type badge
+            // Cell 2 - Commission type badge
             const ctStyles = {
                 percentage_based: 'background:#dcfce7;color:#166534;',
                 fixed_per_item: 'background:#ede9fe;color:#5b21b6;',
@@ -2320,41 +1978,53 @@
                 mixed: 'Mixed'
             };
             const ct = m.commission_type || 'percentage_based';
-            cells[3].innerHTML =
+            cells[2].innerHTML =
                 `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;${ctStyles[ct]||'background:#f3f4f6;color:#374151;'}">${ctLabels[ct]||ct}</span>`;
-            // Cell 4 – Commission details
-            cells[4].innerHTML = renderCommissionDetails(m);
-            // Cell 5 – Status badge
+            // Cell 3 - Commission details
+            cells[3].innerHTML = renderCommissionDetails(m);
+            // Cell 4 - Status badge
             const stSt = m.status === 'active' ? 'background:#dcfce7;color:#166534;' : 'background:#fee2e2;color:#991b1b;';
-            cells[5].innerHTML =
+            cells[4].innerHTML =
                 `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;${stSt}">${_ucfirst(m.status)}</span>`;
-            // Cell 6 – Orders
+            // Cell 5 - Orders
+            cells[5].style.cssText = 'text-align:right;font-size:13px;font-weight:700;color:#374151;';
+            cells[5].textContent = Number(m.total_orders || 0).toLocaleString();
+            // Cell 6 - Sales
             cells[6].style.cssText = 'text-align:right;font-size:13px;font-weight:700;color:#374151;';
-            cells[6].textContent = Number(m.total_orders || 0).toLocaleString();
-            // Cell 7 – Sales
-            cells[7].style.cssText = 'text-align:right;font-size:13px;font-weight:700;color:#374151;';
-            cells[7].textContent = '₱' + _numFmt(m.total_sales || 0);
-            // Cell 8 – WIB Commission
-            cells[8].style.cssText = 'text-align:right;font-size:13px;font-weight:700;color:#357a3a;';
-            cells[8].textContent = '₱' + _numFmt(m.total_commission || 0);
+            cells[6].textContent = '₱' + _numFmt(m.total_sales || 0);
+            // Cell 7 - WIB Commission
+            cells[7].style.cssText = 'text-align:right;font-size:13px;font-weight:700;color:#357a3a;';
+            cells[7].textContent = '₱' + _numFmt(m.total_commission || 0);
         }
 
         // ── Stat card live update ──
         function updateStatCards() {
             const all = Object.values(merchantsData);
-            const total = all.length;
-            const partners = all.filter(m => m.type === 'partner').length;
-            const nonPartners = all.filter(m => m.type === 'non-partner').length;
-            const active = all.filter(m => m.status === 'active').length;
-            document.getElementById('stat_total').textContent = total;
-            document.getElementById('stat_active_sub').innerHTML =
-                '<i class="fas fa-circle" style="font-size:6px;margin-right:4px;"></i>' + active + ' active';
-            document.getElementById('stat_partner').textContent = partners;
-            document.getElementById('stat_partner_sub').textContent = (total > 0 ? Math.round(partners / total * 100) : 0) +
-                '% of total';
-            document.getElementById('stat_nonpartner').textContent = nonPartners;
-            document.getElementById('stat_nonpartner_sub').textContent = (total > 0 ? Math.round(nonPartners / total *
-                100) : 0) + '% of total';
+            const partners = all.filter(m => m.type === 'partner');
+            const nonPartners = all.filter(m => m.type === 'non-partner');
+
+            const totalCommission = all.reduce((sum, m) => sum + Number(m.total_commission || 0), 0);
+            const partnerSales = partners.reduce((sum, m) => sum + Number(m.total_sales || 0), 0);
+            const nonPartnerSales = nonPartners.reduce((sum, m) => sum + Number(m.total_sales || 0), 0);
+
+            const totalEl = document.getElementById('stat_total');
+            if (totalEl) totalEl.textContent = '₱' + _numFmt(totalCommission);
+
+            const partnerEl = document.getElementById('stat_partner');
+            if (partnerEl) partnerEl.textContent = '₱' + _numFmt(partnerSales);
+
+            const partnerSubEl = document.getElementById('stat_partner_sub');
+            if (partnerSubEl) {
+                partnerSubEl.textContent = partners.length + ' partner merchant' + (partners.length !== 1 ? 's' : '');
+            }
+
+            const nonPartnerEl = document.getElementById('stat_nonpartner');
+            if (nonPartnerEl) nonPartnerEl.textContent = '₱' + _numFmt(nonPartnerSales);
+
+            const nonPartnerSubEl = document.getElementById('stat_nonpartner_sub');
+            if (nonPartnerSubEl) {
+                nonPartnerSubEl.textContent = nonPartners.length + ' non-partner merchant' + (nonPartners.length !== 1 ? 's' : '');
+            }
         }
 
         // ── Insert new merchant row into table ──
@@ -2362,7 +2032,6 @@
             const firstRow = document.querySelector('.merchant-row');
             const tbody = firstRow ? firstRow.closest('tbody') : document.querySelector('table tbody');
             if (!tbody) return;
-            const rowNum = tbody.querySelectorAll('.merchant-row').length + 1;
             const typeSt = m.type === 'partner' ? 'background:#dcfce7;color:#166534;' : 'background:#fef9c3;color:#854d0e;';
             const ctStyles = {
                 percentage_based: 'background:#dcfce7;color:#166534;',
@@ -2391,7 +2060,6 @@
             tr.dataset.status = m.status;
             tr.dataset.created = today;
             tr.innerHTML = `
-                <td>${rowNum}</td>
                 <td><div style="display:flex;align-items:center;gap:10px;"><div style="width:38px;height:38px;border-radius:10px;background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-store" style="font-size:15px;color:#3b6e2f;"></i></div><div><div style="font-weight:700;font-size:14px;color:#111827;">${escHtml(m.name)}</div>${m.address?`<div style="font-size:11px;color:#9ca3af;margin-top:1px;">${escHtml(String(m.address).substring(0,40))}${m.address.length>40?'…':''}</div>`:''}</div></div></td>
                 <td><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;${typeSt}">${_ucfirst(m.type)}</span></td>
                 <td><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;${ctStyles[ct]||'background:#f3f4f6;color:#374151;'}">${ctLabels[ct]||ct}</span></td>
@@ -2401,6 +2069,7 @@
                 <td style="text-align:right;font-size:13px;font-weight:700;color:#374151;">₱${_numFmt(m.total_sales||0)}</td>
                 <td style="text-align:right;font-size:13px;font-weight:700;color:#357a3a;">₱${_numFmt(m.total_commission||0)}</td>
                 <td style="text-align:center;"><div style="display:flex;gap:6px;justify-content:center;"><button onclick="openViewModal(${m.id})" class="merchant-action-btn" style="background:#eff6ff;color:#1a7ed1;border:1px solid #bfdbfe;border-radius:8px;padding:7px 13px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-weight:700;box-shadow:0 1px 3px rgba(26,126,209,.1);"><i class="fas fa-eye"></i> View</button><button onclick="openEditModal(${m.id})" class="merchant-action-btn" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;border-radius:8px;padding:7px 13px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-weight:700;box-shadow:0 1px 3px rgba(217,119,6,.1);"><i class="fas fa-edit"></i> Edit</button></div></td>
+                <td style="text-align:center;width:40px;"><input type="checkbox" class="bulkSelectRow" value="${m.id}" style="accent-color:#357a3a;width:16px;height:16px;"></td>
             `;
             const emptyRow = document.getElementById('merchantEmptyRow');
             if (emptyRow) tbody.insertBefore(tr, emptyRow);
@@ -2409,7 +2078,13 @@
 
         // ── Toast ──
         function showToast(message, type = 'success', duration = 3500) {
-            const container = document.getElementById('toastContainer');
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                document.body.appendChild(container);
+            }
+
             const colors = {
                 success: '#28a745',
                 error: '#dc3545',
@@ -2433,6 +2108,17 @@
                 <button class="toast-close" onclick="this.closest('.custom-toast').remove()">&times;</button>
                 <div class="toast-progress" style="background:${color}"></div>
             `;
+
+            const progressBar = toast.querySelector('.toast-progress');
+            if (progressBar) {
+                progressBar.style.animationDuration = `${duration}ms`;
+            }
+
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                toast.style.opacity = '1';
+            }, 10);
+
             setTimeout(() => {
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 300);

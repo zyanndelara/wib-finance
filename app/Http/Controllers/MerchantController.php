@@ -6,19 +6,28 @@ use App\Models\AuditLog;
 use App\Models\Merchant;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class MerchantController extends Controller
 {
     public function index(Request $request)
     {
-        $merchants       = Merchant::latest()->get();
+        $merchantModel    = new Merchant();
+        $createdAtColumn  = $merchantModel->getCreatedAtColumn();
+        $typeColumn       = $merchantModel->getTypeColumn();
+        $merchants       = Merchant::orderByDesc($createdAtColumn)->get();
         $totalMerchants  = Merchant::count();
-        $partnerCount       = Merchant::where('type', 'partner')->count();
-        $nonPartnerCount    = Merchant::where('type', 'non-partner')->count();
-        $partnerSales       = Merchant::where('type', 'partner')->sum('total_sales');
-        $nonPartnerSales    = Merchant::where('type', 'non-partner')->sum('total_sales');
-        $gtSales            = Merchant::sum('total_sales');
-        $totalWibCommission = Merchant::sum('total_commission');
+        $partnerCount       = Merchant::where($typeColumn, 'partner')->count();
+        $nonPartnerCount    = Merchant::where($typeColumn, 'non-partner')->count();
+
+        $tableName = $merchantModel->getTable();
+        $hasTotalSales = Schema::hasColumn($tableName, 'total_sales');
+        $hasTotalCommission = Schema::hasColumn($tableName, 'total_commission');
+
+        $partnerSales       = $hasTotalSales ? Merchant::where($typeColumn, 'partner')->sum('total_sales') : 0;
+        $nonPartnerSales    = $hasTotalSales ? Merchant::where($typeColumn, 'non-partner')->sum('total_sales') : 0;
+        $gtSales            = $hasTotalSales ? Merchant::sum('total_sales') : 0;
+        $totalWibCommission = $hasTotalCommission ? Merchant::sum('total_commission') : 0;
 
         return view('merchants', compact(
             'merchants', 'totalMerchants', 'partnerCount', 'nonPartnerCount',
@@ -28,8 +37,12 @@ class MerchantController extends Controller
 
     public function store(Request $request)
     {
+        $merchantModel = new Merchant();
+        $merchantTable = $merchantModel->getTable();
+        $merchantNameColumn = $merchantModel->getNameColumn();
+
         $validated = $request->validate([
-            'name'            => 'required|string|max:255',
+            'name'            => "required|string|max:255|unique:{$merchantTable},{$merchantNameColumn}",
             'type'            => 'required|in:partner,non-partner',
 
             'address'         => 'nullable|string|max:500',
@@ -43,6 +56,8 @@ class MerchantController extends Controller
             'commission_mixed_amount'     => 'nullable|numeric|min:0',
             'commission_items'            => 'nullable|string',
             'status'                      => 'nullable|in:active,inactive',
+        ], [
+            'name.unique' => 'This merchant is already added.',
         ]);
 
         if (isset($validated['commission_items'])) {
@@ -75,7 +90,11 @@ class MerchantController extends Controller
         );
 
         if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Merchant added successfully.']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Merchant added successfully.',
+                'merchant' => $merchant->fresh(),
+            ]);
         }
 
         return redirect()->route('merchants')->with('success', 'Merchant added successfully.');
@@ -123,9 +142,13 @@ class MerchantController extends Controller
 
     public function bulkUpdate(Request $request)
     {
+        $merchantModel = new Merchant();
+        $merchantTable = $merchantModel->getTable();
+        $merchantKeyColumn = $merchantModel->getKeyName();
+
         $validated = $request->validate([
             'merchant_ids'                => 'required|array',
-            'merchant_ids.*'              => 'exists:merchants,id',
+            'merchant_ids.*'              => "exists:{$merchantTable},{$merchantKeyColumn}",
             'commission_type'             => 'nullable|in:fixed_per_item,category_based_fixed,fixed_per_order,percentage_based,mixed',
             'commission_rate'             => 'nullable|numeric|min:0|max:100000',
             'commission_food_amount'      => 'nullable|numeric|min:0',
@@ -164,7 +187,7 @@ class MerchantController extends Controller
         }
 
         // Update all selected merchants
-        $updatedCount = Merchant::whereIn('id', $merchantIds)->update($updateData);
+        $updatedCount = Merchant::whereIn($merchantKeyColumn, $merchantIds)->update($updateData);
 
         // Log the bulk update
         AuditLog::log(

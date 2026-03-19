@@ -9,12 +9,28 @@ use App\Models\RiderDeduction;
 use App\Models\Remittance;
 use App\Models\Merchant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class RiderController extends Controller
 {
     public function index(Request $request)
     {
-        $riders = Rider::latest()->get();
+        $riders = DB::table('mt_driver')
+            ->select('driver_id', 'first_name', 'last_name', 'date_created')
+            ->whereIn('status', ['active', 'cleared'])
+            ->orderByDesc('date_created')
+            ->get()
+            ->map(function ($driver) {
+                $fullName = trim((string) (($driver->first_name ?? '') . ' ' . ($driver->last_name ?? '')));
+
+                return (object) [
+                    'id' => $driver->driver_id,
+                    'name' => $fullName !== '' ? $fullName : ('Driver #' . $driver->driver_id),
+                    'created_at' => $driver->date_created,
+                ];
+            })
+            ->values();
         $payrolls = RiderPayroll::latest()->paginate(10);
         $deductions = RiderDeduction::latest()->paginate(10);
         $deductionsByRider = RiderDeduction::selectRaw('rider_id, rider_name, SUM(amount) as total_amount, COUNT(*) as deduction_count')
@@ -41,6 +57,80 @@ class RiderController extends Controller
             })
             ->toArray();
 
+        $riderTaskDeliveriesMap = [];
+        if (Schema::hasTable('mt_driver_task')) {
+            $driverTaskColumns = Schema::getColumnListing('mt_driver_task');
+            $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($driverTaskColumns) {
+                return in_array($column, $driverTaskColumns, true);
+            });
+            $taskKeyColumn = in_array('task_id', $driverTaskColumns, true) ? 'task_id' : null;
+            $taskStatsDateParsed = \Carbon\Carbon::parse($request->get('stats_date', today()->toDateString()))->toDateString();
+
+            if ($riderKeyColumn && $taskKeyColumn) {
+                $taskQuery = DB::table('mt_driver_task')
+                    ->selectRaw("{$riderKeyColumn} as rider_key, COUNT({$taskKeyColumn}) as total_deliveries")
+                    ->whereNotNull($taskKeyColumn)
+                    ->groupBy($riderKeyColumn);
+
+                // Scope task counts by selected date using the best available task date column.
+                $taskDateColumn = collect(['delivery_date', 'date_created', 'created_at', 'date_added'])
+                    ->first(function ($column) use ($driverTaskColumns) {
+                        return in_array($column, $driverTaskColumns, true);
+                    });
+
+                if ($taskDateColumn) {
+                    $taskQuery->whereDate($taskDateColumn, $taskStatsDateParsed);
+                }
+
+                $riderTaskDeliveriesMap = $taskQuery
+                    ->pluck('total_deliveries', 'rider_key')
+                    ->map(function ($count) {
+                        return (int) $count;
+                    })
+                    ->toArray();
+            }
+        }
+
+        // Build delivery charges map from mt_order.delivery_charge joined with mt_driver_task by order_id
+        $riderDeliveryChargesMap = [];
+        $taskStatsDateParsed = \Carbon\Carbon::parse($request->get('stats_date', today()->toDateString()))->toDateString();
+        
+        try {
+            $driverTaskColumns = Schema::getColumnListing('mt_driver_task');
+            $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($driverTaskColumns) {
+                return in_array($column, $driverTaskColumns, true);
+            });
+            
+            if ($riderKeyColumn && Schema::hasTable('mt_driver_task')) {
+                // Get delivery charges from mt_order (in wibdb) joined with mt_driver_task by order_id
+                // Use raw join for cross-database queries
+                $chargeQuery = DB::table('mt_driver_task')
+                    ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wibdb.mt_order.delivery_charge), 0) as total_delivery_charge")
+                    ->leftJoin('wibdb.mt_order', 'mt_driver_task.order_id', '=', 'wibdb.mt_order.order_id')
+                    ->groupBy('mt_driver_task.' . $riderKeyColumn);
+                
+                // Scope by selected date using delivery_date from mt_driver_task
+                $taskDateColumn = collect(['delivery_date', 'date_created', 'created_at', 'date_added'])
+                    ->first(function ($column) use ($driverTaskColumns) {
+                        return in_array($column, $driverTaskColumns, true);
+                    });
+                
+                if ($taskDateColumn) {
+                    $chargeQuery->whereDate("mt_driver_task.{$taskDateColumn}", $taskStatsDateParsed);
+                }
+                
+                $riderDeliveryChargesMap = $chargeQuery
+                    ->pluck('total_delivery_charge', 'rider_key')
+                    ->map(function ($charge) {
+                        return (float) $charge;
+                    })
+                    ->toArray();
+            }
+        } catch (\Exception $e) {
+            // If delivery charges cannot be calculated, fall back to empty map
+            $riderDeliveryChargesMap = [];
+        }
+
         // Calculate counts and collections — scoped to selected date (default: today)
         $statsDate = $request->get('stats_date', today()->toDateString());
         $statsDateParsed = \Carbon\Carbon::parse($statsDate)->toDateString();
@@ -54,8 +144,10 @@ class RiderController extends Controller
         } else {
             $remittedOnDate = Remittance::whereDate('remittance_date', $statsDateParsed)
                 ->pluck('rider_id')->unique()->toArray();
-            $nonRemittingRiderCount = Rider::whereDate('created_at', '<=', $statsDateParsed)
-                ->whereNotIn('id', $remittedOnDate)
+            $nonRemittingRiderCount = DB::table('mt_driver')
+                ->whereIn('status', ['active', 'cleared'])
+                ->whereDate('date_created', '<=', $statsDateParsed)
+                ->whereNotIn('driver_id', $remittedOnDate)
                 ->count();
         }
 
@@ -70,14 +162,21 @@ class RiderController extends Controller
             // did NOT submit a remittance yesterday, and have NOT yet settled today.
             // This check is based purely on remittance records so it works
             // regardless of whether the nightly scheduler has run.
-            $blockedRiderIds = Rider::whereDate('created_at', '<', \Carbon\Carbon::today())
-                ->whereDoesntHave('remittances', function ($q) use ($yesterday) {
-                    $q->whereDate('remittance_date', $yesterday);
-                })
-                ->whereDoesntHave('remittances', function ($q) use ($today) {
-                    $q->whereDate('remittance_date', $today);
-                })
-                ->pluck('id')
+            $remittedYesterdayIds = Remittance::whereDate('remittance_date', $yesterday)
+                ->pluck('rider_id')
+                ->unique()
+                ->toArray();
+            $remittedTodayIds = Remittance::whereDate('remittance_date', $today)
+                ->pluck('rider_id')
+                ->unique()
+                ->toArray();
+
+            $blockedRiderIds = DB::table('mt_driver')
+                ->whereIn('status', ['active', 'cleared'])
+                ->whereDate('date_created', '<', \Carbon\Carbon::today())
+                ->whereNotIn('driver_id', $remittedYesterdayIds)
+                ->whereNotIn('driver_id', $remittedTodayIds)
+                ->pluck('driver_id')
                 ->toArray();
         } else {
             $blockedRiderIds = [];
@@ -195,18 +294,33 @@ class RiderController extends Controller
             ]);
         }
 
-        $merchants = Merchant::where('status', 'active')->orderBy('name')->get(['id', 'name']);
+        $merchants = Merchant::where('status', 'active')
+            ->orderBy('restaurant_name')
+            ->get(['merchant_id as id', 'restaurant_name as name']);
 
-        return view('remittance', compact('riders', 'payrolls', 'deductions', 'deductionsByRider', 'allDeductionsFlat', 'remittances', 'nonRemittingRiderCount', 'clearedCount', 'cashCollection', 'digitalCollection', 'statsDate', 'statsDateParsed', 'blockedRiderIds', 'clearedRiderIds', 'riderRemittanceDateMap', 'merchants'));
+        return view('remittance', compact('riders', 'payrolls', 'deductions', 'deductionsByRider', 'allDeductionsFlat', 'remittances', 'nonRemittingRiderCount', 'clearedCount', 'cashCollection', 'digitalCollection', 'statsDate', 'statsDateParsed', 'blockedRiderIds', 'clearedRiderIds', 'riderRemittanceDateMap', 'riderTaskDeliveriesMap', 'riderDeliveryChargesMap', 'merchants'));
     }
 
     public function store(Request $request)
     {
         try {
             $request->validate([
-                'name' => 'required|string|max:255|unique:riders,name',
+                'name' => 'required|string|max:255',
                 'status' => 'nullable|in:pending,cleared',
             ]);
+
+            $incomingName = trim((string) $request->name);
+            $nameExists = Rider::query()
+                ->whereRaw("TRIM(CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, ''))) = ?", [$incomingName])
+                ->exists();
+
+            if ($nameExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => ['name' => ['The name has already been taken.']]
+                ], 422);
+            }
         } catch (\Illuminate\Validation\ValidationException $e) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
@@ -218,9 +332,42 @@ class RiderController extends Controller
             throw $e;
         }
 
+        $name = trim((string) $request->name);
+        [$firstName, $lastName] = array_pad(preg_split('/\s+/', $name, 2), 2, '');
+        $nextDriverId = ((int) Rider::max('driver_id')) + 1;
+
         $rider = Rider::create([
-            'name' => $request->name,
+            'driver_id' => $nextDriverId,
+            'user_type' => 'rider',
+            'user_id' => 0,
+            'on_duty' => 1,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => '',
+            'phone' => '',
+            'username' => '',
+            'password' => '',
+            'team_id' => 0,
+            'transport_type_id' => '',
+            'transport_description' => '',
+            'licence_plate' => '',
+            'color' => '',
             'status' => $request->status ?? 'pending',
+            'date_created' => now(),
+            'date_modified' => now(),
+            'last_login' => now(),
+            'last_online' => 0,
+            'location_lat' => '',
+            'location_lng' => '',
+            'ip_address' => '',
+            'forgot_pass_code' => '0',
+            'token' => '',
+            'device_platform' => 'Android',
+            'enabled_push' => 1,
+            'profile_photo' => '',
+            'is_signup' => 2,
+            'app_version' => '',
+            'last_onduty' => '',
         ]);
 
         return response()->json([
@@ -234,9 +381,23 @@ class RiderController extends Controller
     {
         try {
             $request->validate([
-                'name' => 'required|string|max:255|unique:riders,name,' . $rider->id,
+                'name' => 'required|string|max:255',
                 'status' => 'required|in:pending,cleared',
             ]);
+
+            $incomingName = trim((string) $request->name);
+            $nameExists = Rider::query()
+                ->where('driver_id', '!=', $rider->driver_id)
+                ->whereRaw("TRIM(CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, ''))) = ?", [$incomingName])
+                ->exists();
+
+            if ($nameExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => ['name' => ['The name has already been taken.']]
+                ], 422);
+            }
         } catch (\Illuminate\Validation\ValidationException $e) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
@@ -248,9 +409,14 @@ class RiderController extends Controller
             throw $e;
         }
 
+        $name = trim((string) $request->name);
+        [$firstName, $lastName] = array_pad(preg_split('/\s+/', $name, 2), 2, '');
+
         $rider->update([
-            'name' => $request->name,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'status' => $request->status,
+            'date_modified' => now(),
         ]);
 
         return response()->json([

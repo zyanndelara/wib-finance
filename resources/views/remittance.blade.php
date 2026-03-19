@@ -25,329 +25,14 @@
             background: #f0f2f5;
         }
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: 200px;
-            background: linear-gradient(180deg, #2d4016 0%, #3a5220 40%, #2d4016 100%);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
-            z-index: 1000;
-        }
+                @include('partials.app-sidebar-styles')
+        @include('partials.app-page-background-styles')
 
-        .sidebar-logo {
-            padding: 18px 16px 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 7px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.15);
-        }
 
-        .sidebar-logo img {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar-logo img:hover {
-            transform: scale(1.07);
-        }
-
-        .sidebar-logo .app-name {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.75);
-        }
-
-        .sidebar-menu {
-            flex: 1;
-            padding: 10px 10px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .sidebar-menu::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .sidebar-menu::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar-menu::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
-
-        .menu-section-label {
-            font-size: 9.5px;
-            font-weight: 700;
-            letter-spacing: 1.4px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.38);
-            padding: 10px 8px 4px;
-            user-select: none;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 10px;
-            color: rgba(255, 255, 255, 0.78);
-            text-decoration: none;
-            transition: all 0.22s ease;
-            cursor: pointer;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            font-size: 12.5px;
-            font-weight: 500;
-            border-radius: 8px;
-        }
-
-        .menu-item .menu-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            background: rgba(255, 255, 255, 0.08);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-            transition: all 0.22s ease;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .menu-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .menu-item:hover .menu-icon {
-            background: rgba(255, 211, 0, 0.18);
-            color: #ffd300;
-        }
-
-        .menu-item.active {
-            background: rgba(255, 211, 0, 0.14);
-            color: #ffd300;
-            font-weight: 700;
-        }
-
-        .menu-item.active .menu-icon {
-            background: #ffd300;
-            color: #2d4016;
-        }
-
-        .menu-divider {
-            height: 1px;
-            background: rgba(255, 255, 255, 0.07);
-            margin: 8px 4px;
-        }
-
-        /* Toast Notification Styles */
-        #toastContainer {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .custom-toast {
-            min-width: 300px;
-            max-width: 500px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-left: 4px solid #28a745;
-            animation: slideIn 0.3s ease-out;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .toast-icon {
-            font-size: 24px;
-            color: #28a745;
-            flex-shrink: 0;
-        }
-
-        .toast-message {
-            flex: 1;
-            color: #333;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .toast-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #999;
-            cursor: pointer;
-            padding: 0;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: color 0.2s;
-        }
-
-        .toast-close:hover {
-            color: #333;
-        }
-
-        .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: #28a745;
-            animation: progress 3s linear;
-        }
-
-        @keyframes progress {
-            from {
-                width: 100%;
-            }
-
-            to {
-                width: 0;
-            }
-        }
-
-        .sidebar-footer {
-            padding: 10px 10px 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.15);
-        }
-
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 10px;
-            background: rgba(255, 80, 80, 0.1);
-            color: rgba(255, 150, 150, 0.9);
-            border: 1px solid rgba(255, 80, 80, 0.2);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.22s ease;
-            width: 100%;
-            font-size: 12.5px;
-            font-weight: 600;
-        }
-
-        .logout-btn .menu-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            background: rgba(255, 80, 80, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-            transition: all 0.22s ease;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 80, 80, 0.22);
-            border-color: rgba(255, 80, 80, 0.5);
-            color: #ff6b6b;
-            transform: translateX(2px);
-        }
-
-        .logout-btn:hover .menu-icon {
-            background: rgba(255, 80, 80, 0.3);
-        }
-
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1100;
-            background: #436026;
-            color: white;
-            border: none;
-            padding: 12px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .mobile-menu-toggle:hover {
-            background: #5a7d33;
-            transform: scale(1.05);
-        }
-
-        .mobile-menu-toggle i {
-            font-size: 20px;
-        }
-
-        /* Mobile Overlay */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
 
         /* Main Content Styles */
         .main-content {
-            margin-left: 200px;
+            margin-left: 230px;
             flex: 1;
             padding: 24px 28px;
             overflow-y: auto;
@@ -1298,6 +983,104 @@
             color: #28a745;
         }
 
+        /* Toast Notification */
+        #toastContainer {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: min(420px, calc(100vw - 24px));
+            pointer-events: none;
+        }
+
+        .custom-toast {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            background: #ffffff;
+            border-left: 4px solid #28a745;
+            border-radius: 8px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            animation: toastSlideIn 0.25s ease-out;
+            transition: opacity 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .toast-icon {
+            color: #28a745;
+            font-size: 18px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            flex: 1;
+            min-width: 0;
+            color: #1f2937;
+            font-size: 13px;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .toast-close {
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: -1px;
+            padding: 0;
+        }
+
+        .toast-close:hover {
+            color: #1f2937;
+        }
+
+        .toast-progress {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 3px;
+            width: 100%;
+            animation: toastProgress 3s linear forwards;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                transform: translateX(24px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes toastProgress {
+            from {
+                width: 100%;
+            }
+
+            to {
+                width: 0;
+            }
+        }
+
         /* Cleared Riders Table */
         .cleared-riders-section {
             margin-top: 0;
@@ -1404,7 +1187,7 @@
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
-                width: 200px;
+                width: 230px;
                 z-index: 1001;
             }
 
@@ -1449,6 +1232,21 @@
 
             .menu-item {
                 padding: 8px 10px;
+            }
+
+            #toastContainer {
+                right: 12px;
+                left: 12px;
+                bottom: 12px;
+                width: auto;
+            }
+
+            .custom-toast {
+                padding: 11px 12px;
+            }
+
+            .toast-message {
+                font-size: 12px;
             }
         }
 
@@ -1540,90 +1338,19 @@
                 font-size: 12px;
             }
         }
+
+        @include('partials.user-indicator-styles')
     </style>
 </head>
 
 <body>
-
-    <!-- Mobile Menu Toggle -->
-    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
-
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-logo">
-            <img src="{{ asset('images/logowhite.png') }}" alt="Logo">
-            <span class="app-name">When in Baguio Inc.</span>
-        </div>
-
-        <div class="sidebar-menu">
-            <span class="menu-section-label">Main</span>
-            <a href="{{ route('dashboard') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-home"></i></span>
-                <span>Dashboard</span>
-            </a>
-            <a href="{{ route('remittance') }}" class="menu-item active">
-                <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-                <span>Remittance</span>
-            </a>
-            <a href="{{ route('bank-deposit') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-university"></i></span>
-                <span>Bank &amp; Deposit</span>
-            </a>
-
-            <div class="menu-divider"></div>
-            <span class="menu-section-label">Management</span>
-            <a href="{{ route('merchants') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-store"></i></span>
-                <span>Merchants</span>
-            </a>
-            <a href="{{ route('members.index') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-users-cog"></i></span>
-                <span>Member Management</span>
-            </a>
-            <a href="{{ route('audit-logs') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
-                <span>Audit Logs</span>
-            </a>
-
-            <div class="menu-divider"></div>
-            <span class="menu-section-label">Account</span>
-            <a href="{{ route('profile') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-user"></i></span>
-                <span>Profile</span>
-            </a>
-        </div>
-
-        <div class="sidebar-footer">
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="logout-btn">
-                    <span class="menu-icon"><i class="fas fa-sign-out-alt"></i></span>
-                    <span>Logout</span>
-                </button>
-            </form>
-        </div>
-    </div>
+    @include('partials.app-sidebar', ['activePage' => 'remittance'])
 
     <!-- Main Content -->
     <div class="main-content">
-        <h1 style="font-size: 22px; font-weight: 800; margin-bottom: 0; color: #111827; letter-spacing: -0.3px;">
-            Remittance Managemen</h1>
-        <div class="user-indicator" style="justify-content: flex-end; margin-bottom: 16px;">
-            <div class="user-info">
-                <span class="user-name">{{ auth()->user()->name }}</span>
-                <span class="user-role">{{ auth()->user()->role }}</span>
-                <!-- <span class="user-email">{{ auth()->user()->email }}</span> -->
-                <span class="user-phone">{{ auth()->user()->phone }}</span>
-                <!-- <span class="user-role">{{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}</span> -->
-            </div>
-            <a href="{{ route('profile') }}" class="user-avatar">
-                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-            </a>
+        <div class="content-header">
+            <h1>Remittance Management</h1>
+            @include('partials.user-indicator')
         </div>
 
         <style>
@@ -1804,10 +1531,6 @@
                 <div class="stat-card-value">₱{{ number_format($digitalCollection, 2) }}</div>
             </div>
         </div>
-        <div class="remit-tabs" id="remitTabs">
-            <button class="remit-tab-btn active" data-tab="overview">Remittance Overview</button>
-            <button class="remit-tab-btn" data-tab="payroll">Rider's Payroll</button>
-        </div>
 
 
 
@@ -1893,23 +1616,23 @@
 
             <!-- Remittance Details Panel -->
             <div class="remittance-details-panel">
+                <div class="remit-tabs" id="remitTabs">
+                    <button class="remit-tab-btn active" data-tab="overview">Remittance Overview</button>
+                    <button class="remit-tab-btn" data-tab="payroll">Rider's Payroll</button>
+                </div>
                 <style>
                     .remit-tabs {
                         display: flex;
                         justify-content: stretch;
                         align-items: stretch;
-                        margin-bottom: 0;
-                        width: 100%;
+                        margin: -20px -20px 0 -20px;
+                        width: calc(100% + 40px);
                         background: #f3f4f6;
                         border-top-left-radius: 12px;
                         border-top-right-radius: 12px;
-                        border: 1px solid #e5e7eb;
-                        border-bottom: none;
+                        border-bottom: 1px solid #e5e7eb;
                         padding: 6px 6px 0;
                         gap: 2px;
-                        max-width: 762px;
-                        margin-left: auto;
-                        margin-right: 0;
                     }
 
                     .remit-tab-btn {
@@ -1952,9 +1675,42 @@
                         background: rgba(255, 255, 255, 0.6);
                         color: #374151;
                     }
+
+                    @media (max-width: 768px) {
+                        .remit-tab-btn {
+                            font-size: 12px;
+                            padding: 8px 0;
+                        }
+                    }
+
+                    @media (max-width: 480px) {
+                        .remit-tabs {
+                            flex-direction: column;
+                            padding: 4px;
+                            gap: 4px;
+                            border-radius: 12px;
+                            border-bottom: 1px solid #e5e7eb;
+                        }
+
+                        .remit-tab-btn {
+                            border-radius: 8px;
+                            padding: 10px 16px;
+                            text-align: left;
+                            display: flex;
+                            align-items: center;
+                        }
+
+                        .remit-tab-btn.active {
+                            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                        }
+
+                        .remit-tab-btn.active::after {
+                            display: none;
+                        }
+                    }
                 </style>
                 <div class="remit-tab-content" id="tabOverview">
-                    <div class="details-header">
+                    <div class="details-header" style="margin-top: 20px;">
                         Remittance Details: <span id="detailsRiderName"
                             style="color: #436026; font-weight: 700;"></span>
                     </div>
@@ -1999,104 +1755,427 @@
                     </div>
                 </div>
                 <div class="remit-tab-content" id="tabPayroll" style="display:none;">
+                    <style>
+                        .payroll-panel {
+                            padding: 24px 0;
+                        }
+
+                        .payroll-sections-grid {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 20px;
+                            margin-bottom: 20px;
+                        }
+
+                        .payroll-section-full {
+                            grid-column: 1 / -1;
+                        }
+
+                        .payroll-section {
+                            background: #fff;
+                            border-radius: 12px;
+                            padding: 20px;
+                            border: 1px solid #e5e7eb;
+                            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                        }
+
+                        .payroll-section-title {
+                            font-size: 13px;
+                            font-weight: 700;
+                            color: #436026;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            margin-bottom: 16px;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+
+                        .payroll-section-title i {
+                            font-size: 14px;
+                        }
+
+                        .form-row {
+                            display: grid;
+                            grid-template-columns: 140px 1fr;
+                            gap: 12px;
+                            align-items: start;
+                            margin-bottom: 16px;
+                        }
+
+                        .form-row:last-child {
+                            margin-bottom: 0;
+                        }
+
+                        .payroll-section-full .form-row {
+                            grid-template-columns: 1fr;
+                            gap: 8px;
+                        }
+
+                        .payroll-section-full .form-label {
+                            padding-top: 0;
+                            font-size: 12px;
+                        }
+
+                        .form-label {
+                            font-size: 13px;
+                            font-weight: 600;
+                            color: #374151;
+                            padding-top: 10px;
+                            line-height: 1.4;
+                        }
+
+                        .form-input {
+                            font-size: 14px;
+                            padding: 10px 14px;
+                            border-radius: 8px;
+                            border: 1px solid #d1d5db;
+                            background: #fff;
+                            transition: all 0.2s;
+                            font-family: 'Inter', Arial, sans-serif;
+                        }
+
+                        .form-input:focus {
+                            outline: none;
+                            border-color: #436026;
+                            box-shadow: 0 0 0 3px rgba(67, 96, 38, 0.1);
+                        }
+
+                        .form-input:read-only {
+                            background: #f9fafb;
+                            color: #6b7280;
+                            cursor: not-allowed;
+                        }
+
+                        .form-input-readonly-highlight {
+                            background: #f0f9f4 !important;
+                            color: #436026 !important;
+                            font-weight: 600 !important;
+                            border-color: #9dc183 !important;
+                        }
+
+                        .adda-df-container {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 10px;
+                        }
+
+                        .adda-df-row {
+                            display: flex;
+                            gap: 10px;
+                            align-items: center;
+                        }
+
+                        .adda-df-amount,
+                        .adda-df-date {
+                            flex: 1;
+                            font-size: 14px;
+                            padding: 10px 14px;
+                            border-radius: 8px;
+                            border: 1px solid #d1d5db;
+                            background: #fff;
+                            transition: all 0.2s;
+                        }
+
+                        .adda-df-amount:focus,
+                        .adda-df-date:focus {
+                            outline: none;
+                            border-color: #436026;
+                            box-shadow: 0 0 0 3px rgba(67, 96, 38, 0.1);
+                        }
+
+                        .adda-df-remove {
+                            background: #ef4444;
+                            color: #fff;
+                            border: none;
+                            border-radius: 8px;
+                            padding: 10px 16px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            white-space: nowrap;
+                            transition: all 0.2s;
+                        }
+
+                        .adda-df-remove:hover {
+                            background: #dc2626;
+                            transform: translateY(-1px);
+                        }
+
+                        .adda-df-footer {
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            gap: 12px;
+                            padding-top: 8px;
+                            border-top: 1px solid #e5e7eb;
+                        }
+
+                        .adda-df-summary {
+                            color: #6b7280;
+                            font-size: 13px;
+                            font-weight: 600;
+                        }
+
+                        .adda-add-btn {
+                            background: linear-gradient(135deg, #436026 0%, #5a7d33 100%);
+                            color: #fff;
+                            border: none;
+                            border-radius: 8px;
+                            padding: 9px 18px;
+                            font-size: 13px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            white-space: nowrap;
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                            transition: all 0.2s;
+                            box-shadow: 0 2px 4px rgba(67, 96, 38, 0.2);
+                        }
+
+                        .adda-add-btn:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 4px 12px rgba(67, 96, 38, 0.3);
+                        }
+
+                        .net-salary-section {
+                            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+                            border: 2px solid #9dc183;
+                            border-radius: 10px;
+                            padding: 16px 20px;
+                            margin-top: 20px;
+                        }
+
+                        .net-salary-row {
+                            display: flex;
+                            align-items: center;
+                            gap: 16px;
+                            margin-bottom: 14px;
+                        }
+
+                        .net-salary-label {
+                            font-size: 14px;
+                            font-weight: 700;
+                            color: #1f2937;
+                            flex: 0 0 120px;
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                        }
+
+                        .net-salary-label i {
+                            font-size: 15px;
+                        }
+
+                        .net-salary-input {
+                            flex: 1;
+                            font-size: 15px;
+                            padding: 10px 14px;
+                            border-radius: 8px;
+                            border: 2px solid #9dc183;
+                            background: #fff;
+                            font-weight: 700;
+                            color: #436026;
+                            transition: all 0.2s;
+                        }
+
+                        .net-salary-input:focus {
+                            outline: none;
+                            border-color: #436026;
+                            box-shadow: 0 0 0 3px rgba(67, 96, 38, 0.15);
+                        }
+
+                        .confirm-payroll-btn {
+                            background: linear-gradient(135deg, #2d5f0e 0%, #5a7d35 100%);
+                            color: #fff;
+                            font-size: 14px;
+                            font-weight: 700;
+                            padding: 10px 24px;
+                            border: none;
+                            border-radius: 8px;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                            box-shadow: 0 2px 8px rgba(67, 96, 38, 0.25);
+                            margin-left: auto;
+                        }
+
+                        .confirm-payroll-btn:hover {
+                            transform: translateY(-1px);
+                            box-shadow: 0 4px 12px rgba(67, 96, 38, 0.35);
+                        }
+
+                        .confirm-payroll-btn i {
+                            font-size: 14px;
+                        }
+
+                        @media (max-width: 768px) {
+                            .payroll-sections-grid {
+                                grid-template-columns: 1fr;
+                            }
+
+                            .payroll-section-full > div > div[style*="grid-template-columns"] {
+                                grid-template-columns: 1fr !important;
+                            }
+
+                            .form-row {
+                                grid-template-columns: 1fr;
+                                gap: 8px;
+                            }
+
+                            .form-label {
+                                padding-top: 0;
+                            }
+
+                            .net-salary-row {
+                                flex-direction: column;
+                                align-items: stretch;
+                            }
+
+                            .net-salary-label {
+                                flex: none;
+                            }
+
+                            .adda-df-row {
+                                flex-wrap: wrap;
+                            }
+
+                            .adda-df-amount,
+                            .adda-df-date {
+                                min-width: calc(50% - 5px);
+                            }
+                        }
+                    </style>
                     <div class="payroll-panel">
                         <form id="payrollForm">
-                            <div style="display: flex; flex-direction: column; gap: 8px;">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <label style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">Rider
-                                        ID:</label>
-                                    <input type="text" name="rider_id" readonly
-                                        style="flex: 2; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #f5f9f2; color: #436026; font-weight: 600; cursor: default;">
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <label style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">Rider
-                                        Name:</label>
-                                    <input type="text" name="rider_name" readonly
-                                        style="flex: 2; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #f5f9f2; color: #436026; font-weight: 600; cursor: default;">
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <label style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">Base
-                                        Salary:</label>
-                                    <input type="number" name="base_salary"
-                                        style="flex: 2; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <label
-                                        style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">Incentives:</label>
-                                    <input type="number" name="incentives"
-                                        style="flex: 2; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <label style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">26 days
-                                        renumeration:</label>
-                                    <input type="number" name="renumeration_26_days" step="0.01"
-                                        style="flex: 2; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <label style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">ADDA
-                                        DF:</label>
-                                    <div style="flex: 2; display: flex; flex-direction: column; gap: 8px;">
-                                        <div id="addaDfRows" style="display:flex; flex-direction:column; gap:8px;">
-                                            <div class="adda-df-row" style="display:flex; gap:8px;">
-                                                <input type="number" class="adda-df-amount" step="0.01"
-                                                    placeholder="Amount"
-                                                    style="flex: 1; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
-                                                <input type="date" class="adda-df-date"
-                                                    style="flex: 1; min-width: 160px; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
-                                                <button type="button" class="adda-df-remove"
-                                                    onclick="removeAddaDfRow(this)"
-                                                    style="display:none; background:#dc3545; color:#fff; border:none; border-radius:8px; padding:7px 12px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;">
-                                                    Remove
-                                                </button>
-                                            </div>
+                            <!-- Rider Information Section (Full Width) -->
+                            <div class="payroll-sections-grid">
+                                <div class="payroll-section payroll-section-full">
+                                    <div class="payroll-section-title">
+                                        <i class="fas fa-user-circle"></i>
+                                        Rider Information
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                        <div class="form-row" style="margin-bottom: 0;">
+                                            <label class="form-label">Rider ID:</label>
+                                            <input type="text" name="rider_id" readonly class="form-input form-input-readonly-highlight">
                                         </div>
-                                        <div
-                                            style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                                            <small id="addaDfSummary" style="color:#6c757d; font-size:12px;">Total
-                                                ADDA DF: ₱0.00</small>
-                                            <button type="button" onclick="applyAddaDf()"
-                                                style="background:#436026; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">
-                                                <i class="fas fa-plus"></i> Add
-                                            </button>
+                                        <div class="form-row" style="margin-bottom: 0;">
+                                            <label class="form-label">Rider Name:</label>
+                                            <input type="text" name="rider_name" readonly class="form-input form-input-readonly-highlight">
                                         </div>
                                     </div>
                                 </div>
-                                <input type="hidden" name="adda_df" value="">
-                                <input type="hidden" name="adda_df_date" value="">
-                                <input type="hidden" name="adda_df_entries" value="[]">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <label style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">Salary
-                                        Schedule:</label>
-                                    <select name="salary_schedule"
-                                        style="flex: 2; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
-                                        <option value="" disabled selected hidden>Choose schedule...</option>
-                                        <option value="Mon-Thur/Friday payout">Mon-Thur/Friday payout</option>
-                                        <option value="Fri-Sun/Monday payout">Fri-Sun/Monday payout</option>
-                                        <option value="Mon-Sun/Monday payout">Mon-Sun/Monday payout</option>
-                                        <option value="Cut off payout">Cut off payout</option>
-                                    </select>
+                            </div>
+
+                            <!-- Two Column Grid for Salary Components and ADDA DF -->
+                            <div class="payroll-sections-grid">
+                                <!-- Salary Components Section -->
+                                <div class="payroll-section">
+                                    <div class="payroll-section-title">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                        Salary Components
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="form-label">Base Salary:</label>
+                                        <input type="number" name="base_salary" class="form-input" step="0.01" placeholder="Enter base salary">
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="form-label">Incentives:</label>
+                                        <input type="number" name="incentives" class="form-input" step="0.01" placeholder="Enter incentives">
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="form-label">26 Days Renumeration:</label>
+                                        <input type="number" name="renumeration_26_days" class="form-input" step="0.01" placeholder="Enter 26 days renumeration">
+                                    </div>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <label style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">Mode of
-                                        Payment:</label>
-                                    <select name="mode_of_payment"
-                                        style="flex: 2; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
-                                        <option value="" disabled selected hidden>Choose payment mode...</option>
-                                        <option value="cash">Cash</option>
-                                        <option value="bank">Bank Digital Wallet</option>
-                                    </select>
+
+                                <!-- ADDA DF Section -->
+                                <div class="payroll-section">
+                                    <div class="payroll-section-title">
+                                        <i class="fas fa-calendar-plus"></i>
+                                        ADDA DF
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="form-label">ADDA DF:</label>
+                                        <div class="adda-df-container">
+                                            <div id="addaDfAllowedDaysNotice" style="display:none; margin-bottom:8px; padding:6px 10px; background:#fff3cd; border-left:3px solid #ffc107; font-size:12px; color:#856404; border-radius:4px;">
+                                                <i class="fas fa-info-circle"></i> <span id="addaDfAllowedDaysText"></span>
+                                            </div>
+                                            <div id="addaDfRows">
+                                                <div class="adda-df-row">
+                                                    <input type="number" class="adda-df-amount" step="0.01" placeholder="Amount">
+                                                    <input type="date" class="adda-df-date">
+                                                    <button type="button" class="adda-df-remove" onclick="removeAddaDfRow(this)" style="display:none;">
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="adda-df-footer">
+                                                <span id="addaDfSummary" class="adda-df-summary">Total ADDA DF: ₱0.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="adda_df" value="">
+                                    <input type="hidden" name="adda_df_date" value="">
+                                    <input type="hidden" name="adda_df_entries" value="[]">
                                 </div>
                             </div>
-                            <hr style="margin: 16px 0; border-color: #cfcfcf;">
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                                <label style="flex: 1; font-size: 15px; font-weight: 600; color: #222;">Net
-                                    Salary:</label>
-                                <input type="number" name="net_salary"
-                                    style="flex: 2; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
+
+                            <!-- Payment Details Section (Full Width) -->
+                            <div class="payroll-sections-grid">
+                                <div class="payroll-section payroll-section-full">
+                                    <div class="payroll-section-title">
+                                        <i class="fas fa-credit-card"></i>
+                                        Payment Details
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                        <div class="form-row" style="margin-bottom: 0;">
+                                            <label class="form-label">Salary Schedule:</label>
+                                            <select name="salary_schedule" class="form-input" onchange="handleSalaryScheduleChange()">
+                                                <option value="" disabled selected hidden>Choose schedule...</option>
+                                                <option value="Mon-Thur/Friday payout">Mon-Thur/Friday payout</option>
+                                                <option value="Fri-Sun/Monday payout">Fri-Sun/Monday payout</option>
+                                                <option value="Mon-Sun/Monday payout">Mon-Sun/Monday payout</option>
+                                                <option value="Cut off payout">Cut off payout</option>
+                                                <option value="Select Date">Select Date</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-row" style="margin-bottom: 0;">
+                                            <label class="form-label">Mode of Payment:</label>
+                                            <select name="mode_of_payment" class="form-input">
+                                                <option value="" disabled selected hidden>Choose payment mode...</option>
+                                                <option value="cash">Cash</option>
+                                                <option value="bank">Bank Digital Wallet</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="customDateRange" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                                        <div class="form-row" style="margin-bottom: 0;">
+                                            <label class="form-label">From Date:</label>
+                                            <input type="date" name="custom_from_date" class="form-input">
+                                        </div>
+                                        <div class="form-row" style="margin-bottom: 0;">
+                                            <label class="form-label">To Date:</label>
+                                            <input type="date" name="custom_to_date" class="form-input">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div style="display: flex; justify-content: flex-end;">
-                                <button type="button" id="payrollSubmitBtn" onclick="openPayrollDeductionsModal()"
-                                    style="background: #436026; color: #fff; font-size: 15px; font-weight: 600; padding: 8px 22px; border: none; border-radius: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+
+                            <!-- Net Salary Section -->
+                            <div class="net-salary-section">
+                                <div class="net-salary-row">
+                                    <label class="net-salary-label">
+                                        <i class="fas fa-calculator"></i>
+                                        Net Salary:
+                                    </label>
+                                    <input type="number" name="net_salary" class="net-salary-input" step="0.01" placeholder="Enter net salary">
+                                </div>
+                                <button type="button" id="payrollSubmitBtn" onclick="openPayrollDeductionsModal()" class="confirm-payroll-btn">
                                     <i class="fas fa-briefcase"></i> Confirm Payroll
                                 </button>
                             </div>
@@ -2211,10 +2290,18 @@
                 </div>
                 <script>
                     const riderRemittanceDateMap = @json($riderRemittanceDateMap ?? []);
+                    const riderTaskDeliveriesMap = @json($riderTaskDeliveriesMap ?? []);
+                    const riderDeliveryChargesMap = @json($riderDeliveryChargesMap ?? []);
 
                     // Toast Notification Function
                     function showToast(message, type = 'success', duration = 3000) {
-                        const container = document.getElementById('toastContainer');
+                        let container = document.getElementById('toastContainer');
+                        if (!container) {
+                            container = document.createElement('div');
+                            container.id = 'toastContainer';
+                            document.body.appendChild(container);
+                        }
+
                         const toast = document.createElement('div');
                         toast.className = 'custom-toast';
                         let iconHtml = '<i class="fas fa-check-circle toast-icon"></i>';
@@ -2240,6 +2327,12 @@
                                 <button class="toast-close" aria-label="Close">&times;</button>
                                 <div class="toast-progress" style="background:${progressColor}"></div>
                             `;
+
+                        const progressBar = toast.querySelector('.toast-progress');
+                        if (progressBar) {
+                            progressBar.style.animationDuration = `${duration}ms`;
+                        }
+
                         // Close button handler
                         toast.querySelector('.toast-close').onclick = function() {
                             toast.style.opacity = '0';
@@ -2274,6 +2367,7 @@
                         rows.appendChild(row);
                         enforceAddaDfDateInputRules();
                         updateAddaDfRemoveButtons();
+                        attachAddaDfAmountListeners();
                     }
 
                     function removeAddaDfRow(buttonEl) {
@@ -2290,6 +2384,7 @@
 
                         updateAddaDfRemoveButtons();
                         consolidateAddaDfEntries(false);
+                        attachAddaDfAmountListeners();
                     }
 
                     function updateAddaDfRemoveButtons() {
@@ -2301,20 +2396,254 @@
                         });
                     }
 
-                    function getScheduleDateRuleText(schedule) {
+                    function handleSalaryScheduleChange() {
+                        const scheduleSelect = document.querySelector('[name="salary_schedule"]');
+                        const customDateRange = document.getElementById('customDateRange');
+                        const fromDateInput = document.querySelector('[name="custom_from_date"]');
+                        const toDateInput = document.querySelector('[name="custom_to_date"]');
+                        const allowedDaysNotice = document.getElementById('addaDfAllowedDaysNotice');
+                        const allowedDaysText = document.getElementById('addaDfAllowedDaysText');
+                        const payrollForm = document.getElementById('payrollForm');
+                        
+                        // Clear all ADDA DF inputs when schedule changes
+                        const addaDfRows = document.getElementById('addaDfRows');
+                        if (addaDfRows) {
+                            addaDfRows.innerHTML = `
+                                <div class="adda-df-row">
+                                    <input type="number" class="adda-df-amount" step="0.01" placeholder="Amount">
+                                    <input type="date" class="adda-df-date">
+                                    <button type="button" class="adda-df-remove" onclick="removeAddaDfRow(this)" style="display:none;">
+                                        Remove
+                                    </button>
+                                </div>
+                            `;
+                        }
+                        
+                        if (scheduleSelect.value === 'Select Date') {
+                            customDateRange.style.display = 'grid';
+                            if (fromDateInput) fromDateInput.required = true;
+                            if (toDateInput) toDateInput.required = true;
+                            if (allowedDaysNotice) {
+                                allowedDaysNotice.style.display = 'none';
+                            }
+                            hideAddaDfDateSelector();
+                        } else {
+                            customDateRange.style.display = 'none';
+                            if (fromDateInput) {
+                                fromDateInput.required = false;
+                                fromDateInput.value = '';
+                            }
+                            if (toDateInput) {
+                                toDateInput.required = false;
+                                toDateInput.value = '';
+                            }
+                            
+                            // Get rider's available dates and filter by schedule
+                            const riderId = payrollForm ? payrollForm.querySelector('[name="rider_id"]').value.trim() : '';
+                            if (riderId && scheduleSelect.value) {
+                                const availableDates = getFilteredRiderDates(riderId, scheduleSelect.value);
+                                updateAddaDfDateNotice(availableDates, scheduleSelect.value, allowedDaysNotice, allowedDaysText);
+                                
+                                // Show dropdown with available dates
+                                showAddaDfDateSelector(availableDates);
+                            } else if (scheduleSelect.value && allowedDaysNotice && allowedDaysText) {
+                                const noticeText = getAllowedDaysNoticeText(scheduleSelect.value);
+                                if (noticeText) {
+                                    allowedDaysText.textContent = noticeText;
+                                    allowedDaysNotice.style.display = 'block';
+                                } else {
+                                    allowedDaysNotice.style.display = 'none';
+                                }
+                                hideAddaDfDateSelector();
+                            }
+                        }
+                    }
+                    
+                    let availableAddaDfDates = [];
+                    
+                    function showAddaDfDateSelector(availableDates) {
+                        availableAddaDfDates = availableDates || [];
+                        
+                        const container = document.getElementById('addaDfAllowedDaysNotice');
+                        if (!container) return;
+                        
+                        const existingSelector = document.getElementById('addaDfDateSelectorDropdown');
+                        if (existingSelector) {
+                            existingSelector.remove();
+                        }
+                        
+                        if (availableAddaDfDates.length === 0) {
+                            return;
+                        }
+                        
+                        // Create dropdown selector
+                        const selectorDiv = document.createElement('div');
+                        selectorDiv.id = 'addaDfDateSelectorDropdown';
+                        selectorDiv.style.cssText = 'margin-top:8px; padding:10px; background:#e8f5e9; border-left:3px solid #4caf50; border-radius:4px;';
+                        
+                        const sortedDates = [...availableAddaDfDates].sort();
+                        
+                        selectorDiv.innerHTML = `
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                                <i class="fas fa-calendar-check" style="color:#2e7d32;"></i>
+                                <span style="font-size:12px; color:#2e7d32; font-weight:600;">Select dates to add ADDA DF:</span>
+                            </div>
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <select id="addaDfDateSelect" style="flex:1; padding:8px 12px; border:1px solid #4caf50; border-radius:6px; font-size:13px; background:#fff;">
+                                    <option value="">Choose a date...</option>
+                                    ${sortedDates.map(date => `<option value="${date}">${formatDateDisplay(date)}</option>`).join('')}
+                                </select>
+                                <button type="button" onclick="addSelectedAddaDfDate()" style="background:#4caf50; color:#fff; border:none; border-radius:6px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">
+                                    <i class="fas fa-plus-circle"></i> Add Date
+                                </button>
+                            </div>
+                        `;
+                        
+                        container.parentElement.insertBefore(selectorDiv, container.nextSibling);
+                    }
+                    
+                    function hideAddaDfDateSelector() {
+                        const existingSelector = document.getElementById('addaDfDateSelectorDropdown');
+                        if (existingSelector) {
+                            existingSelector.remove();
+                        }
+                        availableAddaDfDates = [];
+                    }
+                    
+                    function formatDateDisplay(dateStr) {
+                        const date = new Date(dateStr + 'T00:00:00');
+                        const options = { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' };
+                        return date.toLocaleDateString('en-US', options);
+                    }
+                    
+                    function addSelectedAddaDfDate() {
+                        const select = document.getElementById('addaDfDateSelect');
+                        if (!select || !select.value) {
+                            showToast('Please select a date first', 'warning');
+                            return;
+                        }
+                        
+                        const selectedDate = select.value;
+                        
+                        // Check if date is already added
+                        const existingDates = Array.from(document.querySelectorAll('.adda-df-date')).map(input => input.value);
+                        if (existingDates.includes(selectedDate)) {
+                            showToast('This date is already added', 'warning');
+                            return;
+                        }
+                        
+                        const addaDfRows = document.getElementById('addaDfRows');
+                        if (!addaDfRows) return;
+                        
+                        // Remove empty rows first
+                        const emptyRows = Array.from(addaDfRows.querySelectorAll('.adda-df-row')).filter(row => {
+                            const amount = row.querySelector('.adda-df-amount').value.trim();
+                            const date = row.querySelector('.adda-df-date').value.trim();
+                            return !amount && !date;
+                        });
+                        emptyRows.forEach(row => row.remove());
+                        
+                        // Add new row with selected date
+                        const row = document.createElement('div');
+                        row.className = 'adda-df-row';
+                        row.style.cssText = 'display: flex; gap: 8px; align-items: center; margin-bottom: 6px;';
+                        row.innerHTML = `
+                            <input type="number" class="adda-df-amount" step="0.01" placeholder="Amount"
+                                style="flex: 1; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff;">
+                            <input type="date" class="adda-df-date" value="${selectedDate}" readonly
+                                style="flex: 1; min-width: 160px; font-size: 15px; padding: 7px 12px; border-radius: 8px; border: 1px solid #bdbdbd; background: #f5f5f5; cursor: not-allowed;">
+                            <button type="button" class="adda-df-remove" onclick="removeAddaDfRow(this)"
+                                style="background:#dc3545; color:#fff; border:none; border-radius:8px; padding:7px 12px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;">
+                                Remove
+                            </button>
+                        `;
+                        addaDfRows.appendChild(row);
+                        
+                        updateAddaDfRemoveButtons();
+                        
+                        // Reset dropdown
+                        select.value = '';
+                        
+                        // Attach event listeners for automatic calculation
+                        attachAddaDfAmountListeners();
+                        
+                        // Focus on the amount input of the new row
+                        const amountInput = row.querySelector('.adda-df-amount');
+                        if (amountInput) {
+                            setTimeout(() => amountInput.focus(), 50);
+                        }
+                        
+                        showToast('Date added. Enter the amount.', 'success');
+                    }
+                    
+                    function autoPopulateAddaDfDates(availableDates) {
+                        // This function is now replaced by showAddaDfDateSelector
+                        // Keeping for backward compatibility
+                        showAddaDfDateSelector(availableDates);
+                    }
+                    
+                    function getFilteredRiderDates(riderId, schedule) {
+                        const riderDates = riderRemittanceDateMap[String(riderId)] || [];
+                        
+                        // Filter dates based on salary schedule rules
+                        return riderDates.filter(dateStr => {
+                            return isAddaDfDateAllowedBySchedule(dateStr, schedule);
+                        });
+                    }
+                    
+                    function updateAddaDfDateNotice(availableDates, schedule, noticeElement, textElement) {
+                        if (!noticeElement || !textElement) return;
+                        
+                        if (availableDates.length === 0) {
+                            textElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> No remittance data available for this rider matching the selected schedule';
+                            noticeElement.style.background = '#fff3cd';
+                            noticeElement.style.borderLeftColor = '#ffc107';
+                            noticeElement.style.color = '#856404';
+                            noticeElement.style.display = 'block';
+                        } else {
+                            const scheduleRule = getAllowedDaysNoticeText(schedule);
+                            const dateCount = availableDates.length;
+                            textElement.innerHTML = `<i class="fas fa-check-circle"></i> ${scheduleRule} — <span style="font-weight:700;color:#155724;">${dateCount} date${dateCount !== 1 ? 's' : ''} available</span> for ADDA DF`;
+                            noticeElement.style.background = '#d1f2eb';
+                            noticeElement.style.borderLeftColor = '#28a745';
+                            noticeElement.style.color = '#155724';
+                            noticeElement.style.display = 'block';
+                        }
+                    }
+                    
+                    function getAllowedDaysNoticeText(schedule) {
                         if (schedule === 'Mon-Thur/Friday payout') {
-                            return 'Monday through Friday';
+                            return 'You can only select Monday through Thursday';
                         }
                         if (schedule === 'Fri-Sun/Monday payout') {
-                            return 'Friday through Monday';
+                            return 'You can only select Friday, Saturday, or Sunday';
                         }
                         if (schedule === 'Mon-Sun/Monday payout') {
-                            return 'any day of the week';
+                            return 'You can select any day except Monday';
                         }
                         if (schedule === 'Cut off payout') {
-                            return '15th day or last day of month';
+                            return 'You can select any day except the 15th and last day of the month';
                         }
-                        return 'a valid schedule date';
+                        return '';
+                    }
+
+                    function getScheduleDateRuleText(schedule) {
+                        if (schedule === 'Mon-Thur/Friday payout') {
+                            return 'Only Monday through Thursday are allowed';
+                        }
+                        if (schedule === 'Fri-Sun/Monday payout') {
+                            return 'Only Friday, Saturday, and Sunday are allowed';
+                        }
+                        if (schedule === 'Mon-Sun/Monday payout') {
+                            return 'Any day except Monday is allowed';
+                        }
+                        if (schedule === 'Cut off payout') {
+                            return 'Cannot select the 15th or last day of the month';
+                        }
+                        if (schedule === 'Select Date') {
+                            return 'Date must be within the selected date range';
+                        }
+                        return 'Please select a valid date for this schedule';
                     }
 
                     function isAddaDfDateAllowedBySchedule(dateRaw, schedule) {
@@ -2323,28 +2652,46 @@
                         }
 
                         const selectedDate = new Date(dateRaw + 'T00:00:00');
-                        const dayOfWeek = selectedDate.getDay(); // 0=Sun ... 6=Sat
+                        const dayOfWeek = selectedDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 
-                        // Disallow exact payout day/date
-                        if (schedule === 'Mon-Thur/Friday payout') {
-                            // Friday is payout day (5)
-                            return dayOfWeek >= 1 && dayOfWeek <= 4; // Monday-Thursday only
+                        // For custom date selection, check if date is within range
+                        if (schedule === 'Select Date') {
+                            const fromDateInput = document.querySelector('[name="custom_from_date"]');
+                            const toDateInput = document.querySelector('[name="custom_to_date"]');
+                            if (!fromDateInput || !toDateInput || !fromDateInput.value || !toDateInput.value) {
+                                return true; // Allow if dates not set yet
+                            }
+                            const fromDate = new Date(fromDateInput.value + 'T00:00:00');
+                            const toDate = new Date(toDateInput.value + 'T00:00:00');
+                            return selectedDate >= fromDate && selectedDate <= toDate;
                         }
+
+                        // Mon-Thur/Friday payout: Work period is Mon-Thu, payout is Fri
+                        // Only allow Monday (1) through Thursday (4)
+                        if (schedule === 'Mon-Thur/Friday payout') {
+                            return dayOfWeek >= 1 && dayOfWeek <= 4; // Mon-Thu only
+                        }
+                        
+                        // Fri-Sun/Monday payout: Work period is Fri-Sun, payout is Mon
+                        // Only allow Friday (5), Saturday (6), Sunday (0)
                         if (schedule === 'Fri-Sun/Monday payout') {
-                            // Monday is payout day (2)
                             return dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0; // Fri, Sat, Sun only
                         }
+                        
+                        // Mon-Sun/Monday payout: Work period is Mon-Sun, payout is following Mon
+                        // Allow any day except Monday (1)
                         if (schedule === 'Mon-Sun/Monday payout') {
-                            // Monday is payout day (2)
-                            return dayOfWeek !== 2; // Any day except Monday
+                            return dayOfWeek !== 1; // Any day except Monday
                         }
+                        
+                        // Cut off payout: Allow any day except 15th and last day of month
                         if (schedule === 'Cut off payout') {
                             const day = selectedDate.getDate();
                             const lastDayOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)
                                 .getDate();
-                            // Disallow 15th and last day
                             return day !== 15 && day !== lastDayOfMonth;
                         }
+                        
                         return true;
                     }
 
@@ -2443,20 +2790,27 @@
                     }
 
                     function applyAddaDf() {
+                        // Function kept for backward compatibility but calculation is now automatic
                         const ok = consolidateAddaDfEntries(true);
                         if (!ok) {
                             return;
                         }
-
-                        addAddaDfRow();
-                        showToast('ADDA DF entry added. You can add more rows.', 'success');
-
-                        const rows = document.querySelectorAll('#addaDfRows .adda-df-row');
-                        const lastRow = rows[rows.length - 1];
-                        const amountInput = lastRow ? lastRow.querySelector('.adda-df-amount') : null;
-                        if (amountInput) amountInput.focus();
-
+                        showToast('ADDA DF total calculated successfully', 'success');
                         updateAddaDfRemoveButtons();
+                    }
+                    
+                    function attachAddaDfAmountListeners() {
+                        // Attach input event listeners to all amount fields for automatic calculation
+                        const amountInputs = document.querySelectorAll('.adda-df-amount');
+                        amountInputs.forEach(input => {
+                            // Remove existing listeners to avoid duplicates
+                            input.removeEventListener('input', autoCalculateAddaDf);
+                            input.addEventListener('input', autoCalculateAddaDf);
+                        });
+                    }
+                    
+                    function autoCalculateAddaDf() {
+                        consolidateAddaDfEntries(false);
                     }
 
                     const payrollFormEl = document.getElementById('payrollForm');
@@ -2470,6 +2824,7 @@
                             if (!input || input.dataset.scheduleBound === '1') return;
                             input.dataset.scheduleBound = '1';
 
+                            // Validate on change
                             input.addEventListener('change', function() {
                                 const selectedSchedule = salaryScheduleEl.value;
                                 if (!selectedSchedule || !this.value) return;
@@ -2477,11 +2832,28 @@
                                 if (!isAddaDfDateAllowedBySchedule(this.value, selectedSchedule)) {
                                     this.value = '';
                                     showToast(
-                                        'ADDA DF date must match salary schedule: ' + getScheduleDateRuleText(
-                                            selectedSchedule),
+                                        'Invalid date! ' + getScheduleDateRuleText(selectedSchedule),
                                         'warning'
                                     );
                                     this.focus();
+                                }
+                            });
+                            
+                            // Also validate on input (for better UX)
+                            input.addEventListener('input', function() {
+                                const selectedSchedule = salaryScheduleEl.value;
+                                if (!selectedSchedule || !this.value) return;
+                                
+                                // Only validate if a complete date is entered
+                                if (this.value.length === 10) {
+                                    if (!isAddaDfDateAllowedBySchedule(this.value, selectedSchedule)) {
+                                        // Add visual indicator
+                                        this.style.borderColor = '#dc3545';
+                                        this.style.backgroundColor = '#fff5f5';
+                                    } else {
+                                        this.style.borderColor = '';
+                                        this.style.backgroundColor = '';
+                                    }
                                 }
                             });
                         });
@@ -2508,6 +2880,35 @@
                     }
 
                     enforceAddaDfDateInputRules();
+
+                    // Add event listeners for custom date range changes
+                    const customFromDateInput = document.querySelector('[name="custom_from_date"]');
+                    const customToDateInput = document.querySelector('[name="custom_to_date"]');
+                    
+                    if (customFromDateInput && customToDateInput) {
+                        const validateCustomDates = () => {
+                            if (!salaryScheduleEl || salaryScheduleEl.value !== 'Select Date') return;
+                            if (!customFromDateInput.value || !customToDateInput.value) return;
+                            
+                            const dateInputs = payrollFormEl.querySelectorAll('.adda-df-date');
+                            let clearedCount = 0;
+                            dateInputs.forEach(input => {
+                                if (input.value && !isAddaDfDateAllowedBySchedule(input.value, 'Select Date')) {
+                                    input.value = '';
+                                    clearedCount++;
+                                }
+                            });
+
+                            if (clearedCount > 0) {
+                                showToast(
+                                    'Some ADDA DF dates were cleared because they are outside the selected date range.',
+                                    'info');
+                            }
+                        };
+                        
+                        customFromDateInput.addEventListener('change', validateCustomDates);
+                        customToDateInput.addEventListener('change', validateCustomDates);
+                    }
 
                     function openPayrollDeductionsModal() {
                         const form = document.getElementById('payrollForm');
@@ -2537,6 +2938,18 @@
                         if (!salarySchedule) {
                             showToast('Please select Salary Schedule', 'warning');
                             return;
+                        }
+                        if (salarySchedule === 'Select Date') {
+                            const customFromDate = form.querySelector('[name="custom_from_date"]').value;
+                            const customToDate = form.querySelector('[name="custom_to_date"]').value;
+                            if (!customFromDate || !customToDate) {
+                                showToast('Please enter both From Date and To Date', 'warning');
+                                return;
+                            }
+                            if (customFromDate > customToDate) {
+                                showToast('From Date cannot be later than To Date', 'warning');
+                                return;
+                            }
                         }
                         if (!modeOfPayment) {
                             showToast('Please select Mode of Payment', 'warning');
@@ -2758,6 +3171,18 @@
                         const now = new Date();
                         const pad = n => String(n).padStart(2, '0');
                         const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+                        // Handle custom date selection
+                        if (schedule === 'Select Date') {
+                            const form = document.getElementById('payrollForm');
+                            const customFromDate = form ? form.querySelector('[name="custom_from_date"]').value : '';
+                            const customToDate = form ? form.querySelector('[name="custom_to_date"]').value : '';
+                            if (customFromDate && customToDate) {
+                                return [customFromDate, customToDate];
+                            }
+                            // Fallback if dates aren't set
+                            return [fmt(now), fmt(now)];
+                        }
 
                         // Day-of-week: 0=Sun,1=Mon,...,6=Sat
                         const dow = now.getDay();
@@ -3188,6 +3613,9 @@
                                                     style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
                                                     title="{{ $remittance->remarks }}">
                                                     {{ $remittance->remarks }}
+                                                    @if ($remittance->remarks_amount && $remittance->remarks_amount > 0)
+                                                        <span style="color: #436026; font-weight: 700;">₱{{ number_format($remittance->remarks_amount, 2) }}</span>
+                                                    @endif
                                                 </span>
                                             @else
                                                 <span style="color: #999; font-style: italic;">No remarks</span>
@@ -3800,20 +4228,26 @@
                         <div class="form-group">
                             <label for="totalDeliveries"><i class="fas fa-box"></i> Total Deliveries</label>
                             <input type="number" id="totalDeliveries" name="total_deliveries" placeholder="0"
-                                min="0" oninput="updateCombinedDeliveries()" required>
+                                min="0" readonly style="background: #f0f9f4; color: #2d4016; font-weight: 600; cursor: not-allowed; border-color: #9dc183;" required>
+                            <small id="totalDeliveriesHint" style="color: #6c757d; font-size: 12px; display: block; margin-top: 5px;">
+                                Based on tasks for selected date.
+                            </small>
                         </div>
                         <div class="form-group">
                             <label for="totalDeliveryFee"><i class="fas fa-dollar-sign"></i> Total Delivery
                                 Fee</label>
                             <input type="number" id="totalDeliveryFee" name="total_delivery_fee" placeholder="0.00"
-                                step="0.01" min="0" required>
+                                step="0.01" min="0" readonly style="background: #f0f9f4; color: #2d4016; font-weight: 600; cursor: not-allowed; border-color: #9dc183;" required>
+                            <small id="totalDeliveryFeeHint" style="color: #6c757d; font-size: 12px; display: block; margin-top: 5px;">
+                                Based on delivery charges for selected date.
+                            </small>
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="form-group">
-                            <label for="totalRemit"><i class="fas fa-money-check"></i> Total Remit</label>
-                            <input type="number" id="totalRemit" name="total_remit" placeholder="0.00"
+                            <label for="totalCollection"><i class="fas fa-wallet"></i> Total Amount</label>
+                            <input type="number" id="totalCollection" name="total_collection" placeholder="0.00"
                                 step="0.01" min="0" required>
                         </div>
                         <div class="form-group">
@@ -3825,8 +4259,8 @@
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="form-group">
-                            <label for="totalCollection"><i class="fas fa-wallet"></i> Total Collection</label>
-                            <input type="number" id="totalCollection" name="total_collection" placeholder="0.00"
+                            <label for="totalRemit"><i class="fas fa-money-check"></i> Total Remit</label>
+                            <input type="number" id="totalRemit" name="total_remit" placeholder="0.00"
                                 step="0.01" min="0" required>
                         </div>
                         <div class="form-group">
@@ -3839,9 +4273,17 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="remarks"><i class="fas fa-comment"></i> Remarks (optional)</label>
-                        <textarea id="remarks" name="remarks" placeholder="Enter any remarks here" rows="3"
-                            style="width: 100%; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; padding: 10px; resize: vertical;"></textarea>
+                        <label><i class="fas fa-comment"></i> Remarks (optional)</label>
+                        <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start;">
+                            <textarea id="remarks" name="remarks" placeholder="Enter any remarks here" rows="3"
+                                style="width: 100%; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; padding: 10px; resize: vertical;"></textarea>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <label for="remarksAmount" style="font-size: 12px; color: #666; font-weight: 600;">Amount</label>
+                                <input type="number" id="remarksAmount" name="remarks_amount" placeholder="0.00"
+                                    step="0.01" min="0"
+                                    style="width: 140px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 14px;">
+                            </div>
+                        </div>
                     </div>
 
                     {{-- ── Mangan App Section ── --}}
@@ -3920,7 +4362,7 @@
                                 style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
                                 <div class="form-group" style="margin-bottom: 0;">
                                     <label style="font-size: 13px;"><i class="fas fa-calculator"></i> GT <span
-                                            style="font-weight:400; color:#6c757d;">(Grand Total)</span></label>
+                                            style="font-weight:400; color:#6c757d;">(Good Taste/Grumpy)</span></label>
                                     <input type="number" id="manganGt" placeholder="0.00" min="0"
                                         step="0.01"
                                         style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
@@ -3943,6 +4385,16 @@
                                 <label style="font-size: 13px;"><i class="fas fa-receipt"></i> Receipt <span
                                         style="font-weight:400; color:#6c757d;">(Non-Partners)</span></label>
                                 <input type="number" id="manganReceiptNonPartners" placeholder="0.00"
+                                    min="0" step="0.01"
+                                    style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
+                                    onfocus="this.style.borderColor='#436026'"
+                                    onblur="this.style.borderColor='#e9ecef'">
+                            </div>
+
+                            {{-- Total Remit --}}
+                            <div class="form-group" style="margin-bottom: 14px;">
+                                <label style="font-size: 13px;"><i class="fas fa-coins"></i> Total Remit</label>
+                                <input type="number" id="manganTotalRemit" placeholder="0.00"
                                     min="0" step="0.01"
                                     style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
                                     onfocus="this.style.borderColor='#436026'"
@@ -4102,6 +4554,7 @@
             const gt = parseFloat(document.getElementById('manganGt').value) || 0;
             const tips = parseFloat(document.getElementById('manganTips').value) || 0;
             const receipt = parseFloat(document.getElementById('manganReceiptNonPartners').value) || 0;
+            const totalRemit = parseFloat(document.getElementById('manganTotalRemit').value) || 0;
 
             if (!merchant && amount === 0) {
                 showToast('Please fill in at least the Merchant Name or Total Amount before adding.', 'warning');
@@ -4115,12 +4568,26 @@
                 df,
                 gt,
                 tips,
-                receipt
+                receipt,
+                totalRemit
             });
 
             // Increment total deliveries by 1
             const totalDeliveriesEl = document.getElementById('totalDeliveries');
             totalDeliveriesEl.value = (parseInt(totalDeliveriesEl.value) || 0) + 1;
+
+            // Add to main form fields
+            const totalDeliveryFeeEl = document.getElementById('totalDeliveryFee');
+            totalDeliveryFeeEl.value = ((parseFloat(totalDeliveryFeeEl.value) || 0) + df).toFixed(2);
+
+            const totalCollectionEl = document.getElementById('totalCollection');
+            totalCollectionEl.value = ((parseFloat(totalCollectionEl.value) || 0) + amount).toFixed(2);
+
+            const totalTipsEl = document.getElementById('totalTips');
+            totalTipsEl.value = ((parseFloat(totalTipsEl.value) || 0) + tips).toFixed(2);
+
+            const totalRemitEl = document.getElementById('totalRemit');
+            totalRemitEl.value = ((parseFloat(totalRemitEl.value) || 0) + totalRemit).toFixed(2);
 
             syncManganEntriesJson();
             renderManganEntries();
@@ -4132,18 +4599,33 @@
             document.getElementById('manganGt').value = '';
             document.getElementById('manganTips').value = '';
             document.getElementById('manganReceiptNonPartners').value = '';
+            document.getElementById('manganTotalRemit').value = '';
             updateManganBadge();
             showToast('Mangan entry added.', 'success');
             closeManganModal();
         }
 
         function removeManganEntry(index) {
+            const entry = manganEntries[index];
             manganEntries.splice(index, 1);
 
             // Decrement total deliveries by 1
             const totalDeliveriesEl = document.getElementById('totalDeliveries');
             const current = parseInt(totalDeliveriesEl.value) || 0;
             if (current > 0) totalDeliveriesEl.value = current - 1;
+
+            // Subtract from main form fields
+            const totalDeliveryFeeEl = document.getElementById('totalDeliveryFee');
+            totalDeliveryFeeEl.value = Math.max(0, (parseFloat(totalDeliveryFeeEl.value) || 0) - (entry.df || 0)).toFixed(2);
+
+            const totalCollectionEl = document.getElementById('totalCollection');
+            totalCollectionEl.value = Math.max(0, (parseFloat(totalCollectionEl.value) || 0) - (entry.amount || 0)).toFixed(2);
+
+            const totalTipsEl = document.getElementById('totalTips');
+            totalTipsEl.value = Math.max(0, (parseFloat(totalTipsEl.value) || 0) - (entry.tips || 0)).toFixed(2);
+
+            const totalRemitEl = document.getElementById('totalRemit');
+            totalRemitEl.value = Math.max(0, (parseFloat(totalRemitEl.value) || 0) - (entry.totalRemit || 0)).toFixed(2);
 
             syncManganEntriesJson();
             renderManganEntries();
@@ -4182,6 +4664,7 @@
                             <span style="background:#fff; border:1px solid #d6eacc; border-radius:5px; padding:2px 8px;">GT: ₱${e.gt.toFixed(2)}</span>
                             <span style="background:#fff; border:1px solid #d6eacc; border-radius:5px; padding:2px 8px;">Tips: ₱${e.tips.toFixed(2)}</span>
                             <span style="background:#fff; border:1px solid #d6eacc; border-radius:5px; padding:2px 8px;">Receipt: ₱${e.receipt.toFixed(2)}</span>
+                            <span style="background:#fff; border:1px solid #d6eacc; border-radius:5px; padding:2px 8px;">Total Remit: ₱${(e.totalRemit || 0).toFixed(2)}</span>
                         </div>
                     </div>
                     <button type="button" onclick="removeManganEntry(${i})"
@@ -4549,7 +5032,7 @@
                             </span>
                         </td>
                         <td style="padding: 12px; font-size: 13px; color: #333; max-width: 250px;">
-                            ${remittance.remarks ? `<span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${remittance.remarks}">${remittance.remarks}</span>` : '<span style="color: #999; font-style: italic;">No remarks</span>'}
+                            ${remittance.remarks ? `<span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${remittance.remarks}">${remittance.remarks}${remittance.remarks_amount && parseFloat(remittance.remarks_amount) > 0 ? ` <span style="color: #436026; font-weight: 700;">\u20b1${parseFloat(remittance.remarks_amount).toFixed(2)}</span>` : ''}</span>` : '<span style="color: #999; font-style: italic;">No remarks</span>'}
                         </td>
                     </tr>
                 `;
@@ -4801,6 +5284,57 @@
             if (payrollForm) {
                 payrollForm.querySelector('[name="rider_id"]').value = riderId;
                 payrollForm.querySelector('[name="rider_name"]').value = riderName;
+                
+                // Reset salary schedule dropdown
+                const salaryScheduleSelect = payrollForm.querySelector('[name="salary_schedule"]');
+                if (salaryScheduleSelect) {
+                    salaryScheduleSelect.value = '';
+                }
+                
+                // Clear all payroll form inputs except rider info
+                const inputsToClear = ['base_salary', 'incentives', 'renumeration_26_days', 'net_salary', 'adda_df', 'adda_df_date', 'adda_df_entries'];
+                inputsToClear.forEach(name => {
+                    const input = payrollForm.querySelector(`[name="${name}"]`);
+                    if (input) input.value = '';
+                });
+                
+                // Clear mode of payment
+                const modeOfPayment = payrollForm.querySelector('[name="mode_of_payment"]');
+                if (modeOfPayment) modeOfPayment.value = '';
+                
+                // Reset ADDA DF rows
+                const addaDfRows = document.getElementById('addaDfRows');
+                if (addaDfRows) {
+                    addaDfRows.innerHTML = `
+                        <div class="adda-df-row">
+                            <input type="number" class="adda-df-amount" step="0.01" placeholder="Amount">
+                            <input type="date" class="adda-df-date">
+                            <button type="button" class="adda-df-remove" onclick="removeAddaDfRow(this)" style="display:none;">
+                                Remove
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                // Update ADDA DF summary
+                const addaDfSummary = document.getElementById('addaDfSummary');
+                if (addaDfSummary) {
+                    addaDfSummary.textContent = 'Total ADDA DF: ₱0.00';
+                }
+                
+                // Hide ADDA DF notice
+                const allowedDaysNotice = document.getElementById('addaDfAllowedDaysNotice');
+                if (allowedDaysNotice) {
+                    allowedDaysNotice.style.display = 'none';
+                }
+                
+                // Hide date selector dropdown
+                hideAddaDfDateSelector();
+                
+                // Attach automatic calculation listeners
+                if (typeof attachAddaDfAmountListeners === 'function') {
+                    attachAddaDfAmountListeners();
+                }
             }
 
             // Fill Deductions tab hidden inputs
@@ -5132,6 +5666,62 @@
         }
 
         // Remit Modal Functions
+        function getAutoTotalDeliveriesByRider(riderId) {
+            const rawCount = riderTaskDeliveriesMap[String(riderId)] ?? riderTaskDeliveriesMap[riderId] ?? 0;
+            const parsedCount = parseInt(rawCount, 10);
+            return Number.isNaN(parsedCount) ? 0 : Math.max(0, parsedCount);
+        }
+
+        function getAutoTotalDeliveryChargeByRider(riderId) {
+            const rawCharge = riderDeliveryChargesMap[String(riderId)] ?? riderDeliveryChargesMap[riderId] ?? 0;
+            const parsedCharge = parseFloat(rawCharge);
+            return Number.isNaN(parsedCharge) ? 0 : Math.max(0, parsedCharge);
+        }
+
+        function updateTotalDeliveriesDateHint() {
+            const hintEl = document.getElementById('totalDeliveriesHint');
+            if (!hintEl) return;
+
+            const statsDateInput = document.getElementById('statsDateInput');
+            const rawDate = statsDateInput && statsDateInput.value ? statsDateInput.value : '';
+            if (!rawDate) {
+                hintEl.textContent = 'Based on tasks for selected date.';
+                return;
+            }
+
+            const parsed = new Date(rawDate + 'T00:00:00');
+            const isValidDate = !Number.isNaN(parsed.getTime());
+            const displayDate = isValidDate ? parsed.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }) : rawDate;
+
+            hintEl.textContent = `Based on tasks for ${displayDate}.`;
+        }
+
+        function updateTotalDeliveryFeeHint() {
+            const hintEl = document.getElementById('totalDeliveryFeeHint');
+            if (!hintEl) return;
+
+            const statsDateInput = document.getElementById('statsDateInput');
+            const rawDate = statsDateInput && statsDateInput.value ? statsDateInput.value : '';
+            if (!rawDate) {
+                hintEl.textContent = 'Based on delivery charges for selected date.';
+                return;
+            }
+
+            const parsed = new Date(rawDate + 'T00:00:00');
+            const isValidDate = !Number.isNaN(parsed.getTime());
+            const displayDate = isValidDate ? parsed.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }) : rawDate;
+
+            hintEl.textContent = `Based on delivery charges for ${displayDate}.`;
+        }
+
         function openRemitModal(riderId, riderName) {
             // Highlight the active dropdown
             document.querySelectorAll('.rider-dropdown').forEach(d => d.classList.remove('active-highlight'));
@@ -5145,6 +5735,10 @@
             document.getElementById('remitRiderId').value = riderId;
             document.getElementById('remitRiderName').value = riderName;
             document.getElementById('displayRiderName').value = riderName;
+            document.getElementById('totalDeliveries').value = getAutoTotalDeliveriesByRider(riderId);
+            document.getElementById('totalDeliveryFee').value = getAutoTotalDeliveryChargeByRider(riderId);
+            updateTotalDeliveriesDateHint();
+            updateTotalDeliveryFeeHint();
 
             // Reset Mangan entries
             closeManganModal();
@@ -5193,6 +5787,7 @@
                 const modeOfPayment = document.getElementById('modeOfPayment').value;
                 const remitPhoto = document.getElementById('remitPhoto').files[0];
                 const remarks = document.getElementById('remarks').value;
+                const remarksAmount = document.getElementById('remarksAmount').value;
 
                 // Store form data for later submission
                 pendingRemittance = {
@@ -5206,7 +5801,8 @@
                     totalCollection: totalCollection,
                     modeOfPayment: modeOfPayment,
                     remitPhoto: remitPhoto,
-                    remarks: remarks
+                    remarks: remarks,
+                    remarksAmount: remarksAmount
                 };
 
                 // Update the details panel
@@ -5242,8 +5838,11 @@
                 const remarksSection = document.querySelector('.expenses-section .expenses-content');
                 if (remarksSection) {
                     if (remarks && remarks.trim() !== '') {
+                        const amountText = remarksAmount && parseFloat(remarksAmount) > 0 
+                            ? ` <span style="color: #436026; font-weight: 700;">₱${parseFloat(remarksAmount).toFixed(2)}</span>` 
+                            : '';
                         remarksSection.innerHTML =
-                            `<p style="position: relative; z-index: 1; font-weight: 500;">${remarks}</p>`;
+                            `<p style="position: relative; z-index: 1; font-weight: 500;">${remarks}${amountText}</p>`;
                     } else {
                         remarksSection.innerHTML = `<p style="position: relative; z-index: 1; font-weight: 500;">-</p>`;
                     }
@@ -5457,6 +6056,8 @@
             document.getElementById('totalTips').value = pendingRemittance.totalTips;
             document.getElementById('totalCollection').value = pendingRemittance.totalCollection;
             document.getElementById('modeOfPayment').value = pendingRemittance.modeOfPayment;
+            document.getElementById('remarks').value = pendingRemittance.remarks || '';
+            document.getElementById('remarksAmount').value = pendingRemittance.remarksAmount || '';
 
             // Note: File input cannot be pre-filled for security reasons
             // The user will need to re-upload if they want to change the photo
@@ -5501,6 +6102,11 @@
                     remitBtn.setAttribute('onclick', `openRemitModal(${riderId}, '${riderName}')`);
                 }
             });
+            
+            // Initialize automatic ADDA DF calculation listeners
+            if (typeof attachAddaDfAmountListeners === 'function') {
+                attachAddaDfAmountListeners();
+            }
         });
 
         // Show toast for session success messages
@@ -5669,7 +6275,7 @@
                             `<span class="badge-mode badge-${modeRaw.toLowerCase()}">${modeRaw.toUpperCase()}</span>` :
                             '';
                         const remarksHtml = r.remarks ?
-                            `<span class="remarks-text">${r.remarks}</span>` :
+                            `<span class="remarks-text">${r.remarks}${r.remarks_amount && parseFloat(r.remarks_amount) > 0 ? ` <span style="color: #436026; font-weight: 700;">\u20b1${parseFloat(r.remarks_amount).toFixed(2)}</span>` : ''}</span>` :
                             `<span class="remarks-empty">&mdash;</span>`;
                         detailRows += `<tr>
                             <td style="text-align:center"><span class="task-num">${rowNum}</span></td>
@@ -6063,7 +6669,7 @@
                 const dateTo = document.getElementById('reportDateTo').value || 'all';
 
                 const headers = ['# of Task', 'Rider', 'Date', 'Deliveries', 'Delivery Fee', 'Total Remit', 'Tips',
-                    'Collection', 'Payment Mode', 'Remarks'
+                    'Collection', 'Payment Mode', 'Remarks', 'Remarks Amount'
                 ];
                 let csvRowNum = 0;
                 const rows = data.remittances.map(r => {
@@ -6079,6 +6685,7 @@
                         Number(r.total_collection || 0).toFixed(2),
                         r.mode_of_payment || '',
                         r.remarks ? '"' + r.remarks.replace(/"/g, '""') + '"' : '',
+                        r.remarks_amount ? Number(r.remarks_amount).toFixed(2) : '0.00',
                     ];
                 });
 
@@ -7071,13 +7678,13 @@
     <!-- ============ NON-REMITTING RIDERS MODAL ============ -->
     <div class="report-modal-overlay" id="nonRemittingModalOverlay"
         onclick="if(event.target===this)closeNonRemittingModal()">
-        <div class="report-modal" style="max-width:480px;">
+        <div class="report-modal" style="max-width:560px;width:min(560px,96vw);max-height:90vh;display:flex;flex-direction:column;">
             <div class="report-modal-header" style="background:linear-gradient(135deg,#2d4016 0%,#5a7d35 100%);">
                 <h3 id="nrModalTitle"><i class="fas fa-clock"></i> Rider Remittance Status</h3>
                 <button class="report-modal-close" onclick="closeNonRemittingModal()"><i
                         class="fas fa-times"></i></button>
             </div>
-            <div class="report-modal-body" style="padding-bottom:14px;">
+            <div class="report-modal-body" style="padding:10px 12px 8px;overflow:hidden;display:flex;flex-direction:column;">
                 <p id="nrModalDesc" class="report-modal-desc"></p>
                 <div id="nrModalBody">
                     <div style="text-align:center;padding:30px;color:#9ca3af;">
@@ -7109,6 +7716,12 @@
                 border: '#28a745',
                 label: 'CLEARED'
             },
+            late: {
+                bg: '#ffe3e3',
+                color: '#c92a2a',
+                border: '#dc3545',
+                label: 'LATE REMITTED'
+            },
             pending: {
                 bg: '#fff3cd',
                 color: '#856404',
@@ -7123,9 +7736,22 @@
             },
         };
 
-        function _nrStatusBadge(status) {
-            const s = _nrBadge[status] || _nrBadge.no_duty;
-            return `<span style="display:inline-block;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;background:${s.bg};color:${s.color};border:1.5px solid ${s.border};">${s.label}</span>`;
+        function _nrStatusBadge(status, isLate, lateDays, submittedDate) {
+            let s = _nrBadge[status] || _nrBadge.no_duty;
+            let label = s.label;
+            let dateLabel = '';
+            
+            if (status === 'cleared' && isLate) {
+                s = _nrBadge.late;
+                label = s.label;
+                
+                if (submittedDate) {
+                    const subDate = new Date(submittedDate);
+                    dateLabel = `<div style="font-size:10px;font-weight:600;color:${s.color};margin-top:2px;">${subDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>`;
+                }
+            }
+            
+            return `<div style="display:flex;flex-direction:column;align-items:flex-start;"><span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;line-height:1.2;font-weight:700;background:${s.bg};color:${s.color};border:1px solid ${s.border};white-space:nowrap;">${label}</span>${dateLabel}</div>`;
         }
 
         function openNonRemittingModal(date) {
@@ -7167,24 +7793,27 @@
 
                     const rows = data.riders.map((r, i) =>
                         `<tr>
-                        <td style="padding:9px 14px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:12px;">${i+1}</td>
-                        <td style="padding:9px 14px;border-bottom:1px solid #f3f4f6;font-weight:600;font-size:13px;">
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2d4016,#5a7d35);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${r.rider_name.charAt(0).toUpperCase()}</div>
+                        <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:11px;width:34px;">${i+1}</td>
+                        <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;font-weight:600;font-size:12px;">
+                            <div style="display:flex;align-items:center;gap:7px;min-width:0;">
+                                <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#2d4016,#5a7d35);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${r.rider_name.charAt(0).toUpperCase()}</div>
                                 ${r.rider_name}
                             </div>
                         </td>
-                        <td style="padding:9px 14px;border-bottom:1px solid #f3f4f6;">${_nrStatusBadge(r.status)}</td>
+                        <td style="padding:6px 8px;border-bottom:1px solid #f3f4f6;width:120px;">${_nrStatusBadge(r.status, r.is_late, r.late_days, r.submitted_date)}</td>
                     </tr>`
                     ).join('');
 
-                    const cleared = data.riders.filter(r => r.status === 'cleared').length;
+                    const cleared = data.riders.filter(r => r.status === 'cleared' && !r.is_late).length;
+                    const late = data.riders.filter(r => r.status === 'cleared' && r.is_late).length;
                     const pending = data.riders.filter(r => r.status === 'pending').length;
                     const no_duty = data.riders.filter(r => r.status === 'no_duty').length;
 
                     const summaryParts = [];
                     if (cleared) summaryParts.push(
                         `<span style="color:#155724;font-weight:700;">${cleared} Cleared</span>`);
+                    if (late) summaryParts.push(
+                        `<span style="color:#c92a2a;font-weight:700;">${late} Late Remitted</span>`);
                     if (pending) summaryParts.push(
                         `<span style="color:#856404;font-weight:700;">${pending} Pending</span>`);
                     if (no_duty) summaryParts.push(
@@ -7195,17 +7824,19 @@
                            <i class="fas fa-check-circle" style="font-size:32px;color:#28a745;margin-bottom:10px;"></i>
                            <p style="font-size:13px;font-weight:600;">No riders found for this date.</p>
                        </div>` :
-                        `<table style="width:100%;border-collapse:collapse;font-family:'Inter',Arial,sans-serif;">
-                           <thead>
-                               <tr style="background:#f9fafb;">
-                                   <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;border-bottom:2px solid #e5e7eb;">#</th>
-                                   <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;border-bottom:2px solid #e5e7eb;">Rider</th>
-                                   <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;border-bottom:2px solid #e5e7eb;">Status</th>
-                               </tr>
-                           </thead>
-                           <tbody>${rows}</tbody>
-                       </table>
-                       <div style="padding:10px 14px 0;font-size:12px;color:#6b7280;display:flex;gap:14px;flex-wrap:wrap;">${summaryParts.join(' &nbsp;|&nbsp; ')}</div>`;
+                        `<div style="max-height:min(62vh,520px);overflow:auto;border:1px solid #e5e7eb;border-radius:10px;">
+                           <table style="width:100%;border-collapse:collapse;font-family:inherit;table-layout:fixed;">
+                               <thead>
+                                   <tr style="background:#f9fafb;position:sticky;top:0;z-index:1;">
+                                       <th style="padding:7px 8px;text-align:left;font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.35px;border-bottom:1px solid #e5e7eb;width:34px;">#</th>
+                                       <th style="padding:7px 8px;text-align:left;font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.35px;border-bottom:1px solid #e5e7eb;">Rider</th>
+                                       <th style="padding:7px 8px;text-align:left;font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.35px;border-bottom:1px solid #e5e7eb;width:120px;">Status</th>
+                                   </tr>
+                               </thead>
+                               <tbody>${rows}</tbody>
+                           </table>
+                       </div>
+                       <div style="padding:8px 2px 0;font-size:11px;color:#6b7280;display:flex;gap:8px;flex-wrap:wrap;">${summaryParts.join(' ')}</div>`;
 
                     document.getElementById('nrPrintBtn').style.display = data.riders.length ? 'flex' : 'none';
                 })
@@ -7229,38 +7860,117 @@
 
             const statusLabel = {
                 cleared: 'Cleared',
+                late: 'Late Remitted',
                 pending: 'Pending',
                 no_duty: 'No Remit'
             };
             const statusStyle = {
                 cleared: 'background:#d4edda;color:#155724;',
+                late: 'background:#ffe3e3;color:#c92a2a;',
                 pending: 'background:#fff3cd;color:#856404;',
                 no_duty: 'background:#f8d7da;color:#842029;',
             };
 
-            const rows = _nrCurrentRiders.map((r, i) =>
-                `<tr>
-                    <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${i+1}</td>
-                    <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">${r.rider_name}</td>
-                    <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">
-                        <span style="display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;${statusStyle[r.status] || statusStyle.no_duty}">${statusLabel[r.status] || 'No Remit'}</span>
-                    </td>
-                </tr>`
-            ).join('');
+            // Group riders by status
+            const clearedRiders = _nrCurrentRiders.filter(r => r.status === 'cleared' && !r.is_late);
+            const lateRiders = _nrCurrentRiders.filter(r => r.status === 'cleared' && r.is_late);
+            const pendingRiders = _nrCurrentRiders.filter(r => r.status === 'pending');
+            const noDutyRiders = _nrCurrentRiders.filter(r => r.status === 'no_duty');
 
-            const cleared = _nrCurrentRiders.filter(r => r.status === 'cleared').length;
-            const pending = _nrCurrentRiders.filter(r => r.status === 'pending').length;
-            const no_duty = _nrCurrentRiders.filter(r => r.status === 'no_duty').length;
+            const cleared = clearedRiders.length;
+            const late = lateRiders.length;
+            const pending = pendingRiders.length;
+            const no_duty = noDutyRiders.length;
+
+            // Function to generate rows for a specific status group
+            const generateRows = (riders) => {
+                return riders.map((r, i) => {
+                    let status = r.status;
+                    let label = statusLabel[status] || 'No Remit';
+                    let dateLabel = '';
+                    
+                    if (r.status === 'cleared' && r.is_late) {
+                        status = 'late';
+                        label = statusLabel.late;
+                        
+                        if (r.submitted_date) {
+                            const subDate = new Date(r.submitted_date);
+                            dateLabel = `<div style="font-size:10px;color:#c92a2a;margin-top:3px;">${subDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>`;
+                        }
+                    }
+                    
+                    return `<tr>
+                        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${i+1}</td>
+                        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">${r.rider_name}</td>
+                        <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">
+                            <span style="display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;${statusStyle[status] || statusStyle.no_duty}">${label}</span>
+                            ${dateLabel}
+                        </td>
+                    </tr>`;
+                }).join('');
+            };
+
+            // Generate separate sections for each status
+            let tableContent = '';
+            
+            if (cleared > 0) {
+                tableContent += `
+                    <h3 style="font-size:15px;color:#155724;margin:24px 0 10px;display:flex;align-items:center;gap:8px;">
+                        <span style="background:#d4edda;color:#155724;padding:4px 12px;border-radius:8px;font-size:13px;font-weight:700;">${cleared} Cleared</span>
+                    </h3>
+                    <table>
+                        <thead><tr><th>#</th><th>Rider Name</th><th>Status</th></tr></thead>
+                        <tbody>${generateRows(clearedRiders)}</tbody>
+                    </table>
+                `;
+            }
+            
+            if (late > 0) {
+                tableContent += `
+                    <h3 style="font-size:15px;color:#c92a2a;margin:24px 0 10px;display:flex;align-items:center;gap:8px;">
+                        <span style="background:#ffe3e3;color:#c92a2a;padding:4px 12px;border-radius:8px;font-size:13px;font-weight:700;">${late} Late Remitted</span>
+                    </h3>
+                    <table>
+                        <thead><tr><th>#</th><th>Rider Name</th><th>Status</th></tr></thead>
+                        <tbody>${generateRows(lateRiders)}</tbody>
+                    </table>
+                `;
+            }
+            
+            if (pending > 0) {
+                tableContent += `
+                    <h3 style="font-size:15px;color:#856404;margin:24px 0 10px;display:flex;align-items:center;gap:8px;">
+                        <span style="background:#fff3cd;color:#856404;padding:4px 12px;border-radius:8px;font-size:13px;font-weight:700;">${pending} Pending</span>
+                    </h3>
+                    <table>
+                        <thead><tr><th>#</th><th>Rider Name</th><th>Status</th></tr></thead>
+                        <tbody>${generateRows(pendingRiders)}</tbody>
+                    </table>
+                `;
+            }
+            
+            if (no_duty > 0) {
+                tableContent += `
+                    <h3 style="font-size:15px;color:#842029;margin:24px 0 10px;display:flex;align-items:center;gap:8px;">
+                        <span style="background:#f8d7da;color:#842029;padding:4px 12px;border-radius:8px;font-size:13px;font-weight:700;">${no_duty} No Remit</span>
+                    </h3>
+                    <table>
+                        <thead><tr><th>#</th><th>Rider Name</th><th>Status</th></tr></thead>
+                        <tbody>${generateRows(noDutyRiders)}</tbody>
+                    </table>
+                `;
+            }
 
             const win = window.open('', '_blank', 'width=700,height=650');
             win.document.write(`<!DOCTYPE html><html><head><title>Rider Status – ${dateLabel}</title>
             <style>
                 body { font-family: Arial, sans-serif; margin: 32px; color: #1f2937; }
                 h2 { font-size: 18px; font-weight: 800; margin: 0 0 4px; }
+                h3 { margin-top: 24px; }
                 .sub { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
                 .legend { font-size: 12px; margin-bottom: 18px; display: flex; gap: 14px; }
                 .legend span { padding: 2px 10px; border-radius: 8px; font-weight: 700; font-size: 11px; }
-                table { width: 100%; border-collapse: collapse; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                 thead tr { background: #2d4016; color: #fff; }
                 th { padding: 9px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
                 td { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
@@ -7272,13 +7982,11 @@
             <div class="sub">Date: ${dateLabel} &nbsp;|&nbsp; Generated: ${new Date().toLocaleString('en-PH')}</div>
             <div class="legend">
                 <span style="background:#d4edda;color:#155724;">${cleared} Cleared</span>
+                <span style="background:#ffe3e3;color:#c92a2a;">${late} Late Remitted</span>
                 <span style="background:#fff3cd;color:#856404;">${pending} Pending</span>
                 <span style="background:#f8d7da;color:#842029;">${no_duty} No Remit</span>
             </div>
-            <table>
-                <thead><tr><th>#</th><th>Rider Name</th><th>Status</th></tr></thead>
-                <tbody>${rows}</tbody>
-            </table>
+            ${tableContent}
             <div class="footer">When in Baguio Inc. &mdash; Remittance System</div>
             <br><button onclick="window.print()" style="padding:8px 20px;background:#2d4016;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Print / Save as PDF</button>
             </body></html>`);

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 @if (auth()->user()->force_password_change && auth()->user()->role !== 'admin')
     <div id="forceChangeModal"
@@ -83,6 +83,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - When in Baguio Inc.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -91,293 +95,145 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --brand-900: #1f3624;
+            --brand-800: #2d4a30;
+            --brand-700: #3f633c;
+            --brand-500: #6f954d;
+            --brand-300: #b5ce8a;
+            --accent: #f5b700;
+            --danger: #b84040;
+            --surface: #f6f7f1;
+            --surface-soft: #fcfcf8;
+            --text: #172118;
+            --muted: #5b6a56;
+            --card-shadow: 0 10px 28px rgba(19, 40, 23, 0.12);
+            --radius-lg: 18px;
+            --radius-md: 12px;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Manrope', sans-serif;
             display: flex;
             height: 100vh;
             overflow: hidden;
-            background: #e8e8e8;
+            color: var(--text);
+            background: radial-gradient(circle at 10% -10%, #d9e8b6 0, rgba(217, 232, 182, 0) 30%),
+                radial-gradient(circle at 100% 0, #e8f3cc 0, rgba(232, 243, 204, 0) 25%),
+                linear-gradient(130deg, #eff2e4 0%, #e9efdc 45%, #edf3e8 100%);
         }
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: 200px;
-            background: linear-gradient(180deg, #2d4016 0%, #3a5220 40%, #2d4016 100%);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
-            z-index: 1000;
-        }
+                @include('partials.app-sidebar-styles')
+        @include('partials.app-page-background-styles')
 
-        .sidebar-logo {
-            padding: 18px 16px 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 7px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.15);
-        }
 
-        .sidebar-logo img {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar-logo img:hover {
-            transform: scale(1.07);
-        }
-
-        .sidebar-logo .app-name {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.75);
-        }
-
-        .sidebar-menu {
-            flex: 1;
-            padding: 10px 10px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .sidebar-menu::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .sidebar-menu::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar-menu::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
-
-        .menu-section-label {
-            font-size: 9.5px;
-            font-weight: 700;
-            letter-spacing: 1.4px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.38);
-            padding: 10px 8px 4px;
-            user-select: none;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 10px;
-            color: rgba(255, 255, 255, 0.78);
-            text-decoration: none;
-            transition: all 0.22s ease;
-            cursor: pointer;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            font-size: 12.5px;
-            font-weight: 500;
-            border-radius: 8px;
-        }
-
-        .menu-item .menu-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            background: rgba(255, 255, 255, 0.08);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-            transition: all 0.22s ease;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .menu-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .menu-item:hover .menu-icon {
-            background: rgba(255, 211, 0, 0.18);
-            color: #ffd300;
-        }
-
-        .menu-item.active {
-            background: rgba(255, 211, 0, 0.14);
-            color: #ffd300;
-            font-weight: 700;
-        }
-
-        .menu-item.active .menu-icon {
-            background: #ffd300;
-            color: #2d4016;
-        }
-
-        .menu-divider {
-            height: 1px;
-            background: rgba(255, 255, 255, 0.07);
-            margin: 8px 4px;
-        }
-
-        .sidebar-footer {
-            padding: 10px 10px 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.15);
-        }
-
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 10px;
-            background: rgba(255, 80, 80, 0.1);
-            color: rgba(255, 150, 150, 0.9);
-            border: 1px solid rgba(255, 80, 80, 0.2);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.22s ease;
-            width: 100%;
-            font-size: 12.5px;
-            font-weight: 600;
-        }
-
-        .logout-btn .menu-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            background: rgba(255, 80, 80, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-            transition: all 0.22s ease;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 80, 80, 0.22);
-            border-color: rgba(255, 80, 80, 0.5);
-            color: #ff6b6b;
-            transform: translateX(2px);
-        }
-
-        .logout-btn:hover .menu-icon {
-            background: rgba(255, 80, 80, 0.3);
-        }
-
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1100;
-            background: #436026;
-            color: white;
-            border: none;
-            padding: 12px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .mobile-menu-toggle:hover {
-            background: #5a7d33;
-            transform: scale(1.05);
-        }
-
-        .mobile-menu-toggle i {
-            font-size: 20px;
-        }
-
-        /* Mobile Overlay */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
 
         /* Main Content Styles */
         .main-content {
-            margin-left: 200px;
+            margin-left: 230px;
             flex: 1;
-            padding: 40px;
+            padding: 28px 30px;
             overflow-y: auto;
-            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            background: transparent;
         }
 
         .content-header {
-            margin-bottom: 30px;
+            margin-bottom: 24px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(44, 71, 44, 0.14);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.86) 0%, rgba(248, 252, 240, 0.86) 100%);
+            box-shadow: var(--card-shadow);
+            padding: 22px 24px;
+            backdrop-filter: blur(3px);
+            gap: 18px;
+            flex-wrap: wrap;
+            animation: riseIn 0.55s ease both;
+        }
+
+        .header-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .content-header h1 {
-            font-size: 32px;
-            font-weight: bold;
-            color: #1a1a1a;
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--brand-900);
             margin: 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            font-family: 'Sora', sans-serif;
+            letter-spacing: 0.3px;
+        }
+
+        .dashboard-subtitle {
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .action-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 999px;
+            text-decoration: none;
+            padding: 8px 14px;
+            color: var(--brand-900);
+            background: rgba(63, 99, 60, 0.08);
+            border: 1px solid rgba(63, 99, 60, 0.14);
+            font-size: 12px;
+            font-weight: 700;
+            transition: all 0.25s ease;
+        }
+
+        .action-chip:hover {
+            transform: translateY(-2px);
+            background: rgba(245, 183, 0, 0.18);
+            border-color: rgba(176, 129, 0, 0.3);
         }
 
         .user-indicator {
             display: flex;
             align-items: center;
             gap: 12px;
+            margin-left: auto;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(67, 96, 38, 0.12);
+            border-radius: 999px;
+            padding: 6px 8px 6px 16px;
         }
 
         .user-indicator .user-avatar {
-            width: 55px;
-            height: 55px;
-            background: linear-gradient(135deg, #436026 0%, #5a7d33 100%);
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--brand-700) 0%, var(--brand-500) 100%);
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 22px;
+            font-size: 18px;
             text-decoration: none;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 3px 8px rgba(67, 96, 38, 0.4);
+            box-shadow: 0 5px 12px rgba(48, 81, 35, 0.36);
         }
 
         .user-indicator .user-avatar:hover {
-            background: linear-gradient(135deg, #ffd300 0%, #ffed4e 100%);
-            color: #436026;
-            transform: scale(1.1);
-            box-shadow: 0 4px 15px rgba(255, 211, 0, 0.5);
+            background: linear-gradient(135deg, #f5d54f 0%, var(--accent) 100%);
+            color: var(--brand-900);
+            transform: scale(1.06);
+            box-shadow: 0 8px 16px rgba(178, 138, 14, 0.34);
         }
 
         .user-indicator .user-info {
@@ -390,14 +246,13 @@
 
         .user-indicator .user-name {
             font-weight: 600;
-            color: #1a1a1a;
-            font-size: 15px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+            color: var(--text);
+            font-size: 14px;
         }
 
         .user-indicator .user-role {
             font-size: 12px;
-            color: #666;
+            color: var(--muted);
             font-weight: 500;
             text-transform: capitalize;
         }
@@ -405,50 +260,87 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 14px;
+            margin-bottom: 20px;
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #436026 0%, #5a7d33 100%);
+            background: linear-gradient(140deg, #27442d 0%, #3f633c 100%);
             color: white;
-            border-radius: 12px;
-            padding: 25px;
+            border-radius: 16px;
+            padding: 20px;
             text-align: left;
-            box-shadow: 0 8px 20px rgba(67, 96, 38, 0.3);
+            box-shadow: 0 12px 24px rgba(24, 46, 26, 0.24);
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 14px;
             text-decoration: none;
             cursor: pointer;
+            min-height: 110px;
+            animation: riseIn 0.45s ease both;
+        }
+
+        .stat-card:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .stat-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .stat-card:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .stat-card:nth-child(4) {
+            animation-delay: 0.2s;
         }
 
         .stat-card:visited {
             color: white;
         }
 
+        .stat-card:nth-child(2) {
+            background: linear-gradient(140deg, #31573a 0%, #4d7a4a 100%);
+        }
+
+        .stat-card:nth-child(3) {
+            background: linear-gradient(140deg, #365f55 0%, #447667 100%);
+        }
+
+        .stat-card:nth-child(4) {
+            background: linear-gradient(140deg, #61452f 0%, #8a6140 100%);
+        }
+
         .stat-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #ffd300, #436026);
+            width: 150px;
+            height: 150px;
+            right: -45px;
+            top: -45px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 30px rgba(67, 96, 38, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 14px 28px rgba(21, 40, 20, 0.3);
         }
 
         .stat-card .stat-icon {
-            font-size: 28px;
+            font-size: 22px;
             opacity: 0.9;
-            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            filter: drop-shadow(1px 2px 4px rgba(0, 0, 0, 0.2));
             flex-shrink: 0;
         }
 
@@ -462,64 +354,66 @@
         }
 
         .stat-card h3 {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
             margin: 0;
-            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.18);
             white-space: nowrap;
             overflow: hidden;
             width: 100%;
         }
 
         .stat-card p {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             opacity: 0.9;
             margin: 0;
+            letter-spacing: 0.35px;
         }
 
         .charts-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 14px;
+            margin-bottom: 14px;
         }
 
         .chart-box {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: var(--card-shadow);
             transition: all 0.3s ease;
-            border: 1px solid rgba(67, 96, 38, 0.1);
+            border: 1px solid rgba(67, 96, 38, 0.12);
+            animation: riseIn 0.5s ease both;
         }
 
         .chart-box:hover {
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 12px 24px rgba(35, 54, 22, 0.17);
             transform: translateY(-3px);
         }
 
         .chart-box h3 {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
-            margin-bottom: 15px;
-            color: #1a1a1a;
+            margin-bottom: 12px;
+            color: var(--brand-900);
             padding-bottom: 10px;
-            border-bottom: 2px solid #436026;
+            border-bottom: 1px solid rgba(67, 96, 38, 0.16);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .chart-filter {
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
             font-size: 12px;
-            background: white;
-            border: 1px solid #ddd;
+            background: var(--surface-soft);
+            border: 1px solid rgba(63, 99, 60, 0.2);
             cursor: pointer;
             transition: all 0.3s ease;
-            color: #436026;
+            color: var(--brand-800);
             font-weight: 600;
             outline: none;
         }
@@ -540,19 +434,21 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #fafafa;
+            background: linear-gradient(160deg, #f6f8f0 0%, #fefefc 100%);
             border-radius: 8px;
             color: #666;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.03);
         }
 
         .transaction-history {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
             transition: all 0.3s ease;
-            border: 1px solid rgba(67, 96, 38, 0.1);
+            border: 1px solid rgba(67, 96, 38, 0.12);
+            animation: riseIn 0.55s ease both;
+            animation-delay: 0.2s;
         }
 
         .transaction-history:hover {
@@ -560,54 +456,23 @@
         }
 
         .transaction-history h3 {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            margin-bottom: 20px;
-            color: #1a1a1a;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #436026;
+            margin-bottom: 16px;
+            color: var(--brand-900);
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(67, 96, 38, 0.16);
         }
 
         .transaction-table {
-            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            background: linear-gradient(135deg, #f6f8f0 0%, #edf2e4 100%);
             border-radius: 8px;
             padding: 40px;
             min-height: 200px;
             text-align: center;
-            color: #666;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.08);
-            border: 1px solid #ddd;
-        }
-
-        .chart-tabs {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .chart-tab {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            background: white;
-            border: 1px solid #ddd;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-        }
-
-        .chart-tab:hover {
-            background: #f8f8f8;
-            border-color: #436026;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 96, 38, 0.2);
-        }
-
-        .chart-tab.active {
-            background: linear-gradient(135deg, #436026 0%, #5a7d33 100%);
-            color: white;
-            border-color: #436026;
-            box-shadow: 0 4px 10px rgba(67, 96, 38, 0.4);
+            color: var(--muted);
+            box-shadow: inset 0 2px 8px rgba(18, 44, 18, 0.06);
+            border: 1px dashed rgba(67, 96, 38, 0.3);
         }
 
         /* Success Alert */
@@ -634,10 +499,26 @@
             }
         }
 
+        @keyframes riseIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+
+            .main-content {
+                padding: 22px;
             }
         }
 
@@ -649,7 +530,7 @@
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
-                width: 200px;
+                width: 230px;
                 z-index: 1001;
             }
 
@@ -659,7 +540,7 @@
 
             .main-content {
                 margin-left: 0;
-                padding: 80px 20px 20px 20px;
+                padding: 80px 16px 18px 16px;
             }
 
             .sidebar-logo {
@@ -687,21 +568,22 @@
             .content-header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 15px;
+                gap: 16px;
+                padding: 18px;
             }
 
             .content-header h1 {
-                font-size: 24px;
+                font-size: 26px;
             }
 
             .user-indicator {
                 width: 100%;
-                justify-content: flex-end;
+                justify-content: space-between;
+                margin-left: 0;
             }
 
-            .chart-tabs {
-                flex-wrap: wrap;
-                gap: 10px;
+            .quick-actions {
+                width: 100%;
             }
         }
 
@@ -722,102 +604,43 @@
             }
 
             .chart-box {
-                padding: 20px;
+                padding: 16px;
             }
 
             .transaction-history {
-                padding: 20px;
+                padding: 16px;
             }
 
             .user-indicator .user-info {
-                padding: 6px 10px;
+                align-items: flex-start;
+                text-align: left;
             }
 
             .user-indicator .user-name {
-                font-size: 12px;
+                font-size: 13px;
             }
         }
+
+        @include('partials.user-indicator-styles')
     </style>
 </head>
 
 <body>
-    <!-- Mobile Menu Toggle -->
-    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
-
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-logo">
-            <img src="{{ asset('images/logowhite.png') }}" alt="Logo">
-            <span class="app-name">When in Baguio Inc.</span>
-        </div>
-
-        <div class="sidebar-menu">
-            <span class="menu-section-label">Main</span>
-            <a href="{{ route('dashboard') }}" class="menu-item active">
-                <span class="menu-icon"><i class="fas fa-home"></i></span>
-                <span>Dashboard</span>
-            </a>
-            <a href="{{ route('remittance') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-                <span>Remittance</span>
-            </a>
-            <a href="{{ route('bank-deposit') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-university"></i></span>
-                <span>Bank &amp; Deposit</span>
-            </a>
-
-            <div class="menu-divider"></div>
-            <span class="menu-section-label">Management</span>
-            <a href="{{ route('merchants') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-store"></i></span>
-                <span>Merchants</span>
-            </a>
-            <a href="{{ route('members.index') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-users-cog"></i></span>
-                <span>Member Management</span>
-            </a>
-            <a href="{{ route('audit-logs') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
-                <span>Audit Logs</span>
-            </a>
-
-            <div class="menu-divider"></div>
-            <span class="menu-section-label">Account</span>
-            <a href="{{ route('profile') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-user"></i></span>
-                <span>Profile</span>
-            </a>
-        </div>
-
-        <div class="sidebar-footer">
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="logout-btn">
-                    <span class="menu-icon"><i class="fas fa-sign-out-alt"></i></span>
-                    <span>Logout</span>
-                </button>
-            </form>
-        </div>
-    </div>
+    @include('partials.app-sidebar', ['activePage' => 'dashboard'])
 
     <!-- Main Content -->
     <div class="main-content">
         <div class="content-header">
-            <h1>Dashboard</h1>
-            <div class="user-indicator">
-                <div class="user-info">
-                    <span class="user-name">{{ auth()->user()->name }}</span>
-                    <span class="user-role">{{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}</span>
+            <div class="header-copy">
+                <h1>Dashboard Overview</h1>
+                <p class="dashboard-subtitle">Track collections, monitor funds, and spot issues quickly from one place.</p>
+                <div class="quick-actions">
+                    <a href="{{ route('remittance') }}" class="action-chip"><i class="fas fa-file-invoice-dollar"></i> Remittance</a>
+                    <a href="{{ route('bank-deposit') }}" class="action-chip"><i class="fas fa-building-columns"></i> Bank &amp; Deposit</a>
+                    <a href="{{ route('merchants') }}" class="action-chip"><i class="fas fa-store"></i> Merchants</a>
                 </div>
-                <a href="{{ route('profile') }}" class="user-avatar">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                </a>
             </div>
+            @include('partials.user-indicator')
         </div>
 
         <!-- Stats Cards -->
@@ -924,19 +747,19 @@
                 datasets: [{
                     label: 'Partners',
                     data: [300, 450, 350, 500, 400, 300, 350],
-                    borderColor: '#a78bfa',
+                    borderColor: '#3f633c',
                     backgroundColor: 'transparent',
                     tension: 0.4
                 }, {
                     label: 'Non-Partners',
                     data: [250, 300, 400, 350, 450, 380, 420],
-                    borderColor: '#fb7185',
+                    borderColor: '#b84040',
                     backgroundColor: 'transparent',
                     tension: 0.4
                 }, {
                     label: 'Good Taste',
                     data: [400, 380, 420, 400, 350, 300, 250],
-                    borderColor: '#60a5fa',
+                    borderColor: '#447667',
                     backgroundColor: 'transparent',
                     tension: 0.4
                 }]
@@ -1040,9 +863,13 @@
             expenseBalanceChart.update();
         }
 
-        // Orders by Month Chart — connected to real merchant sales (remittances)
-        const ordersData = @json($monthlySales);
+        // Orders by Month Chart connected to merchant orders totals
+        const ordersData = @json($monthlyOrders);
         const defaultYear = {{ $chartYears[0] }};
+
+        function buildZeroOrderPoints(values) {
+            return values.map(v => Number(v) === 0 ? 0 : null);
+        }
 
         const ordersCtx = document.getElementById('ordersByMonthChart').getContext('2d');
         const ordersByMonthChart = new Chart(ordersCtx, {
@@ -1050,7 +877,18 @@
             data: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 datasets: [{
-                    label: 'Sales (₱)',
+                    type: 'line',
+                    label: 'Zero Orders',
+                    data: buildZeroOrderPoints(ordersData[defaultYear] || Array(12).fill(0)),
+                    showLine: false,
+                    pointRadius: 5,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#b84040',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    order: 0
+                }, {
+                    label: 'Overall Orders',
                     data: ordersData[defaultYear] || Array(12).fill(0),
                     backgroundColor: function(context) {
                         const value = context.dataset.data[context.dataIndex];
@@ -1058,7 +896,8 @@
                     },
                     borderRadius: 6,
                     borderSkipped: false,
-                    hoverBackgroundColor: '#ffd300'
+                    hoverBackgroundColor: '#ffd300',
+                    order: 1
                 }]
             },
             options: {
@@ -1066,16 +905,18 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: false
+                        display: true,
+                        position: 'bottom'
                     },
                     tooltip: {
                         callbacks: {
                             label: function(ctx) {
+                                if (ctx.dataset.label === 'Zero Orders') {
+                                    return ' Zero orders this month';
+                                }
                                 return ctx.parsed.y === 0 ?
-                                    ' No data' :
-                                    ' ₱' + ctx.parsed.y.toLocaleString('en-PH', {
-                                        minimumFractionDigits: 2
-                                    });
+                                    ' Orders: 0' :
+                                    ' Orders: ' + ctx.parsed.y.toLocaleString('en-PH');
                             }
                         }
                     }
@@ -1093,7 +934,7 @@
                         },
                         ticks: {
                             callback: function(value) {
-                                return '₱' + value.toLocaleString('en-PH');
+                                return value.toLocaleString('en-PH');
                             }
                         }
                     }
@@ -1102,7 +943,9 @@
         });
 
         function updateOrdersByMonth(year) {
-            ordersByMonthChart.data.datasets[0].data = ordersData[year] || Array(12).fill(0);
+            const yearData = ordersData[year] || Array(12).fill(0);
+            ordersByMonthChart.data.datasets[0].data = buildZeroOrderPoints(yearData);
+            ordersByMonthChart.data.datasets[1].data = yearData;
             ordersByMonthChart.update();
         }
 

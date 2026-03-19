@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('bank_deposit_confirmations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('rider_id')->constrained('riders')->cascadeOnDelete();
+            $table->unsignedBigInteger('rider_id');
+            $table->index('rider_id');
             $table->foreignId('confirmed_by')->constrained('users')->cascadeOnDelete();
             $table->date('deposit_date');
             $table->decimal('bank_amount', 15, 2)->comment('Original daily remit amount');

@@ -49,28 +49,35 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         $totalCollections = \App\Models\Remittance::sum('total_collection');
         $totalDiscrepancies = \App\Models\BankDepositConfirmation::sum('discrepancy');
 
-        // Build monthly merchant sales (total_collection) per year for the chart
+        // Build monthly overall orders per year from merchant totals
         $currentYear = (int) date('Y');
         $chartYears  = [$currentYear, $currentYear - 1, $currentYear - 2];
+        $merchantModel = new \App\Models\Merchant();
+        $merchantDateColumn = $merchantModel->getCreatedAtColumn();
+        $merchantTable = $merchantModel->getTable();
+        $hasTotalOrders = \Illuminate\Support\Facades\Schema::hasColumn($merchantTable, 'total_orders');
 
-        $rawMonthly = \App\Models\Remittance::select(
-            \Illuminate\Support\Facades\DB::raw('YEAR(created_at) as yr'),
-            \Illuminate\Support\Facades\DB::raw('MONTH(created_at) as mo'),
-            \Illuminate\Support\Facades\DB::raw('SUM(total_collection) as total')
-        )
-        ->whereIn(\Illuminate\Support\Facades\DB::raw('YEAR(created_at)'), $chartYears)
-        ->groupBy('yr', 'mo')
-        ->get();
+        $rawMonthly = collect();
+        if ($hasTotalOrders) {
+            $rawMonthly = \App\Models\Merchant::select(
+                \Illuminate\Support\Facades\DB::raw("YEAR({$merchantDateColumn}) as yr"),
+                \Illuminate\Support\Facades\DB::raw("MONTH({$merchantDateColumn}) as mo"),
+                \Illuminate\Support\Facades\DB::raw('SUM(total_orders) as total')
+            )
+            ->whereIn(\Illuminate\Support\Facades\DB::raw("YEAR({$merchantDateColumn})"), $chartYears)
+            ->groupBy('yr', 'mo')
+            ->get();
+        }
 
-        $monthlySales = [];
+        $monthlyOrders = [];
         foreach ($chartYears as $yr) {
-            $monthlySales[$yr] = array_fill(0, 12, 0);
+            $monthlyOrders[$yr] = array_fill(0, 12, 0);
         }
         foreach ($rawMonthly as $row) {
-            $monthlySales[(int)$row->yr][(int)$row->mo - 1] = (float) $row->total;
+            $monthlyOrders[(int)$row->yr][(int)$row->mo - 1] = (int) $row->total;
         }
 
-        return view('dashboard', compact('totalCollections', 'totalDiscrepancies', 'monthlySales', 'chartYears'));
+        return view('dashboard', compact('totalCollections', 'totalDiscrepancies', 'monthlyOrders', 'chartYears'));
     })->name('dashboard');
 
     Route::post('/force-password-change', [AuthController::class, 'forcePasswordChange'])->name('force.password.change');
@@ -98,29 +105,75 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         $isToday = $date === \Carbon\Carbon::today()->toDateString();
 
         if ($isToday) {
-            $allRiders = \App\Models\Rider::orderBy('name')->get(['id', 'name']);
-            $submittedIds = \App\Models\Remittance::whereDate('remittance_date', $date)
-                ->pluck('rider_id')->unique()->toArray();
+            $allRiders = \App\Models\Rider::whereIn('status', ['active', 'cleared'])
+                ->orderBy('first_name')
+                ->orderBy('last_name')
+                ->get();
+            $remittances = \App\Models\Remittance::whereDate('remittance_date', $date)
+                ->get(['rider_id', 'remittance_date', 'created_at']);
 
-            $rows = $allRiders->map(function ($r) use ($submittedIds) {
+            $remittanceMap = $remittances->keyBy('rider_id');
+
+            $rows = $allRiders->map(function ($r) use ($remittanceMap, $date) {
+                $remittance = $remittanceMap->get($r->id);
+                if ($remittance) {
+                    $remitDate = \Carbon\Carbon::parse($remittance->remittance_date)->startOfDay();
+                    $submittedDate = \Carbon\Carbon::parse($remittance->created_at)->startOfDay();
+                    $lateDays = $submittedDate->diffInDays($remitDate, false);
+                    $isLate = $lateDays < 0; // submitted after remittance date
+
+                    return [
+                        'rider_name' => $r->name,
+                        'status'     => 'cleared',
+                        'is_late'    => $isLate,
+                        'late_days'  => $isLate ? abs($lateDays) : 0,
+                        'submitted_date' => $remittance->created_at,
+                    ];
+                }
                 return [
                     'rider_name' => $r->name,
-                    'status'     => in_array($r->id, $submittedIds) ? 'cleared' : 'pending',
+                    'status'     => 'pending',
+                    'is_late'    => false,
+                    'late_days'  => 0,
+                    'submitted_date' => null,
                 ];
             })->values()->toArray();
         } else {
             // For past dates, check the remittances table directly so it works
             // for ALL dates — not just ones where the scheduler has run.
-            $remittedIds = \App\Models\Remittance::whereDate('remittance_date', $date)
-                ->pluck('rider_id')->unique()->toArray();
+            $remittances = \App\Models\Remittance::whereDate('remittance_date', $date)
+                ->get(['rider_id', 'remittance_date', 'created_at']);
 
-            $allRiders = \App\Models\Rider::whereDate('created_at', '<=', $date)
-                ->orderBy('name')->get(['id', 'name']);
+            $remittanceMap = $remittances->keyBy('rider_id');
 
-            $rows = $allRiders->map(function ($r) use ($remittedIds) {
+            $allRiders = \App\Models\Rider::whereIn('status', ['active', 'cleared'])
+                ->whereDate('date_created', '<=', $date)
+                ->orderBy('first_name')
+                ->orderBy('last_name')
+                ->get();
+
+            $rows = $allRiders->map(function ($r) use ($remittanceMap, $date) {
+                $remittance = $remittanceMap->get($r->id);
+                if ($remittance) {
+                    $remitDate = \Carbon\Carbon::parse($remittance->remittance_date)->startOfDay();
+                    $submittedDate = \Carbon\Carbon::parse($remittance->created_at)->startOfDay();
+                    $lateDays = $submittedDate->diffInDays($remitDate, false);
+                    $isLate = $lateDays < 0; // submitted after remittance date
+
+                    return [
+                        'rider_name' => $r->name,
+                        'status'     => 'cleared',
+                        'is_late'    => $isLate,
+                        'late_days'  => $isLate ? abs($lateDays) : 0,
+                        'submitted_date' => $remittance->created_at,
+                    ];
+                }
                 return [
                     'rider_name' => $r->name,
-                    'status'     => in_array($r->id, $remittedIds) ? 'cleared' : 'no_duty',
+                    'status'     => 'no_duty',
+                    'is_late'    => false,
+                    'late_days'  => 0,
+                    'submitted_date' => null,
                 ];
             })->values()->toArray();
         }
@@ -145,7 +198,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         // Apply search filter
         if ($request->filled('search')) {
             $query->whereHas('rider', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
+                $q->whereRaw("CONCAT_WS(' ', first_name, last_name) like ?", ['%' . $request->search . '%']);
             });
         }
 
@@ -170,7 +223,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         // Apply search filter to summary
         if ($request->filled('search')) {
             $riderSummaryQuery->whereHas('rider', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
+                $q->whereRaw("CONCAT_WS(' ', first_name, last_name) like ?", ['%' . $request->search . '%']);
             });
         }
 
@@ -178,8 +231,8 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         if ($request->filled('sort')) {
             switch ($request->sort) {
                 case 'name':
-                    $riderSummaryQuery->join('riders', 'remittances.rider_id', '=', 'riders.id')
-                        ->orderBy('riders.name', 'asc');
+                    $riderSummaryQuery->join('mt_driver as riders', 'remittances.rider_id', '=', 'riders.driver_id')
+                        ->orderByRaw("CONCAT_WS(' ', riders.first_name, riders.last_name) asc");
                     break;
                 case 'total_remit':
                     $riderSummaryQuery->orderByRaw('SUM(total_remit) DESC');
@@ -292,7 +345,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
 
     Route::post('/bank-deposit/confirm', function (\Illuminate\Http\Request $request) {
         $request->validate([
-            'rider_id'    => 'required|exists:riders,id',
+            'rider_id'    => 'required|exists:mt_driver,driver_id',
             'bank_amount' => 'required|numeric|min:0',
             'total_amount'=> 'required|numeric|min:0.01',
             'deposit_date'=> 'required|date',

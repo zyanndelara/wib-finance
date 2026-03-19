@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -21,327 +21,14 @@
             background: #e8e8e8;
         }
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: 200px;
-            background: linear-gradient(180deg, #2d4016 0%, #3a5220 40%, #2d4016 100%);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
-            z-index: 1000;
-        }
+                @include('partials.app-sidebar-styles')
+        @include('partials.app-page-background-styles')
 
-        .sidebar-logo {
-            padding: 18px 16px 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 7px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.15);
-        }
 
-        .sidebar-logo img {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar-logo img:hover {
-            transform: scale(1.07);
-        }
-
-        .sidebar-logo .app-name {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.75);
-        }
-
-        .sidebar-menu {
-            flex: 1;
-            padding: 10px 10px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .sidebar-menu::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .sidebar-menu::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar-menu::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
-
-        .menu-section-label {
-            font-size: 9.5px;
-            font-weight: 700;
-            letter-spacing: 1.4px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.38);
-            padding: 10px 8px 4px;
-            user-select: none;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 10px;
-            color: rgba(255, 255, 255, 0.78);
-            text-decoration: none;
-            transition: all 0.22s ease;
-            cursor: pointer;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            font-size: 12.5px;
-            font-weight: 500;
-            border-radius: 8px;
-        }
-
-        .menu-item .menu-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            background: rgba(255, 255, 255, 0.08);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-            transition: all 0.22s ease;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .menu-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .menu-item:hover .menu-icon {
-            background: rgba(255, 211, 0, 0.18);
-            color: #ffd300;
-        }
-
-        .menu-item.active {
-            background: rgba(255, 211, 0, 0.14);
-            color: #ffd300;
-            font-weight: 700;
-        }
-
-        .menu-item.active .menu-icon {
-            background: #ffd300;
-            color: #2d4016;
-        }
-
-        .menu-divider {
-            height: 1px;
-            background: rgba(255, 255, 255, 0.07);
-            margin: 8px 4px;
-        }
-
-        /* Toast Notification Styles */
-        #toastContainer {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .custom-toast {
-            min-width: 240px;
-            max-width: 380px;
-            background: #fff;
-            border-radius: 6px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-left: 3px solid #28a745;
-            animation: slideIn 0.3s ease-out;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .toast-icon {
-            font-size: 18px;
-            color: #28a745;
-            flex-shrink: 0;
-        }
-
-        .toast-message {
-            flex: 1;
-            color: #333;
-            font-size: 12px;
-            line-height: 1.3;
-        }
-
-        .toast-close {
-            background: none;
-            border: none;
-            font-size: 16px;
-            color: #999;
-            cursor: pointer;
-            padding: 0;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: color 0.2s;
-        }
-
-        .toast-close:hover {
-            color: #333;
-        }
-
-        .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 2px;
-            background: #28a745;
-            animation: progress 3s linear;
-        }
-
-        @keyframes progress {
-            from {
-                width: 100%;
-            }
-            to {
-                width: 0;
-            }
-        }
-
-        .sidebar-footer {
-            padding: 10px 10px 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.15);
-        }
-
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 10px;
-            background: rgba(255, 80, 80, 0.1);
-            color: rgba(255, 150, 150, 0.9);
-            border: 1px solid rgba(255, 80, 80, 0.2);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.22s ease;
-            width: 100%;
-            font-size: 12.5px;
-            font-weight: 600;
-        }
-
-        .logout-btn .menu-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            background: rgba(255, 80, 80, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
-            transition: all 0.22s ease;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 80, 80, 0.22);
-            border-color: rgba(255, 80, 80, 0.5);
-            color: #ff6b6b;
-            transform: translateX(2px);
-        }
-
-        .logout-btn:hover .menu-icon {
-            background: rgba(255, 80, 80, 0.3);
-        }
-
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1100;
-            background: #436026;
-            color: white;
-            border: none;
-            padding: 12px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .mobile-menu-toggle:hover {
-            background: #5a7d33;
-            transform: scale(1.05);
-        }
-
-        .mobile-menu-toggle i {
-            font-size: 20px;
-        }
-
-        /* Mobile Overlay */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
 
         /* Main Content Styles */
         .main-content {
-            margin-left: 200px;
+            margin-left: 230px;
             flex: 1;
             padding: 40px;
             overflow-y: auto;
@@ -502,7 +189,7 @@
             box-shadow: 0 18px 40px rgba(0,0,0,0.18);
         }
 
-        /* Card 1 – Expected Remit (indigo-blue) */
+        /* Card 1 � Expected Remit (indigo-blue) */
         .summary-cards .summary-card:nth-child(1) {
             background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 60%, #60a5fa 100%);
         }
@@ -510,7 +197,7 @@
             box-shadow: 0 18px 40px rgba(59,130,246,0.45);
         }
 
-        /* Card 2 – Cash Collected (emerald) */
+        /* Card 2 � Cash Collected (emerald) */
         .summary-cards .summary-card:nth-child(2) {
             background: linear-gradient(135deg, #065f46 0%, #059669 55%, #34d399 100%);
         }
@@ -518,7 +205,7 @@
             box-shadow: 0 18px 40px rgba(5,150,105,0.45);
         }
 
-        /* Card 3 – Discrepancy (rose-red) */
+        /* Card 3 � Discrepancy (rose-red) */
         .summary-cards .summary-card:nth-child(3) {
             background: linear-gradient(135deg, #9f1239 0%, #dc2626 55%, #f87171 100%);
         }
@@ -526,7 +213,7 @@
             box-shadow: 0 18px 40px rgba(220,38,38,0.45);
         }
 
-        /* Card 4 – Change (amber-orange) */
+        /* Card 4 � Change (amber-orange) */
         .summary-cards .summary-card:nth-child(4) {
             background: linear-gradient(135deg, #92400e 0%, #d97706 55%, #fbbf24 100%);
         }
@@ -1156,6 +843,104 @@
             opacity: 0;
         }
 
+        /* Toast Notification */
+        #toastContainer {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: min(420px, calc(100vw - 24px));
+            pointer-events: none;
+        }
+
+        .custom-toast {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            background: #ffffff;
+            border-left: 4px solid #28a745;
+            border-radius: 8px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            animation: toastSlideIn 0.25s ease-out;
+            transition: opacity 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .toast-icon {
+            color: #28a745;
+            font-size: 18px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            flex: 1;
+            min-width: 0;
+            color: #1f2937;
+            font-size: 13px;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .toast-close {
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: -1px;
+            padding: 0;
+        }
+
+        .toast-close:hover {
+            color: #1f2937;
+        }
+
+        .toast-progress {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 3px;
+            width: 100%;
+            animation: toastProgress 3s linear forwards;
+        }
+
+        @keyframes toastSlideIn {
+            from {
+                transform: translateX(24px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes toastProgress {
+            from {
+                width: 100%;
+            }
+
+            to {
+                width: 0;
+            }
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .stats-grid {
@@ -1184,7 +969,7 @@
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
-                width: 200px;
+                width: 230px;
                 z-index: 1001;
             }
 
@@ -1195,6 +980,21 @@
             .main-content {
                 margin-left: 0;
                 padding: 80px 20px 20px 20px;
+            }
+
+            #toastContainer {
+                right: 12px;
+                left: 12px;
+                bottom: 12px;
+                width: auto;
+            }
+
+            .custom-toast {
+                padding: 11px 12px;
+            }
+
+            .toast-message {
+                font-size: 12px;
             }
 
             .sidebar-logo {
@@ -1659,86 +1459,18 @@
             transform: translateY(-1px);
         }
         .report-generate-btn:active { transform: translateY(0); }
+
+        @include('partials.user-indicator-styles')
     </style>
 </head>
 <body>
-    <!-- Mobile Menu Toggle -->
-    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
-
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-logo">
-            <img src="{{ asset('images/logowhite.png') }}" alt="Logo">
-            <span class="app-name">When in Baguio Inc.</span>
-        </div>
-
-        <div class="sidebar-menu">
-            <span class="menu-section-label">Main</span>
-            <a href="{{ route('dashboard') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-home"></i></span>
-                <span>Dashboard</span>
-            </a>
-            <a href="{{ route('remittance') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-                <span>Remittance</span>
-            </a>
-            <a href="{{ route('bank-deposit') }}" class="menu-item active">
-                <span class="menu-icon"><i class="fas fa-university"></i></span>
-                <span>Bank &amp; Deposit</span>
-            </a>
-
-            <div class="menu-divider"></div>
-            <span class="menu-section-label">Management</span>
-            <a href="{{ route('merchants') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-store"></i></span>
-                <span>Merchants</span>
-            </a>
-            <a href="{{ route('members.index') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-users-cog"></i></span>
-                <span>Member Management</span>
-            </a>
-            <a href="{{ route('audit-logs') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
-                <span>Audit Logs</span>
-            </a>
-
-            <div class="menu-divider"></div>
-            <span class="menu-section-label">Account</span>
-            <a href="{{ route('profile') }}" class="menu-item">
-                <span class="menu-icon"><i class="fas fa-user"></i></span>
-                <span>Profile</span>
-            </a>
-        </div>
-
-        <div class="sidebar-footer">
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="logout-btn">
-                    <span class="menu-icon"><i class="fas fa-sign-out-alt"></i></span>
-                    <span>Logout</span>
-                </button>
-            </form>
-        </div>
-    </div>
+    @include('partials.app-sidebar', ['activePage' => 'bank-deposit'])
 
     <!-- Main Content -->
     <div class="main-content">
         <div class="content-header">
             <h1>Bank & Deposit</h1>
-            <div class="user-indicator">
-                <div class="user-info">
-                    <span class="user-name">{{ auth()->user()->name }}</span>
-                    <span class="user-role">{{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}</span>
-                </div>
-                <a href="{{ route('profile') }}" class="user-avatar">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                </a>
-            </div>
+            @include('partials.user-indicator')
         </div>
 
         <div class="content-box-large">
@@ -1773,7 +1505,7 @@
                         </div>
                         <div class="summary-card-icon"><i class="fas fa-wallet"></i></div>
                     </div>
-                    <div class="summary-card-value">₱{{ number_format($totalExpectedRemit ?? 0, 2) }}</div>
+                    <div class="summary-card-value">{{ number_format($totalExpectedRemit ?? 0, 2) }}</div>
                     <div class="summary-card-sub"><i class="fas fa-circle" style="font-size:6px;"></i> Total rider remittances due</div>
                 </div>
                 <div class="summary-card">
@@ -1789,7 +1521,7 @@
                         </div>
                         <div class="summary-card-icon"><i class="fas fa-money-bill-wave"></i></div>
                     </div>
-                    <div class="summary-card-value" id="cashCollectedDisplay">₱{{ number_format($confirmedCashCollected ?? 0, 2) }}</div>
+                    <div class="summary-card-value" id="cashCollectedDisplay">{{ number_format($confirmedCashCollected ?? 0, 2) }}</div>
                     <div class="summary-card-sub"><i class="fas fa-circle" style="font-size:6px;"></i> Confirmed bank deposits</div>
                 </div>
                 <div class="summary-card">
@@ -1799,9 +1531,9 @@
                         <div class="summary-card-icon"><i class="fas fa-balance-scale"></i></div>
                     </div>
                     <div class="summary-card-value" id="discrepancyDisplay"
-                         data-original="-₱{{ number_format(abs($discrepancy), 2) }}"
+                         data-original="-{{ number_format(abs($discrepancy), 2) }}"
                          data-original-color="#fff">
-                        -₱{{ number_format(abs($discrepancy), 2) }}
+                        -{{ number_format(abs($discrepancy), 2) }}
                     </div>
                     <div class="summary-card-sub"><i class="fas fa-circle" style="font-size:6px;"></i> Expected vs. collected gap</div>
                 </div>
@@ -1810,7 +1542,7 @@
                         <div class="summary-card-label">Change</div>
                         <div class="summary-card-icon"><i class="fas fa-coins"></i></div>
                     </div>
-                    <div class="summary-card-value" id="changeDisplay">+₱{{ number_format($totalChange, 2) }}</div>
+                    <div class="summary-card-value" id="changeDisplay">+{{ number_format($totalChange, 2) }}</div>
                     <div class="summary-card-sub"><i class="fas fa-circle" style="font-size:6px;"></i> Excess cash returned</div>
                 </div>
             </div>
@@ -1889,17 +1621,17 @@
                                 if ($riderDiscrepancy !== null) {
                                     if ($riderDiscrepancy > 0) {
                                         $discColor = '#d97706';
-                                        $discText  = '+₱' . number_format($riderDiscrepancy, 2);
+                                        $discText  = '+?' . number_format($riderDiscrepancy, 2);
                                     } elseif ($riderDiscrepancy < 0) {
                                         $discColor = '#dc2626';
-                                        $discText  = '-₱' . number_format(abs($riderDiscrepancy), 2);
+                                        $discText  = '-?' . number_format(abs($riderDiscrepancy), 2);
                                     } else {
                                         $discColor = '#059669';
-                                        $discText  = '₱0.00';
+                                        $discText  = '?0.00';
                                     }
                                 } else {
                                     $discColor = '#9ca3af';
-                                    $discText  = '—';
+                                    $discText  = '�';
                                 }
                                 $riderLatestRemittance = \App\Models\Remittance::where('rider_id', $summary->rider_id)
                                     ->latest()
@@ -1929,7 +1661,7 @@
                                 </td>
                                 <td>
                                     <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                                        <span style="font-weight: 700; color: #059669; font-size: 14px;">₱{{ number_format($summary->total_remit_amount, 2) }}</span>
+                                        <span style="font-weight: 700; color: #059669; font-size: 14px;">?{{ number_format($summary->total_remit_amount, 2) }}</span>
                                     </div>
                                 </td>
                                 <td>
@@ -1967,7 +1699,7 @@
                                 <td>
                                     @php $riderConfirmed = $riderConfirmation ? $riderConfirmation->total_amount : 0; @endphp
                                     <span id="confirmed-amount-{{ $summary->rider_id }}" style="font-weight: 700; font-size: 13px; color: {{ $riderConfirmed > 0 ? '#059669' : '#9ca3af' }};">
-                                        ₱{{ number_format($riderConfirmed, 2) }}
+                                        ?{{ number_format($riderConfirmed, 2) }}
                                     </span>
                                 </td>
                                 <td>{{ auth()->user()->name }}</td>
@@ -2098,56 +1830,56 @@
                                 <tr data-denom="1000">
                                     <td>1000</td>
                                     <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>₱0</td>
+                                    <td>?0</td>
                                 </tr>
                                 <tr data-denom="500">
                                     <td>500</td>
                                     <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>₱0</td>
+                                    <td>?0</td>
                                 </tr>
                                 <tr data-denom="200">
                                     <td>200</td>
                                     <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>₱0</td>
+                                    <td>?0</td>
                                 </tr>
                                 <tr data-denom="100">
                                     <td>100</td>
                                     <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>₱0</td>
+                                    <td>?0</td>
                                 </tr>
                                 <tr data-denom="50">
                                     <td>50</td>
                                     <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>₱0</td>
+                                    <td>?0</td>
                                 </tr>
                                 <tr data-denom="20">
                                     <td>20</td>
                                     <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>₱0</td>
+                                    <td>?0</td>
                                 </tr>
                                 <tr data-denom="20b">
                                     <td>20</td>
                                     <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>₱0</td>
+                                    <td>?0</td>
                                 </tr>
                                 <tr data-denom="10">
                                     <td>10</td>
                                     <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>₱0</td>
+                                    <td>?0</td>
                                 </tr>
                                 <tr data-denom="5">
                                     <td>5</td>
                                     <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>₱0</td>
+                                    <td>?0</td>
                                 </tr>
                                 <tr data-denom="1">
                                     <td>1</td>
                                     <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>₱0</td>
+                                    <td>?0</td>
                                 </tr>
                                 <tr class="total-row">
                                     <td colspan="2">Total</td>
-                                    <td id="denominationTotal">₱0</td>
+                                    <td id="denominationTotal">?0</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2206,7 +1938,7 @@
             if (hasValid)  labels.push('Validating');
             if (hasChange) labels.push('Change');
             el.setAttribute('data-has-indicator', '1');
-            el.setAttribute('data-indicator-label', labels.join(' · '));
+            el.setAttribute('data-indicator-label', labels.join(' � '));
             el.appendChild(dots);
         }
 
@@ -2309,7 +2041,7 @@
             }
             
             // Add next month's overflow days
-            const totalCells = 42; // 6 rows × 7 days
+            const totalCells = 42; // 6 rows � 7 days
             const usedCells = firstDay + daysInMonth;
             const nextMonthDays = totalCells - usedCells;
             
@@ -2375,7 +2107,7 @@
             url.searchParams.delete('page'); // Reset to page 1
             
             // Show loading toast
-            showToast(`📅 Filtering remittances for ${displayDate}...`, 'info', 2000);
+            showToast(`?? Filtering remittances for ${displayDate}...`, 'info', 2000);
             
             // Navigate to filtered results
             window.location.href = url.toString();
@@ -2387,7 +2119,7 @@
             url.searchParams.delete('date');
             url.searchParams.delete('page');
             
-            showToast('📅 Date filter cleared - showing all records', 'info', 2000);
+            showToast('?? Date filter cleared - showing all records', 'info', 2000);
             window.location.href = url.toString();
         }
 
@@ -2416,7 +2148,7 @@
             
             if (filterValue) {
                 const filterText = filterSelect.options[filterSelect.selectedIndex].text;
-                showToast(`📊 Filter applied: ${filterText}`, 'info', 2500);
+                showToast(`?? Filter applied: ${filterText}`, 'info', 2500);
                 // Add your filter logic here
                 // filterTableByDateRange(filterValue);
             } else {
@@ -2460,7 +2192,7 @@
             
             console.log('Current page:', currentPage);
             if (previousPage !== currentPage) {
-                showToast(`📄 Loading page ${currentPage} of ${totalPages}`, 'info', 1500);
+                showToast(`?? Loading page ${currentPage} of ${totalPages}`, 'info', 1500);
             }
             
             // Add your pagination logic here
@@ -2486,20 +2218,20 @@
                 rows.forEach(row => {
                     const amountCell = row.querySelector('td:last-child');
                     if (amountCell && !amountCell.querySelector('input')) {
-                        amountCell.textContent = '₱0';
+                        amountCell.textContent = '?0';
                     }
                 });
                 
                 const totalRows = denominationTable.querySelectorAll('.total-row');
                 const totalCell = totalRows[0].querySelector('td:last-child');
                 if (totalCell && !totalCell.querySelector('input')) {
-                    totalCell.textContent = '₱0';
+                    totalCell.textContent = '?0';
                 }
             }
 
             // Reset Total and Remaining displays
             const denomTotalCell = document.getElementById('denominationTotal');
-            if (denomTotalCell) denomTotalCell.textContent = '₱0';
+            if (denomTotalCell) denomTotalCell.textContent = '?0';
 
             // Reset bank field to original remit amount
             const bankInput = document.getElementById('bankInput');
@@ -2521,13 +2253,13 @@
             if (bankLabelReset) { bankLabelReset.textContent = 'Bank'; bankLabelReset.style.color = '#374151'; }
             
             if (hasValues) {
-                showToast('✓ All denominations have been reset to zero', 'success', 2500);
+                showToast('? All denominations have been reset to zero', 'success', 2500);
             } else {
                 showToast('Denominations are already empty', 'info', 2000);
             }
         }
 
-        // Initialized from DB total for today — persists across refreshes
+        // Initialized from DB total for today � persists across refreshes
         let totalConfirmedCollection = {{ $confirmedCashCollected ?? 0 }};
 
         function refreshSummaryCards() {
@@ -2544,7 +2276,7 @@
                     const discCard = document.getElementById('discrepancyDisplay');
                     if (discCard) {
                         const absDisc = Math.abs(d.discrepancy || 0);
-                        discCard.textContent = '-₱' + absDisc.toLocaleString('en-US', {minimumFractionDigits: 2});
+                        discCard.textContent = '-' + absDisc.toLocaleString('en-US', {minimumFractionDigits: 2});
                         discCard.style.color = '#fff';
                         discCard.dataset.original = discCard.textContent;
                     }
@@ -2553,7 +2285,7 @@
                     const changeCard = document.getElementById('changeDisplay');
                     if (changeCard) {
                         const changeVal = d.change || 0;
-                        changeCard.textContent = '+₱' + changeVal.toLocaleString('en-US', {minimumFractionDigits: 2});
+                        changeCard.textContent = '+' + changeVal.toLocaleString('en-US', {minimumFractionDigits: 2});
                         changeCard.style.color = '#fff';
                     }
                 })
@@ -2563,7 +2295,7 @@
         function updateCashCollectedDisplay() {
             const display = document.getElementById('cashCollectedDisplay');
             if (display) {
-                display.textContent = '₱' + totalConfirmedCollection.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                display.textContent = totalConfirmedCollection.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 display.style.color = '#fff';
             }
         }
@@ -2585,24 +2317,24 @@
 
             // Check if a rider is selected
             if (!selectedRow) {
-                showToast('⚠️ Please select a rider first', 'error', 3000);
+                showToast('?? Please select a rider first', 'error', 3000);
                 return;
             }
 
             // Get original bank amount
             const originalAmount = parseFloat(bankInput.dataset.originalAmount) || 0;
             if (originalAmount <= 0) {
-                showToast('⚠️ No bank amount to confirm. Select a rider first.', 'error', 3000);
+                showToast('?? No bank amount to confirm. Select a rider first.', 'error', 3000);
                 return;
             }
 
             // Get total denomination amount
             const totalCell = document.getElementById('denominationTotal');
-            const totalText = totalCell ? totalCell.textContent.replace('₱', '').replace(/,/g, '') : '0';
+            const totalText = totalCell ? totalCell.textContent.replace('?', '').replace(/,/g, '') : '0';
             const totalAmount = parseFloat(totalText) || 0;
 
             if (totalAmount <= 0) {
-                showToast('⚠️ Please enter denomination amounts first', 'error', 3000);
+                showToast('?? Please enter denomination amounts first', 'error', 3000);
                 return;
             }
 
@@ -2622,23 +2354,23 @@
             _pendingConfirm = { riderId, riderName, originalAmount, totalAmount, denomData, balance };
 
             document.getElementById('modal-rider-name').textContent  = riderName;
-            document.getElementById('modal-bank-amount').textContent  = '₱' + originalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('modal-denom-total').textContent  = '₱' + totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('modal-bank-amount').textContent  = '?' + originalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('modal-denom-total').textContent  = '?' + totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
 
             const balanceEl = document.getElementById('modal-balance');
             const balanceLabelEl = document.getElementById('modal-balance-label');
             if (balance > 0) {
-                // Bank > Total: denominations short → Discrepancy
-                balanceEl.textContent = '-₱' + balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+                // Bank > Total: denominations short ? Discrepancy
+                balanceEl.textContent = '-?' + balance.toLocaleString('en-US', {minimumFractionDigits: 2});
                 balanceEl.style.color = '#dc2626';
                 if (balanceLabelEl) { balanceLabelEl.textContent = 'Discrepancy'; balanceLabelEl.style.color = '#dc2626'; }
             } else if (balance === 0) {
-                balanceEl.textContent = '₱0.00';
+                balanceEl.textContent = '?0.00';
                 balanceEl.style.color = '#059669';
                 if (balanceLabelEl) { balanceLabelEl.textContent = 'Balance'; balanceLabelEl.style.color = '#6b7280'; }
             } else {
-                // Total > Bank: denominations over → Balance (excess)
-                balanceEl.textContent = '+₱' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2});
+                // Total > Bank: denominations over ? Balance (excess)
+                balanceEl.textContent = '+?' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2});
                 balanceEl.style.color = '#d97706';
                 if (balanceLabelEl) { balanceLabelEl.textContent = 'Balance'; balanceLabelEl.style.color = '#6b7280'; }
             }
@@ -2647,14 +2379,14 @@
             const warningText = document.getElementById('modal-warning-text');
             if (balance > 0) {
                 // Denominations short
-                warningText.textContent = 'Denomination total is ₱' + balance.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' short of the bank amount. This will be recorded as a discrepancy.';
+                warningText.textContent = 'Denomination total is ?' + balance.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' short of the bank amount. This will be recorded as a discrepancy.';
                 warningEl.style.display = 'block';
                 warningEl.style.background = '#fff1f2';
                 warningEl.style.border = '1px solid #fecaca';
                 warningEl.style.color = '#b91c1c';
             } else if (balance < 0) {
                 // Denominations over
-                warningText.textContent = 'Denomination total exceeds bank amount by ₱' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2}) + '. Verify the breakdown is correct.';
+                warningText.textContent = 'Denomination total exceeds bank amount by ?' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2}) + '. Verify the breakdown is correct.';
                 warningEl.style.display = 'block';
                 warningEl.style.background = '#fffbeb';
                 warningEl.style.border = '1px solid #fcd34d';
@@ -2693,16 +2425,16 @@
             document.getElementById('dh-date').textContent = d.depositDate ? 'Deposit Date: ' + d.depositDate : '';
 
             const denoms = [
-                { label: '₱1,000 Bill',  key: 'denom1000',  value: 1000 },
-                { label: '₱500 Bill',   key: 'denom500',   value: 500  },
-                { label: '₱200 Bill',   key: 'denom200',   value: 200  },
-                { label: '₱100 Bill',   key: 'denom100',   value: 100  },
-                { label: '₱50 Bill',    key: 'denom50',    value: 50   },
-                { label: '₱20 Bill',    key: 'denom20',    value: 20   },
-                { label: '₱20 Coin',    key: 'denom20b',   value: 20   },
-                { label: '₱10 Coin',    key: 'denom10',    value: 10   },
-                { label: '₱5 Coin',     key: 'denom5',     value: 5    },
-                { label: '₱1 Coin',     key: 'denom1',     value: 1    },
+                { label: '?1,000 Bill',  key: 'denom1000',  value: 1000 },
+                { label: '?500 Bill',   key: 'denom500',   value: 500  },
+                { label: '?200 Bill',   key: 'denom200',   value: 200  },
+                { label: '?100 Bill',   key: 'denom100',   value: 100  },
+                { label: '?50 Bill',    key: 'denom50',    value: 50   },
+                { label: '?20 Bill',    key: 'denom20',    value: 20   },
+                { label: '?20 Coin',    key: 'denom20b',   value: 20   },
+                { label: '?10 Coin',    key: 'denom10',    value: 10   },
+                { label: '?5 Coin',     key: 'denom5',     value: 5    },
+                { label: '?1 Coin',     key: 'denom1',     value: 1    },
             ];
 
             const tbody = document.getElementById('dh-denom-rows');
@@ -2714,23 +2446,23 @@
                 tr.style.cssText = 'border-bottom:1px solid #f3f4f6;' + (pieces > 0 ? 'background:#fafafa;' : '');
                 tr.innerHTML = `
                     <td style="padding:7px 12px; color:${pieces > 0 ? '#111827' : '#d1d5db'};">${item.label}</td>
-                    <td style="padding:7px 12px; text-align:center; font-weight:${pieces > 0 ? '700' : '400'}; color:${pieces > 0 ? '#374151' : '#d1d5db'}; font-size:14px;">${pieces > 0 ? pieces : '—'}</td>
-                    <td style="padding:7px 12px; text-align:right; font-weight:${pieces > 0 ? '700' : '400'}; color:${pieces > 0 ? '#059669' : '#d1d5db'};">${pieces > 0 ? '₱' + amount.toLocaleString('en-US', {minimumFractionDigits: 2}) : '—'}</td>
+                    <td style="padding:7px 12px; text-align:center; font-weight:${pieces > 0 ? '700' : '400'}; color:${pieces > 0 ? '#374151' : '#d1d5db'}; font-size:14px;">${pieces > 0 ? pieces : '�'}</td>
+                    <td style="padding:7px 12px; text-align:right; font-weight:${pieces > 0 ? '700' : '400'}; color:${pieces > 0 ? '#059669' : '#d1d5db'};">${pieces > 0 ? '?' + amount.toLocaleString('en-US', {minimumFractionDigits: 2}) : '�'}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
             const total = parseFloat(d.total) || 0;
-            document.getElementById('dh-total').textContent = '₱' + total.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('dh-total').textContent = '?' + total.toLocaleString('en-US', {minimumFractionDigits: 2});
 
             const bank = parseFloat(d.bank) || 0;
-            document.getElementById('dh-bank').textContent = '₱' + bank.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('dh-bank').textContent = '?' + bank.toLocaleString('en-US', {minimumFractionDigits: 2});
 
             const disc = parseFloat(d.discrepancy) || 0;
             const discEl = document.getElementById('dh-discrepancy');
-            if (disc > 0)      { discEl.textContent = '+₱' + disc.toLocaleString('en-US', {minimumFractionDigits: 2}); discEl.style.color = '#d97706'; }
-            else if (disc < 0) { discEl.textContent = '-₱' + Math.abs(disc).toLocaleString('en-US', {minimumFractionDigits: 2}); discEl.style.color = '#dc2626'; }
-            else               { discEl.textContent = '₱0.00'; discEl.style.color = '#059669'; }
+            if (disc > 0)      { discEl.textContent = '+?' + disc.toLocaleString('en-US', {minimumFractionDigits: 2}); discEl.style.color = '#d97706'; }
+            else if (disc < 0) { discEl.textContent = '-?' + Math.abs(disc).toLocaleString('en-US', {minimumFractionDigits: 2}); discEl.style.color = '#dc2626'; }
+            else               { discEl.textContent = '?0.00'; discEl.style.color = '#059669'; }
 
             modal.style.display = 'flex';
         }
@@ -2812,15 +2544,15 @@
                         // discrepancy = totalAmount - originalAmount (which is -balance)
                         const discrepancyVal = totalAmount - originalAmount;
                         if (balance > 0) {
-                            // Bank > Total: short → Discrepancy (negative)
-                            discCell.textContent = '-₱' + balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+                            // Bank > Total: short ? Discrepancy (negative)
+                            discCell.textContent = '-?' + balance.toLocaleString('en-US', {minimumFractionDigits: 2});
                             discCell.style.color = '#dc2626';
                         } else if (balance < 0) {
-                            // Total > Bank: over → show excess as positive balance
-                            discCell.textContent = '+₱' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2});
+                            // Total > Bank: over ? show excess as positive balance
+                            discCell.textContent = '+?' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2});
                             discCell.style.color = '#d97706';
                         } else {
-                            discCell.textContent = '₱0.00';
+                            discCell.textContent = '?0.00';
                             discCell.style.color = '#059669';
                         }
                         // Keep dataset in sync so inline discrepancy edit works without page refresh
@@ -2831,12 +2563,12 @@
                         }
                     }
 
-                    showToast(`✅ Confirmed! ${riderName} — ₱${totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2})} saved to database`, 'success', 4000);
+                    showToast(`? Confirmed! ${riderName} � ?${totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2})} saved to database`, 'success', 4000);
 
                     // Update Confirmed Amount cell live
                     const confirmedAmountSpan = document.getElementById('confirmed-amount-' + riderId);
                     if (confirmedAmountSpan) {
-                        confirmedAmountSpan.textContent = '₱' + totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
+                        confirmedAmountSpan.textContent = '?' + totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
                         confirmedAmountSpan.style.color = '#059669';
                     }
 
@@ -2857,7 +2589,7 @@
                 btn.disabled = false;
                 btn.style.background = '#436026';
                 btn.innerHTML = '<i class="fas fa-check" style="margin-right: 6px;"></i>Confirm';
-                showToast('❌ Failed to save. Please try again.', 'error', 3000);
+                showToast('? Failed to save. Please try again.', 'error', 3000);
             });
         }
 
@@ -2885,7 +2617,13 @@
 
         // Toast Notification Function
         function showToast(message, type = 'success', duration = 3000) {
-            const container = document.getElementById('toastContainer');
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                document.body.appendChild(container);
+            }
+
             const toast = document.createElement('div');
             toast.className = 'custom-toast';
             let iconHtml = '<i class="fas fa-check-circle toast-icon"></i>';
@@ -2911,6 +2649,12 @@
                 <button class="toast-close" aria-label="Close">&times;</button>
                 <div class="toast-progress" style="background:${progressColor}"></div>
             `;
+
+            const progressBar = toast.querySelector('.toast-progress');
+            if (progressBar) {
+                progressBar.style.animationDuration = `${duration}ms`;
+            }
+
             toast.querySelector('.toast-close').onclick = function() {
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 300);
@@ -2928,7 +2672,7 @@
                 const amount = pieces * denomination;
                 const row = input.closest('tr');
                 const amountCell = row.querySelector('td:last-child');
-                amountCell.textContent = '₱' + amount.toLocaleString();
+                amountCell.textContent = '?' + amount.toLocaleString();
                 _denomsEntered = true;
                 calculateTotal();
             }
@@ -2941,7 +2685,7 @@
                 rows.forEach(row => {
                     const amountCell = row.querySelector('td:last-child');
                     if (amountCell && !amountCell.querySelector('input')) {
-                        const amountText = amountCell.textContent.replace('₱', '').replace(/,/g, '');
+                        const amountText = amountCell.textContent.replace('?', '').replace(/,/g, '');
                         const amount = parseInt(amountText) || 0;
                         total += amount;
                     }
@@ -2950,12 +2694,12 @@
                 // Update Total row
                 const totalCell = document.getElementById('denominationTotal');
                 if (totalCell) {
-                    totalCell.textContent = '₱' + total.toLocaleString();
+                    totalCell.textContent = '?' + total.toLocaleString();
                     totalCell.style.cursor = 'pointer';
                     totalCell.title = 'Click to copy total amount';
                     totalCell.onclick = function() {
                         navigator.clipboard.writeText(total.toString()).then(() => {
-                            showToast(`✓ Copied ₱${total.toLocaleString()} to clipboard`, 'success', 2000);
+                            showToast(`? Copied ?${total.toLocaleString()} to clipboard`, 'success', 2000);
                         }).catch(() => {
                             showToast('Failed to copy to clipboard', 'error', 2000);
                         });
@@ -2971,7 +2715,7 @@
                     bankInput.removeAttribute('readonly');
                     const bankLabel = document.getElementById('bankLabel');
                     if (originalAmount === 0 || total === 0) {
-                        // No rider selected or no denominations entered — show original amount, leave discrepancy alone
+                        // No rider selected or no denominations entered � show original amount, leave discrepancy alone
                         if (originalAmount > 0) {
                             bankInput.value = originalAmount.toFixed(2);
                             bankInput.style.borderColor = '#436026';
@@ -3001,7 +2745,7 @@
                         }
                         }
                     } else if (remaining > 0) {
-                        bankInput.value = '-₱' + remaining.toFixed(2);
+                        bankInput.value = '-?' + remaining.toFixed(2);
                         bankInput.style.borderColor = '#dc2626';
                         bankInput.style.borderWidth = '2px';
                         bankInput.style.borderStyle = 'solid';
@@ -3014,13 +2758,13 @@
                             const riderIdP = selectedRowP.getAttribute('data-rider-id');
                             const discCellP = document.getElementById('discrepancy-cell-' + riderIdP);
                             if (discCellP) {
-                                discCellP.textContent = '-₱' + remaining.toLocaleString('en-US', {minimumFractionDigits: 2});
+                                discCellP.textContent = '-?' + remaining.toLocaleString('en-US', {minimumFractionDigits: 2});
                                 discCellP.style.color = '#dc2626';
                             }
                         }
                         }
                     } else {
-                        bankInput.value = '+₱' + Math.abs(remaining).toFixed(2);
+                        bankInput.value = '+?' + Math.abs(remaining).toFixed(2);
                         bankInput.style.borderColor = '#d97706';
                         bankInput.style.borderWidth = '2px';
                         bankInput.style.borderStyle = 'solid';
@@ -3109,7 +2853,7 @@
                     const searchInput = document.getElementById('searchInput');
                     if (searchInput) {
                         searchInput.focus();
-                        showToast('🔍 Search activated', 'info', 1500);
+                        showToast('?? Search activated', 'info', 1500);
                     }
                 }
             });
@@ -3227,9 +2971,9 @@
                 .then(data => {
                     if (data.success) {
                         let newText, newColor;
-                        if (newVal > 0)      { newText = '+₱' + newVal.toLocaleString('en-US', {minimumFractionDigits: 2}); newColor = '#d97706'; }
-                        else if (newVal < 0) { newText = '-₱' + Math.abs(newVal).toLocaleString('en-US', {minimumFractionDigits: 2}); newColor = '#dc2626'; }
-                        else                 { newText = '₱0.00'; newColor = '#059669'; }
+                        if (newVal > 0)      { newText = '+?' + newVal.toLocaleString('en-US', {minimumFractionDigits: 2}); newColor = '#d97706'; }
+                        else if (newVal < 0) { newText = '-?' + Math.abs(newVal).toLocaleString('en-US', {minimumFractionDigits: 2}); newColor = '#dc2626'; }
+                        else                 { newText = '?0.00'; newColor = '#059669'; }
 
                         cell.textContent           = newText;
                         cell.style.color           = newColor;
@@ -3240,7 +2984,7 @@
                         const newTotal = data.new_total;
                         const confirmedSpan = document.getElementById('confirmed-amount-' + riderId);
                         if (confirmedSpan && newTotal !== undefined) {
-                            confirmedSpan.textContent = '₱' + parseFloat(newTotal).toLocaleString('en-US', {minimumFractionDigits: 2});
+                            confirmedSpan.textContent = '?' + parseFloat(newTotal).toLocaleString('en-US', {minimumFractionDigits: 2});
                             confirmedSpan.style.color = parseFloat(newTotal) > 0 ? '#059669' : '#9ca3af';
                         }
 
@@ -3281,7 +3025,7 @@
             // Block selection if already validated
             if (row.dataset.validated === 'true') {
                 const riderName = row.getAttribute('data-rider-name');
-                showToast(`⚠️ ${riderName} is already validated and cannot be re-confirmed.`, 'warning', 3000);
+                showToast(`?? ${riderName} is already validated and cannot be re-confirmed.`, 'warning', 3000);
                 return;
             }
 
@@ -3329,7 +3073,7 @@
             // Re-enable readonly
             bankInput.setAttribute('readonly', true);
 
-            // Reset denomination flag — user hasn't typed anything for this rider yet
+            // Reset denomination flag � user hasn't typed anything for this rider yet
             _denomsEntered = false;
 
             // Recalculate if any denominations are already filled
@@ -3366,7 +3110,7 @@
             });
         @endif
 
-        // ─── Report Modal ───────────────────────────────────────────
+        // --- Report Modal -------------------------------------------
         function openReportModal() {
             document.getElementById('reportModalOverlay').classList.add('open');
         }
@@ -3382,11 +3126,11 @@
             const format     = document.getElementById('reportFormat').value;
 
             if (!dateFrom || !dateTo) {
-                showToast('⚠️ Please select both From and To dates.', 'error', 3000);
+                showToast('?? Please select both From and To dates.', 'error', 3000);
                 return;
             }
             if (dateFrom > dateTo) {
-                showToast('⚠️ "Date From" cannot be after "Date To".', 'error', 3000);
+                showToast('?? "Date From" cannot be after "Date To".', 'error', 3000);
                 return;
             }
 
@@ -3420,7 +3164,7 @@
             }
 
             closeReportModal();
-            showToast('📄 Report is being generated...', 'success', 2500);
+            showToast('?? Report is being generated...', 'success', 2500);
         }
     </script>
 
@@ -3543,7 +3287,7 @@
                 </div>
                 <div>
                     <div class="report-modal-topbar-title">Generate Report</div>
-                    <div class="report-modal-topbar-sub">Bank &amp; Deposit — configure &amp; export</div>
+                    <div class="report-modal-topbar-sub">Bank &amp; Deposit � configure &amp; export</div>
                 </div>
             </div>
             <button class="report-modal-close" onclick="closeReportModal()"><i class="fas fa-times"></i></button>
@@ -3559,7 +3303,7 @@
                     <span>From</span>
                     <input type="date" id="reportDateFrom" class="report-input" value="{{ request('date') ?? now()->format('Y-m-d') }}">
                 </div>
-                <div class="report-date-sep">→</div>
+                <div class="report-date-sep">?</div>
                 <div class="report-date-field">
                     <span>To</span>
                     <input type="date" id="reportDateTo" class="report-input" value="{{ request('date') ?? now()->format('Y-m-d') }}">

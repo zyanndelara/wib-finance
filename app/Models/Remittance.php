@@ -20,6 +20,7 @@ class Remittance extends Model
         'remit_photo',
         'status',
         'remarks',
+        'remarks_amount',
         'remittance_date',
         'mangan_merchant_name',
         'mangan_total_deliveries',
@@ -36,11 +37,12 @@ class Remittance extends Model
         'total_remit' => 'decimal:2',
         'total_tips' => 'decimal:2',
         'total_collection' => 'decimal:2',
+        'remarks_amount' => 'decimal:2',
         'remittance_date' => 'date',
     ];
 
     public function rider()
     {
-        return $this->belongsTo(Rider::class);
+        return $this->belongsTo(Rider::class, 'rider_id', 'driver_id');
     }
 }

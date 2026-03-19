@@ -14,7 +14,7 @@ class RemittanceController extends Controller
     {
         try {
             $request->validate([
-                'rider_id' => 'required|exists:riders,id',
+                'rider_id' => 'required|exists:mt_driver,driver_id',
                 'total_deliveries' => 'required|integer|min:0',
                 'total_delivery_fee' => 'required|numeric|min:0',
                 'total_remit' => 'required|numeric|min:0',
@@ -22,6 +22,7 @@ class RemittanceController extends Controller
                 'total_collection' => 'required|numeric|min:0',
                 'mode_of_payment' => 'required|string',
                 'remit_photo' => 'nullable|image|max:5120', // 5MB max
+                'remarks_amount' => 'nullable|numeric|min:0',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             if ($request->expectsJson() || $request->ajax()) {
@@ -47,6 +48,7 @@ class RemittanceController extends Controller
             'total_collection' => $request->total_collection,
             'mode_of_payment' => $request->mode_of_payment,
             'remarks' => $request->remarks,
+            'remarks_amount' => $request->remarks_amount ?? null,
             'status' => 'confirmed',
             'remittance_date' => $request->filled('remittance_date')
                 ? \Carbon\Carbon::parse($request->remittance_date)->toDateString()
@@ -71,8 +73,8 @@ class RemittanceController extends Controller
 
         $remittance = Remittance::create($remittanceData);
 
-        // Mark the rider as cleared once a remittance is submitted
-        Rider::where('id', $remittanceData['rider_id'])->update(['status' => 'cleared']);
+        // Do not overwrite rider master status on remittance submit.
+        // Daily remit state is derived from remittance records/date, not mt_driver.status.
 
         // Load the rider relationship
         $remittance->load('rider');
@@ -202,8 +204,10 @@ class RemittanceController extends Controller
 
         $remittances = $query->latest()->get();
 
-        $ridersWithRemittance = $remittances->pluck('rider_id')->unique()->count();
-        $nonRemittingRiderCount = Rider::count() - $ridersWithRemittance;
+        $activeRiderIds = Rider::whereIn('status', ['active', 'cleared'])->pluck('driver_id');
+        $ridersWithRemittance = $remittances->pluck('rider_id')->unique();
+        $activeRidersWithRemittance = $ridersWithRemittance->intersect($activeRiderIds)->count();
+        $nonRemittingRiderCount = $activeRiderIds->count() - $activeRidersWithRemittance;
 
         $summary = [
             'total_records'            => $remittances->count(),
