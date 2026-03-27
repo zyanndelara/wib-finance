@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('images/logowhite.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Remittance - When in Baguio Inc.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -44,11 +45,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #ffffff;
-            padding: 14px 18px;
-            border-radius: 10px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .content-header h1 {
@@ -431,6 +427,12 @@
             background: linear-gradient(135deg, #f8d7da 0%, #f5c2c7 100%);
             color: #842029;
             border-color: #dc3545;
+        }
+
+        .rider-status.short {
+            background: linear-gradient(135deg, #ffe3e3 0%, #ffc9c9 100%);
+            color: #9b1c1c;
+            border-color: #fa5252;
         }
 
         .rider-action-btn.blocked-btn {
@@ -1248,30 +1250,29 @@
             .toast-message {
                 font-size: 12px;
             }
-        }
 
-        .content-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-        }
+            .content-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
 
-        .content-header h1 {
-            font-size: 20px;
-        }
+            .content-header h1 {
+                font-size: 20px;
+            }
 
-        .user-indicator {
-            width: 100%;
-            justify-content: flex-end;
-        }
+            .user-indicator {
+                width: 100%;
+                justify-content: flex-end;
+            }
 
-        .cleared-riders-section {
-            overflow-x: auto;
-        }
+            .cleared-riders-section {
+                overflow-x: auto;
+            }
 
-        .cleared-riders-table {
-            min-width: 600px;
-        }
+            .cleared-riders-table {
+                min-width: 600px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1539,10 +1540,6 @@
             <div class="rider-queue-panel">
                 <div class="panel-header">
                     <h2>Rider Queue</h2>
-                    <button class="add-remit-btn" onclick="openAddRiderModal()">
-                        <i class="fas fa-plus"></i>
-                        <span>Add Rider</span>
-                    </button>
                 </div>
                 <div class="search-bar">
                     <i class="fas fa-search"></i>
@@ -1551,8 +1548,11 @@
                 <div class="rider-list">
                     @forelse($riders as $index => $rider)
                         @php $isBlocked = in_array($rider->id, $blockedRiderIds); @endphp
+                        @php $isAlreadyRemitted = in_array($rider->id, $remittedRiderIds ?? []); @endphp
+                        @php $isShortRemit = in_array($rider->id, $shortRiderIds ?? []); @endphp
                         <div class="rider-row" data-rider-id="{{ $rider->id }}"
-                            data-blocked="{{ $isBlocked ? 'true' : 'false' }}">
+                            data-blocked="{{ $isBlocked ? 'true' : 'false' }}"
+                            data-remitted="{{ $isAlreadyRemitted ? 'true' : 'false' }}">
                             <div class="rider-dropdown">
                                 <div class="rider-dropdown-header" onclick="toggleRiderDropdown(this)">
                                     <div style="display:flex;align-items:center;gap:9px;">
@@ -1564,6 +1564,12 @@
                                     <div style="display:flex;align-items:center;gap:6px;">
                                         @if ($isBlocked)
                                             <span class="rider-status pending">Pending</span>
+                                        @elseif($isAlreadyRemitted)
+                                            <span class="rider-status cleared">
+                                                <i class="fas fa-check" style="font-size:8px;"></i> Remitted
+                                            </span>
+                                        @elseif($isShortRemit)
+                                            <span class="rider-status short">Short</span>
                                         @elseif(in_array($rider->id, $clearedRiderIds))
                                             <span class="rider-status cleared">
                                                 <i class="fas fa-check" style="font-size:8px;"></i> Cleared
@@ -1579,6 +1585,12 @@
                                         @if ($isBlocked)
                                             <button class="rider-action-btn blocked-btn" disabled
                                                 title="Rider did not remit yesterday">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                                <span>Remit</span>
+                                            </button>
+                                        @elseif($isAlreadyRemitted)
+                                            <button class="rider-action-btn blocked-btn" disabled
+                                                title="Rider already fully remitted for the selected date">
                                                 <i class="fas fa-money-bill-wave"></i>
                                                 <span>Remit</span>
                                             </button>
@@ -1600,6 +1612,11 @@
                                             <i class="fas fa-exclamation-triangle"></i>
                                             This rider did not remit yesterday. Please settle before proceeding.
                                         </div>
+                                    @elseif($isAlreadyRemitted)
+                                        <div class="rider-blocked-notice" style="background: #e9f7ef; border-color: #b8e0c3; color: #1f6b3d;">
+                                            <i class="fas fa-check-circle"></i>
+                                            This rider is fully remitted for the selected date.
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -1607,7 +1624,7 @@
                     @empty
                         <div class="empty-state" style="text-align: center; padding: 40px; color: #6c757d;">
                             <i class="fas fa-users" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
-                            <p style="font-size: 14px; margin: 0;">No riders yet. Click "Add Rider" to get started.</p>
+                            <p style="font-size: 14px; margin: 0;">No riders available.</p>
                         </div>
                     @endforelse
                 </div>
@@ -1676,6 +1693,10 @@
                         color: #374151;
                     }
 
+                    .remit-tab-content {
+                        padding-top: 16px;
+                    }
+
                     @media (max-width: 768px) {
                         .remit-tab-btn {
                             font-size: 12px;
@@ -1710,7 +1731,7 @@
                     }
                 </style>
                 <div class="remit-tab-content" id="tabOverview">
-                    <div class="details-header" style="margin-top: 20px;">
+                    <div class="details-header">
                         Remittance Details: <span id="detailsRiderName"
                             style="color: #436026; font-weight: 700;"></span>
                     </div>
@@ -1757,7 +1778,7 @@
                 <div class="remit-tab-content" id="tabPayroll" style="display:none;">
                     <style>
                         .payroll-panel {
-                            padding: 24px 0;
+                            padding: 0;
                         }
 
                         .payroll-sections-grid {
@@ -2106,13 +2127,6 @@
                                                 <i class="fas fa-info-circle"></i> <span id="addaDfAllowedDaysText"></span>
                                             </div>
                                             <div id="addaDfRows">
-                                                <div class="adda-df-row">
-                                                    <input type="number" class="adda-df-amount" step="0.01" placeholder="Amount">
-                                                    <input type="date" class="adda-df-date">
-                                                    <button type="button" class="adda-df-remove" onclick="removeAddaDfRow(this)" style="display:none;">
-                                                        Remove
-                                                    </button>
-                                                </div>
                                             </div>
                                             <div class="adda-df-footer">
                                                 <span id="addaDfSummary" class="adda-df-summary">Total ADDA DF: ₱0.00</span>
@@ -2146,11 +2160,16 @@
                                         </div>
                                         <div class="form-row" style="margin-bottom: 0;">
                                             <label class="form-label">Mode of Payment:</label>
-                                            <select name="mode_of_payment" class="form-input">
-                                                <option value="" disabled selected hidden>Choose payment mode...</option>
-                                                <option value="cash">Cash</option>
-                                                <option value="bank">Bank Digital Wallet</option>
-                                            </select>
+                                            <div style="display: flex; gap: 16px; margin-top: 8px;">
+                                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                                    <input type="checkbox" name="payroll_mode_of_payment_checkbox" value="cash" class="payroll-payment-mode-checkbox" style="cursor: pointer;">
+                                                    <span>Cash</span>
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                                    <input type="checkbox" name="payroll_mode_of_payment_checkbox" value="bank" class="payroll-payment-mode-checkbox" style="cursor: pointer;">
+                                                    <span>Bank Digital Wallet</span>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
                                     <div id="customDateRange" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
@@ -2292,6 +2311,9 @@
                     const riderRemittanceDateMap = @json($riderRemittanceDateMap ?? []);
                     const riderTaskDeliveriesMap = @json($riderTaskDeliveriesMap ?? []);
                     const riderDeliveryChargesMap = @json($riderDeliveryChargesMap ?? []);
+                    const riderTipsMap = @json($riderTipsMap ?? []);
+                    const riderTotalCollectionMap = @json($riderTotalCollectionMap ?? []);
+                    const riderRemittedTotalsMap = @json($remittedTotalsByRider ?? []);
 
                     // Toast Notification Function
                     function showToast(message, type = 'success', duration = 3000) {
@@ -2408,15 +2430,7 @@
                         // Clear all ADDA DF inputs when schedule changes
                         const addaDfRows = document.getElementById('addaDfRows');
                         if (addaDfRows) {
-                            addaDfRows.innerHTML = `
-                                <div class="adda-df-row">
-                                    <input type="number" class="adda-df-amount" step="0.01" placeholder="Amount">
-                                    <input type="date" class="adda-df-date">
-                                    <button type="button" class="adda-df-remove" onclick="removeAddaDfRow(this)" style="display:none;">
-                                        Remove
-                                    </button>
-                                </div>
-                            `;
+                            addaDfRows.innerHTML = '';
                         }
                         
                         if (scheduleSelect.value === 'Select Date') {
@@ -2920,7 +2934,11 @@
                         const baseSalary = form.querySelector('[name="base_salary"]').value;
                         const renumeration26Days = form.querySelector('[name="renumeration_26_days"]').value;
                         const salarySchedule = form.querySelector('[name="salary_schedule"]').value;
-                        const modeOfPayment = form.querySelector('[name="mode_of_payment"]').value;
+                        
+                        // Get selected payroll payment modes
+                        const selectedPayrollModes = Array.from(document.querySelectorAll('.payroll-payment-mode-checkbox:checked'))
+                            .map(cb => cb.value);
+                        
                         const netSalary = form.querySelector('[name="net_salary"]').value;
 
                         if (!riderId || !riderName) {
@@ -2951,14 +2969,44 @@
                                 return;
                             }
                         }
-                        if (!modeOfPayment) {
-                            showToast('Please select Mode of Payment', 'warning');
+                        if (selectedPayrollModes.length === 0) {
+                            showToast('Please select at least one Mode of Payment', 'warning');
                             return;
                         }
                         if (!netSalary) {
                             showToast('Please enter Net Salary', 'warning');
                             return;
                         }
+
+                        // Store the selected modes in hidden fields for form submission
+                        let payrollModeInput = form.querySelector('[name="selected_payroll_modes"]');
+                        if (!payrollModeInput) {
+                            payrollModeInput = document.createElement('input');
+                            payrollModeInput.type = 'hidden';
+                            payrollModeInput.name = 'selected_payroll_modes';
+                            form.appendChild(payrollModeInput);
+                        }
+                        payrollModeInput.value = JSON.stringify(selectedPayrollModes);
+
+                        // Also set payment_modes_json for backend consistency
+                        let paymentModesJson = form.querySelector('[name="payment_modes_json"]');
+                        if (!paymentModesJson) {
+                            paymentModesJson = document.createElement('input');
+                            paymentModesJson.type = 'hidden';
+                            paymentModesJson.name = 'payment_modes_json';
+                            form.appendChild(paymentModesJson);
+                        }
+                        paymentModesJson.value = JSON.stringify(selectedPayrollModes);
+
+                        // Set the mode_of_payment field
+                        let modeOfPaymentInput = form.querySelector('[name="mode_of_payment"]');
+                        if (!modeOfPaymentInput) {
+                            modeOfPaymentInput = document.createElement('input');
+                            modeOfPaymentInput.type = 'hidden';
+                            modeOfPaymentInput.name = 'mode_of_payment';
+                            form.appendChild(modeOfPaymentInput);
+                        }
+                        modeOfPaymentInput.value = selectedPayrollModes.length === 1 ? selectedPayrollModes[0] : 'multiple';
 
                         // Set rider name in modal header
                         document.getElementById('payrollDeductionRiderName').textContent = riderName;
@@ -3595,10 +3643,60 @@
                                         <td style="text-align: right; font-weight: 600; color: #007bff;">
                                             ₱{{ number_format($remittance->total_collection, 2) }}</td>
                                         <td style="text-align: center;">
-                                            <span
-                                                style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; {{ $remittance->mode_of_payment === 'cash' ? 'background: #d4edda; color: #155724;' : 'background: #d1ecf1; color: #0c5460;' }}">
-                                                {{ strtoupper($remittance->mode_of_payment) }}
-                                            </span>
+                                            @php
+                                                $rawMode = trim((string) ($remittance->mode_of_payment ?? ''));
+                                                $normalizeMode = function ($value) {
+                                                    $mode = trim((string) $value);
+                                                    $mode = (string) preg_replace('/^[\'\"]+|[\'\"]+$/', '', $mode);
+                                                    return strtolower(trim($mode));
+                                                };
+
+                                                $modes = [];
+                                                $decoded = json_decode($rawMode, true);
+                                                if (json_last_error() === JSON_ERROR_NONE) {
+                                                    if (is_array($decoded)) {
+                                                        $modes = $decoded;
+                                                    } elseif (is_string($decoded)) {
+                                                        $modes = [$decoded];
+                                                    }
+                                                }
+
+                                                if (empty($modes)) {
+                                                    if (preg_match('/^\[(.*)\]$/', $rawMode, $matches)) {
+                                                        $parts = array_map('trim', explode(',', $matches[1]));
+                                                        $modes = $parts;
+                                                    } else {
+                                                        $modes = [$rawMode];
+                                                    }
+                                                }
+
+                                                if ($rawMode === 'multiple' && isset($remittance->attributes['payment_modes_json'])) {
+                                                    $jsonModes = json_decode($remittance->attributes['payment_modes_json'], true);
+                                                    if (is_array($jsonModes) && !empty($jsonModes)) {
+                                                        $modes = $jsonModes;
+                                                    }
+                                                }
+
+                                                $modes = array_values(array_filter(array_map($normalizeMode, $modes), fn($mode) => $mode !== ''));
+                                                if (empty($modes)) {
+                                                    $modes = ['unknown'];
+                                                }
+                                            @endphp
+                                            @if (count($modes) > 1)
+                                                <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;">
+                                                    @foreach ($modes as $mode)
+                                                        <span style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; 
+                                                            {{ $mode === 'cash' ? 'background: #d4edda; color: #155724;' : 'background: #d1ecf1; color: #0c5460;' }}">
+                                                            {{ strtoupper($mode) }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <span style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; 
+                                                    {{ ($modes[0] ?? '') === 'cash' ? 'background: #d4edda; color: #155724;' : 'background: #d1ecf1; color: #0c5460;' }}">
+                                                    {{ strtoupper($modes[0] ?? 'UNKNOWN') }}
+                                                </span>
+                                            @endif
                                         </td>
                                         <td style="text-align: center;">
                                             <span
@@ -3609,14 +3707,15 @@
                                         <td>{{ $remittance->created_at->format('M d, Y') }}</td>
                                         <td style="max-width: 250px;">
                                             @if ($remittance->remarks)
-                                                <span
-                                                    style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                                    title="{{ $remittance->remarks }}">
-                                                    {{ $remittance->remarks }}
-                                                    @if ($remittance->remarks_amount && $remittance->remarks_amount > 0)
-                                                        <span style="color: #436026; font-weight: 700;">₱{{ number_format($remittance->remarks_amount, 2) }}</span>
-                                                    @endif
-                                                </span>
+                                                @php
+                                                    $remarkLines = preg_split('/\s*\|\s*|\r\n|\r|\n/', (string) $remittance->remarks);
+                                                    $remarkLines = array_values(array_filter(array_map('trim', $remarkLines), fn($line) => $line !== ''));
+                                                @endphp
+                                                <div style="display: grid; gap: 4px;">
+                                                    @foreach ($remarkLines as $line)
+                                                        <div style="display: block; white-space: normal; word-break: break-word; line-height: 1.35;">{{ $line }}</div>
+                                                    @endforeach
+                                                </div>
                                             @else
                                                 <span style="color: #999; font-style: italic;">No remarks</span>
                                             @endif
@@ -3859,10 +3958,60 @@
                                         </td>
                                         <td>{{ $payroll->salary_schedule }}</td>
                                         <td>
-                                            <span
-                                                style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; {{ $payroll->mode_of_payment === 'cash' ? 'background: #d4edda; color: #155724;' : 'background: #d1ecf1; color: #0c5460;' }}">
-                                                {{ ucfirst($payroll->mode_of_payment) }}
-                                            </span>
+                                            @php
+                                                $rawMode = trim((string) ($payroll->mode_of_payment ?? ''));
+                                                $normalizeMode = function ($value) {
+                                                    $mode = trim((string) $value);
+                                                    $mode = (string) preg_replace('/^[\'\"]+|[\'\"]+$/', '', $mode);
+                                                    return strtolower(trim($mode));
+                                                };
+
+                                                $modes = [];
+                                                $decoded = json_decode($rawMode, true);
+                                                if (json_last_error() === JSON_ERROR_NONE) {
+                                                    if (is_array($decoded)) {
+                                                        $modes = $decoded;
+                                                    } elseif (is_string($decoded)) {
+                                                        $modes = [$decoded];
+                                                    }
+                                                }
+
+                                                if (empty($modes)) {
+                                                    if (preg_match('/^\[(.*)\]$/', $rawMode, $matches)) {
+                                                        $parts = array_map('trim', explode(',', $matches[1]));
+                                                        $modes = $parts;
+                                                    } else {
+                                                        $modes = [$rawMode];
+                                                    }
+                                                }
+
+                                                if ($rawMode === 'multiple' && isset($payroll->attributes['payment_modes_json'])) {
+                                                    $jsonModes = json_decode($payroll->attributes['payment_modes_json'], true);
+                                                    if (is_array($jsonModes) && !empty($jsonModes)) {
+                                                        $modes = $jsonModes;
+                                                    }
+                                                }
+
+                                                $modes = array_values(array_filter(array_map($normalizeMode, $modes), fn($mode) => $mode !== ''));
+                                                if (empty($modes)) {
+                                                    $modes = ['unknown'];
+                                                }
+                                            @endphp
+                                            @if (count($modes) > 1)
+                                                <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                                    @foreach ($modes as $mode)
+                                                        <span style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; 
+                                                            {{ $mode === 'cash' ? 'background: #d4edda; color: #155724;' : 'background: #d1ecf1; color: #0c5460;' }}">
+                                                            {{ ucfirst($mode) }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <span style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; 
+                                                    {{ ($modes[0] ?? '') === 'cash' ? 'background: #d4edda; color: #155724;' : 'background: #d1ecf1; color: #0c5460;' }}">
+                                                    {{ ucfirst($modes[0] ?? 'Unknown') }}
+                                                </span>
+                                            @endif
                                         </td>
                                         <td>{{ $payroll->created_at->format('M d, Y') }}</td>
                                     </tr>
@@ -4183,29 +4332,6 @@
         </div>
     </div>
 
-    <!-- Add Rider Modal -->
-    <div class="modal-overlay" id="addRiderModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-user-plus"></i> Add New Rider</h3>
-                <button class="modal-close" onclick="closeAddRiderModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="addRiderForm">
-                    <div class="form-group">
-                        <label for="riderName"><i class="fas fa-user"></i> Rider Name</label>
-                        <input type="text" id="riderName" name="riderName" placeholder="Enter rider name"
-                            required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn submit" onclick="submitAddRider()"><i class="fas fa-check"></i> Add
-                    Rider</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Remit Modal -->
     <div class="modal-overlay" id="remitModal">
         <div class="modal-content"
@@ -4248,12 +4374,18 @@
                         <div class="form-group">
                             <label for="totalCollection"><i class="fas fa-wallet"></i> Total Amount</label>
                             <input type="number" id="totalCollection" name="total_collection" placeholder="0.00"
-                                step="0.01" min="0" required>
+                                step="0.01" min="0" readonly style="background: #f0f9f4; color: #2d4016; font-weight: 600; cursor: not-allowed; border-color: #9dc183;" required>
+                            <small id="totalCollectionHint" style="color: #6c757d; font-size: 12px; display: block; margin-top: 5px;">
+                                Based on total_w_tax for selected date.
+                            </small>
                         </div>
                         <div class="form-group">
                             <label for="totalTips"><i class="fas fa-hand-holding-usd"></i> Total Tips</label>
                             <input type="number" id="totalTips" name="total_tips" placeholder="0.00"
-                                step="0.01" min="0">
+                                step="0.01" min="0" readonly style="background: #f0f9f4; color: #2d4016; font-weight: 600; cursor: not-allowed; border-color: #9dc183;">
+                            <small id="totalTipsHint" style="color: #6c757d; font-size: 12px; display: block; margin-top: 5px;">
+                                Based on order tips for selected date.
+                            </small>
                         </div>
                     </div>
 
@@ -4262,28 +4394,63 @@
                             <label for="totalRemit"><i class="fas fa-money-check"></i> Total Remit</label>
                             <input type="number" id="totalRemit" name="total_remit" placeholder="0.00"
                                 step="0.01" min="0" required>
+                            <small id="remainingRemitHint" style="display:none; margin-top: 5px; font-size: 12px; font-weight: 600;"></small>
                         </div>
                         <div class="form-group">
-                            <label for="modeOfPayment"><i class="fas fa-credit-card"></i> Mode of Payment</label>
-                            <select id="modeOfPayment" name="mode_of_payment" required>
-                                <option value="">Select Payment Mode</option>
-                                <option value="cash">Cash</option>
-                                <option value="gcash">GCash</option>
-                            </select>
+                            <label><i class="fas fa-credit-card"></i> Mode of Payment</label>
+                            <div id="paymentModesContainer" style="display: flex; align-items: center; gap: 16px; margin-top: 0; min-height: 40px; padding: 0 12px; border: 1.5px solid #d6eacc; border-radius: 8px; background: #fff;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                                    <input type="checkbox" name="mode_of_payment_checkbox" value="cash" class="payment-mode-checkbox" style="cursor: pointer;">
+                                    <span>Cash</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                                    <input type="checkbox" name="mode_of_payment_checkbox" value="gcash" class="payment-mode-checkbox" style="cursor: pointer;">
+                                    <span>GCash</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Breakdown by Mode -->
+                    <div id="paymentBreakdownSection" style="display: none; margin-bottom: 20px; padding: 16px; background: #f8faf7; border: 1.5px solid #d6eacc; border-radius: 10px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #2d4016;">
+                            <i class="fas fa-list"></i> Payment Breakdown
+                        </label>
+                        <div id="paymentBreakdownFields" style="display: grid; gap: 12px;"></div>
+                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #d6eacc;">
+                            <div style="display: grid; grid-template-columns: 1fr 150px; gap: 12px; align-items: center;">
+                                <label style="font-weight: 600; color: #2d4016;">Total Remit:</label>
+                                <input type="text" id="totalPaymentDisplay" readonly style="background: #e8f5e0; border: 1.5px solid #9dc183; color: #2d4016; font-weight: 600; padding: 8px 12px; border-radius: 6px;">
+                            </div>
                         </div>
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-comment"></i> Remarks (optional)</label>
-                        <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start;">
-                            <textarea id="remarks" name="remarks" placeholder="Enter any remarks here" rows="3"
-                                style="width: 100%; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; padding: 10px; resize: vertical;"></textarea>
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <label for="remarksAmount" style="font-size: 12px; color: #666; font-weight: 600;">Amount</label>
-                                <input type="number" id="remarksAmount" name="remarks_amount" placeholder="0.00"
-                                    step="0.01" min="0"
-                                    style="width: 140px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 14px;">
+                        <div id="remitRemarksRows" style="display: grid; gap: 10px;">
+                            <div class="remit-remark-row" style="display: grid; grid-template-columns: minmax(0, 1fr) 150px 40px; gap: 10px; align-items: start;">
+                                <textarea class="remit-remarks-input" placeholder="Enter any remarks here" rows="3"
+                                    style="width: 100%; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; padding: 10px; resize: vertical;"></textarea>
+                                <div style="display: flex; flex-direction: column; align-self: start;">
+                                    <label style="display: block; margin-bottom: 6px; font-size: 12px; color: #666; font-weight: 600; line-height: 1.2;">Amount</label>
+                                    <input type="number" class="remit-remarks-amount" placeholder="0.00"
+                                        step="0.01" min="0"
+                                        style="width: 100%; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 14px; box-sizing: border-box;">
+                                </div>
+                                <button type="button" class="remit-remark-remove" onclick="removeRemitRemarkRow(this)"
+                                    style="height: 40px; width: 40px; margin-top: 24px; border: 1px solid #f5c2c7; background: #f8d7da; color: #842029; border-radius: 8px; cursor: pointer; visibility: hidden;"
+                                    title="Remove row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </div>
+                        <div style="margin-top: 10px;">
+                            <button type="button" onclick="addRemitRemarkRow()"
+                                style="padding: 8px 12px; border: 1px solid #9dc183; background: #f0f9f4; color: #2d4016; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                                <i class="fas fa-plus"></i> Add another remark
+                            </button>
+                        </div>
+                        <input type="hidden" id="consolidatedRemarks" name="remarks" value="">
+                        <input type="hidden" id="consolidatedRemarksAmount" name="remarks_amount" value="">
                     </div>
 
                     {{-- ── Mangan App Section ── --}}
@@ -4856,6 +5023,10 @@
         let currentRiderName = '';
         let currentPage = 1;
         const itemsPerPage = 10;
+        let selectedRemittanceId = null;
+        let remittanceBreakdownCache = {};
+        let currentSelectedBreakdownPayload = null;
+        let currentSelectedBreakdownRemittance = null;
 
         function displayRiderRemittances(remittances, riderName) {
             const content = document.getElementById('riderRecordsContent');
@@ -4866,6 +5037,8 @@
             filteredRiderRemittances = remittances;
             currentRiderName = riderName;
             currentPage = 1;
+            selectedRemittanceId = null;
+            remittanceBreakdownCache = {};
 
             // Clear any previous filter
             filterDateInput.value = '';
@@ -4890,6 +5063,23 @@
         function renderRiderRemittancesPage() {
             const content = document.getElementById('riderRecordsContent');
             const remittances = filteredRiderRemittances;
+
+            function formatRemarksHtmlLines(rawRemarks) {
+                if (!rawRemarks) {
+                    return '<span style="color: #999; font-style: italic;">No remarks</span>';
+                }
+
+                const lines = String(rawRemarks)
+                    .split(/\s*\|\s*|\r?\n/)
+                    .map(line => line.trim())
+                    .filter(Boolean);
+
+                if (!lines.length) {
+                    return '<span style="color: #999; font-style: italic;">No remarks</span>';
+                }
+
+                return `<div style="display:grid; gap:4px;">${lines.map(line => `<div style="display:block; white-space:normal; word-break:break-word; line-height:1.35;">${escapeHtml(line)}</div>`).join('')}</div>`;
+            }
 
             // Check if there are no filtered results
             if (remittances.length === 0) {
@@ -5011,9 +5201,10 @@
 
                 const paymentColor = remittance.mode_of_payment === 'cash' ? '#28a745' : '#007bff';
                 const paymentBg = remittance.mode_of_payment === 'cash' ? '#d4edda' : '#cfe2ff';
+                const isSelected = Number(selectedRemittanceId) === Number(remittance.id);
 
                 tableHTML += `
-                    <tr style="border-bottom: 1px solid #e9ecef; ${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
+                    <tr class="remittance-record-row ${isSelected ? 'remittance-record-row-selected' : ''}" data-remittance-id="${remittance.id}" style="border-bottom: 1px solid #e9ecef; cursor: pointer; ${index % 2 === 0 ? 'background: #f8f9fa;' : ''} ${isSelected ? 'background: #e6f3dd; box-shadow: inset 3px 0 0 #436026;' : ''}">
                         <td style="padding: 12px; font-size: 13px; color: #333;">${formattedDate}</td>
                         <td style="padding: 12px; text-align: center; font-size: 13px; font-weight: 600; color: #436026;">${remittance.total_deliveries}</td>
                         <td style="padding: 12px; text-align: right; font-size: 13px; color: #333;">₱${parseFloat(remittance.total_delivery_fee).toFixed(2)}</td>
@@ -5031,9 +5222,7 @@
                                 ${statusSubText ? `<span style="display:block; margin-top:2px; font-size:10px; font-style:italic; font-weight:500; line-height:1.2;">${statusSubText}</span>` : ''}
                             </span>
                         </td>
-                        <td style="padding: 12px; font-size: 13px; color: #333; max-width: 250px;">
-                            ${remittance.remarks ? `<span style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${remittance.remarks}">${remittance.remarks}${remittance.remarks_amount && parseFloat(remittance.remarks_amount) > 0 ? ` <span style="color: #436026; font-weight: 700;">\u20b1${parseFloat(remittance.remarks_amount).toFixed(2)}</span>` : ''}</span>` : '<span style="color: #999; font-style: italic;">No remarks</span>'}
-                        </td>
+                        <td style="padding: 12px; font-size: 13px; color: #333; max-width: 250px;">${formatRemarksHtmlLines(remittance.remarks)}</td>
                     </tr>
                 `;
             });
@@ -5041,6 +5230,11 @@
             tableHTML += `
                         </tbody>
                     </table>
+                </div>
+
+                <div id="remittanceMerchantBreakdown" style="margin-top: 16px; border: 1px solid #dce8d4; border-radius: 8px; background: #f9fcf7; padding: 14px 16px;">
+                    <div style="font-size: 13px; color: #436026; font-weight: 700; margin-bottom: 6px;"><i class="fas fa-store"></i> Merchant Breakdown</div>
+                    <div style="font-size: 13px; color: #6b7280;">Select a remittance row above to view delivery breakdown per merchant.</div>
                 </div>
             `;
 
@@ -5108,10 +5302,472 @@
             }
 
             content.innerHTML = tableHTML;
+
+            const recordRows = content.querySelectorAll('.remittance-record-row');
+            recordRows.forEach(row => {
+                row.addEventListener('click', () => {
+                    setSelectedRemittanceRow(row);
+                });
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatPaymentType(paymentType, fallback = '') {
+            const raw = String(paymentType ?? fallback ?? '').trim();
+            if (!raw) {
+                return '';
+            }
+
+            const normalizeToken = (value) => String(value ?? '')
+                .trim()
+                .replace(/^['"]+|['"]+$/g, '')
+                .trim();
+
+            try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    return parsed
+                        .map(item => normalizeToken(item))
+                        .filter(Boolean)
+                        .join(' / ')
+                        .toUpperCase();
+                }
+
+                if (typeof parsed === 'string') {
+                    const normalized = normalizeToken(parsed);
+                    return normalized ? normalized.toUpperCase() : '';
+                }
+            } catch (_) {
+                // Keep non-JSON values as-is.
+            }
+
+            // Handle non-JSON array-like values coming from DB, e.g. ['CASH'].
+            const arrayLikeMatch = raw.match(/^\[(.*)\]$/);
+            if (arrayLikeMatch) {
+                const normalized = arrayLikeMatch[1]
+                    .split(',')
+                    .map(token => normalizeToken(token))
+                    .filter(Boolean)
+                    .join(' / ');
+
+                return normalized ? normalized.toUpperCase() : '';
+            }
+
+            const normalized = normalizeToken(raw);
+            return normalized ? normalized.toUpperCase() : '';
+        }
+
+        function normalizeDetailedRemarks(value) {
+            const raw = String(value ?? '').trim();
+            if (!raw) {
+                return '';
+            }
+
+            return raw.replace(/(^|\|\s*|\n)\d+\.\s*/g, (match, prefix) => `${prefix}- `);
+        }
+
+        function setSelectedRemittanceRow(rowElement) {
+            const remittanceId = Number(rowElement.getAttribute('data-remittance-id'));
+            if (!remittanceId) {
+                return;
+            }
+
+            const tableRows = document.querySelectorAll('.remittance-record-row');
+            tableRows.forEach(row => {
+                row.classList.remove('remittance-record-row-selected');
+                const baseBg = row.rowIndex % 2 === 0 ? '#f8f9fa' : '#ffffff';
+                row.style.background = baseBg;
+                row.style.boxShadow = 'none';
+            });
+
+            selectedRemittanceId = remittanceId;
+            rowElement.classList.add('remittance-record-row-selected');
+            rowElement.style.background = '#e6f3dd';
+            rowElement.style.boxShadow = 'inset 3px 0 0 #436026';
+
+            const selectedRemittance = filteredRiderRemittances.find(item => Number(item.id) === remittanceId) || null;
+            renderMerchantBreakdown(remittanceId, selectedRemittance);
+        }
+
+        function renderMerchantBreakdown(remittanceId, remittance) {
+            const container = document.getElementById('remittanceMerchantBreakdown');
+            if (!container) {
+                return;
+            }
+
+            currentSelectedBreakdownRemittance = remittance || null;
+            currentSelectedBreakdownPayload = null;
+
+            container.innerHTML = `
+                <div style="text-align: center; padding: 18px 12px; color: #436026;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 20px;"></i>
+                    <p style="margin-top: 8px; font-size: 13px;">Loading merchant breakdown...</p>
+                </div>
+            `;
+
+            if (remittanceBreakdownCache[remittanceId]) {
+                paintMerchantBreakdown(container, remittanceBreakdownCache[remittanceId], remittance);
+                return;
+            }
+
+            fetch(`/remittances/${remittanceId}/merchant-breakdown`)
+                .then(response => response.json())
+                .then(data => {
+                    remittanceBreakdownCache[remittanceId] = data;
+                    paintMerchantBreakdown(container, data, remittance);
+                })
+                .catch(() => {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 16px 12px; color: #b91c1c; font-size: 13px;">
+                            <i class="fas fa-exclamation-triangle" style="margin-right: 6px;"></i>
+                            Unable to load merchant breakdown for this remittance.
+                        </div>
+                    `;
+                });
+        }
+
+        function paintMerchantBreakdown(container, payload, remittance) {
+            const items = Array.isArray(payload?.breakdown) ? payload.breakdown : [];
+            const summary = payload?.summary || {
+                merchant_count: 0,
+                total_deliveries: 0,
+                total_collection: 0
+            };
+            currentSelectedBreakdownPayload = payload || null;
+            currentSelectedBreakdownRemittance = remittance || currentSelectedBreakdownRemittance;
+            const recordDateRaw = remittance?.remittance_date || remittance?.created_at || payload?.remittance_date || '';
+            const recordDate = recordDateRaw ? new Date(recordDateRaw).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }) : 'N/A';
+
+            if (!items.length) {
+                container.innerHTML = `
+                    <div style="border:1px solid #dce8d4; border-radius:8px; overflow:hidden; background:#fff;">
+                        <div style="padding:10px 12px; background:linear-gradient(135deg,#f0f7ed 0%,#f8fcf5 100%); border-bottom:1px solid #dce8d4; font-size:12px; font-weight:700; color:#2d4016;">
+                            Detailed Breakdown (Sheet Format)
+                        </div>
+                        <div style="padding: 12px; border-radius: 6px; background: #fff; border: none; color: #6b7280; font-size: 13px;">
+                            No merchant delivery breakdown found for this remittance date.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const rowsHtml = items.map((item, idx) => {
+                const orders = Array.isArray(item.orders) ? item.orders : [];
+                const orderBadges = orders.length ? orders.map(order =>
+                    `<span style="display:inline-flex;align-items:center;padding:4px 8px;border:1px solid #d7e6ce;border-radius:999px;background:#fff;font-size:11px;color:#374151;font-weight:600;">#${escapeHtml(order.order_id || '')}</span>`
+                ).join('') : '<span style="font-size:11px;color:#9ca3af;font-style:italic;">No order IDs</span>';
+
+                const orderRows = orders.length ? orders.map(order => `
+                    <tr>
+                        <td style="padding:6px 8px;border-bottom:1px solid #edf2ea;font-size:11px;color:#374151;">${escapeHtml(order.order_id || '')}</td>
+                        <td style="padding:6px 8px;border-bottom:1px solid #edf2ea;font-size:11px;color:#0d6efd;text-align:right;">₱${Number(order.total_collection || 0).toFixed(2)}</td>
+                    </tr>
+                `).join('') : `
+                    <tr>
+                        <td colspan="2" style="padding:6px 8px;font-size:11px;color:#9ca3af;font-style:italic;">No order rows available.</td>
+                    </tr>
+                `;
+
+                return `
+                <tr style="${idx % 2 === 0 ? 'background: #ffffff;' : 'background: #f7fbf4;'}">
+                    <td style="padding: 10px 12px; border-bottom: 1px solid #e5eee0; font-size: 13px; color: #1f2937;">${escapeHtml(item.merchant_name || 'Unknown Merchant')}</td>
+                    <td style="padding: 10px 12px; border-bottom: 1px solid #e5eee0; text-align: center; font-size: 13px; font-weight: 700; color: #436026;">${Number(item.deliveries || 0)}</td>
+                    <td style="padding: 10px 12px; border-bottom: 1px solid #e5eee0; text-align: right; font-size: 13px; font-weight: 600; color: #0d6efd;">₱${Number(item.total_collection || 0).toFixed(2)}</td>
+                </tr>
+                <tr style="${idx % 2 === 0 ? 'background: #f9fcf7;' : 'background: #ffffff;'}">
+                    <td colspan="3" style="padding: 8px 12px 12px; border-bottom: 1px solid #e5eee0;">
+                        <details>
+                            <summary style="cursor:pointer;color:#436026;font-size:12px;font-weight:700;">View Orders (${orders.length})</summary>
+                            <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">${orderBadges}</div>
+                                <div style="max-width:360px;border:1px solid #e3eedb;border-radius:6px;overflow:hidden;background:#fff;">
+                                    <table style="width:100%;border-collapse:collapse;">
+                                        <thead>
+                                            <tr style="background:#eef6e9;">
+                                                <th style="padding:6px 8px;text-align:left;font-size:11px;color:#436026;">Order ID</th>
+                                                <th style="padding:6px 8px;text-align:right;font-size:11px;color:#436026;">Collection</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>${orderRows}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </details>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+
+            const detailRows = [];
+            let taskCounter = 0;
+            items.forEach(item => {
+                const merchantName = item.merchant_name || 'Unknown Merchant';
+                const orders = Array.isArray(item.orders) ? item.orders : [];
+                if (!orders.length) {
+                    return;
+                }
+
+                orders.forEach(order => {
+                    taskCounter += 1;
+                    detailRows.push({
+                        task_no: taskCounter,
+                        rider: currentRiderName || 'N/A',
+                        mop: formatPaymentType(order?.payment_type, payload?.mode_of_payment || remittance?.mode_of_payment || ''),
+                        ref_no: order.order_id || '',
+                        merchant: merchantName,
+                        total_amount: Number(order.total_collection || 0),
+                        df: Number(order.delivery_fee || 0),
+                        gt_grumpy_receipt: Number(order.gt_grumpy_receipt || 0),
+                        tip: Number(order.tip_amount || 0),
+                        receipt_non_partners: Number(order.receipt_non_partners || 0),
+                        total_remit: Number(order.total_remit || 0),
+                        cf: Number(order.cf_amount || 0),
+                        estimate_sales_admin_fee: Number(order.total_collection || 0) + Number(order.cf_amount || 0),
+                        remarks: normalizeDetailedRemarks(payload?.remarks || remittance?.remarks || '')
+                    });
+                });
+            });
+
+            const detailedRowsHtml = detailRows.length ? detailRows.map((row, idx) => `
+                <tr style="${idx % 2 === 0 ? 'background:#fff;' : 'background:#f7fbf4;'} border-bottom:1px solid #e5eee0; transition: background 0.2s ease;">
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; font-weight:600; color:#436026;">${row.task_no}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#374151;">${escapeHtml(row.rider)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.mop || '-')}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#0d6efd; font-weight:600;">${escapeHtml(row.ref_no || '-')}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.merchant)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.total_amount.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.df.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.gt_grumpy_receipt.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.tip.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.receipt_non_partners.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; font-weight:700; color:#436026;">₱${row.total_remit.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#666; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.remarks || '-')}</td>
+                </tr>
+            `).join('') : `
+                <tr>
+                    <td colspan="14" style="padding:24px; text-align:center; color:#9ca3af; font-size:13px;">No detailed order rows available.</td>
+                </tr>
+            `;
+
+            container.innerHTML = `
+                <div style="margin-top:0; border:1px solid #dce8d4; border-radius:8px; overflow:hidden; background:#fff;">
+                    <div style="padding:12px 14px; background:linear-gradient(135deg,#f0f7ed 0%,#f8fcf5 100%); border-bottom:1px solid #dce8d4; font-size:13px; font-weight:700; color:#2d4016;">
+                        Detailed Breakdown (Sheet Format)
+                    </div>
+                    <div style="overflow:auto; max-height:500px; position:relative;">
+                        <table style="width:100%; border-collapse:collapse; min-width: 1200px; table-layout: fixed;">
+                            <thead style="position: sticky; top: 0; z-index: 10;">
+                                <tr style="background:#e8dbc4; color:#1f2937; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:60px; background:#e8dbc4;"># of Task</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:110px; background:#e8dbc4;">Rider</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:120px; background:#e8dbc4;">MOP</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:80px; background:#e8dbc4;">REF #</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:170px; background:#e8dbc4;">Merchant</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Amount</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">DF</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:100px; background:#e8dbc4;">GT / Grumpy Receipt</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">Tip</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:110px; background:#e8dbc4;">Receipt (Non Partners)</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Remit</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">CF</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:120px; background:#e8dbc4;">ESTIMATE SALES+ADMIN FEE</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:140px; background:#e8dbc4;">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>${detailedRowsHtml}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeCsvCell(value) {
+            const str = String(value ?? '');
+            return `"${str.replace(/"/g, '""')}"`;
+        }
+
+        function exportCurrentBreakdownCsv() {
+            const payload = currentSelectedBreakdownPayload;
+            const items = Array.isArray(payload?.breakdown) ? payload.breakdown : [];
+
+            if (!items.length) {
+                showMessageModal('No breakdown data to export yet. Select a remittance row with available breakdown.', 'warning');
+                return;
+            }
+
+            const rows = [];
+            rows.push(['# of Task', 'Rider', 'MOP', 'REF #', 'Merchant', 'Total Amount', 'DF', 'GT/Grumpy Receipt', 'Tip', 'Receipt (Non Partners)', 'Total Remit', 'CF', 'ESTIMATE SALES+ADMIN FEE', 'Remarks'].map(escapeCsvCell).join(','));
+
+            let taskCounter = 0;
+            items.forEach(item => {
+                const orders = Array.isArray(item.orders) ? item.orders : [];
+                orders.forEach(order => {
+                    taskCounter += 1;
+                    rows.push([
+                        taskCounter,
+                        currentRiderName || '',
+                        formatPaymentType(order?.payment_type, payload?.mode_of_payment || currentSelectedBreakdownRemittance?.mode_of_payment || ''),
+                        order.order_id || '',
+                        item.merchant_name || 'Unknown Merchant',
+                        Number(order.total_collection || 0).toFixed(2),
+                        Number(order.delivery_fee || 0).toFixed(2),
+                        Number(order.gt_grumpy_receipt || 0).toFixed(2),
+                        Number(order.tip_amount || 0).toFixed(2),
+                        Number(order.receipt_non_partners || 0).toFixed(2),
+                        Number(order.total_remit || 0).toFixed(2),
+                        Number(order.cf_amount || 0).toFixed(2),
+                        (Number(order.total_collection || 0) + Number(order.cf_amount || 0)).toFixed(2),
+                        normalizeDetailedRemarks(payload?.remarks || currentSelectedBreakdownRemittance?.remarks || '')
+                    ].map(escapeCsvCell).join(','));
+                });
+            });
+
+            const csvContent = rows.join('\n');
+            const blob = new Blob([csvContent], {
+                type: 'text/csv;charset=utf-8;'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const fileDate = payload?.remittance_date || (new Date().toISOString().substring(0, 10));
+            a.href = url;
+            a.download = `merchant-breakdown-${selectedRemittanceId || 'record'}-${fileDate}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportCurrentBreakdownPdf() {
+            const payload = currentSelectedBreakdownPayload;
+            const items = Array.isArray(payload?.breakdown) ? payload.breakdown : [];
+
+            if (!items.length) {
+                showMessageModal('No breakdown data to export yet. Select a remittance row with available breakdown.', 'warning');
+                return;
+            }
+
+            const summary = payload?.summary || {
+                merchant_count: 0,
+                total_deliveries: 0,
+                total_collection: 0,
+            };
+            const recordDateRaw = currentSelectedBreakdownRemittance?.remittance_date || currentSelectedBreakdownRemittance?.created_at || payload?.remittance_date || '';
+            const recordDate = recordDateRaw ? new Date(recordDateRaw).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }) : 'N/A';
+
+            const detailRows = [];
+            let taskCounter = 0;
+            items.forEach(item => {
+                const orders = Array.isArray(item.orders) ? item.orders : [];
+                orders.forEach(order => {
+                    taskCounter += 1;
+                    detailRows.push(`
+                        <tr>
+                            <td style="text-align:center;">${taskCounter}</td>
+                            <td>${escapeHtml(currentRiderName || 'N/A')}</td>
+                            <td style="text-align:center; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(formatPaymentType(order?.payment_type, payload?.mode_of_payment || currentSelectedBreakdownRemittance?.mode_of_payment || ''))}</td>
+                            <td style="text-align:center;">${escapeHtml(order.order_id || '')}</td>
+                            <td style="white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(item.merchant_name || 'Unknown Merchant')}</td>
+                            <td style="text-align:right;">₱${Number(order.total_collection || 0).toFixed(2)}</td>
+                            <td style="text-align:right;">₱${Number(order.delivery_fee || 0).toFixed(2)}</td>
+                            <td style="text-align:right;">₱${Number(order.gt_grumpy_receipt || 0).toFixed(2)}</td>
+                            <td style="text-align:right;">₱${Number(order.tip_amount || 0).toFixed(2)}</td>
+                            <td style="text-align:right;">₱${Number(order.receipt_non_partners || 0).toFixed(2)}</td>
+                            <td style="text-align:right;">₱${Number(order.total_remit || 0).toFixed(2)}</td>
+                            <td style="text-align:right;">₱${Number(order.cf_amount || 0).toFixed(2)}</td>
+                            <td style="text-align:right;">₱${(Number(order.total_collection || 0) + Number(order.cf_amount || 0)).toFixed(2)}</td>
+                            <td style="white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(normalizeDetailedRemarks(payload?.remarks || currentSelectedBreakdownRemittance?.remarks || ''))}</td>
+                        </tr>
+                    `);
+                });
+            });
+
+            const printWindow = window.open('', '_blank', 'width=1100,height=800');
+            if (!printWindow) {
+                showMessageModal('Unable to open print window. Please allow pop-ups and try again.', 'warning');
+                return;
+            }
+
+            const html = `
+                <html>
+                <head>
+                    <title>Merchant Breakdown Export</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 24px; color: #1f2937; }
+                        h2 { margin: 0 0 6px 0; color: #2d4016; }
+                        .sub { margin: 0 0 14px 0; color: #4b5563; font-size: 12px; }
+                        .summary { margin-bottom: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+                        .card { border: 1px solid #d4e4ca; border-radius: 6px; padding: 8px 10px; font-size: 12px; }
+                        table { width: 100%; border-collapse: collapse; }
+                        thead th { background: #436026; color: #fff; padding: 9px; font-size: 11px; text-align: left; }
+                        tbody td { border-bottom: 1px solid #e5eee0; padding: 8px; font-size: 12px; vertical-align: top; }
+                    </style>
+                </head>
+                <body>
+                    <h2>Merchant Breakdown</h2>
+                    <p class="sub">Rider: ${escapeHtml(currentRiderName || 'N/A')} | Record Date: ${escapeHtml(recordDate)} | Remittance ID: ${escapeHtml(selectedRemittanceId || 'N/A')}</p>
+                    <div class="summary">
+                        <div class="card">Merchants: <strong>${Number(summary.merchant_count || 0)}</strong></div>
+                        <div class="card">Deliveries: <strong>${Number(summary.total_deliveries || 0)}</strong></div>
+                        <div class="card">Collection: <strong>₱${Number(summary.total_collection || 0).toFixed(2)}</strong></div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align:center;">#</th>
+                                <th>Rider</th>
+                                <th style="text-align:center;">MOP</th>
+                                <th style="text-align:center;">REF #</th>
+                                <th>Merchant</th>
+                                <th style="text-align:right;">Total Amount</th>
+                                <th style="text-align:right;">DF</th>
+                                <th style="text-align:right;">GT/Grumpy</th>
+                                <th style="text-align:right;">Tip</th>
+                                <th style="text-align:right;">Receipt (NP)</th>
+                                <th style="text-align:right;">Total Remit</th>
+                                <th style="text-align:right;">CF</th>
+                                <th style="text-align:right;">Estimate Sales+Admin Fee</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>${detailRows.join('')}</tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.open();
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 400);
         }
 
         function goToRiderRecordsPage(page) {
             currentPage = page;
+            selectedRemittanceId = null;
+            currentSelectedBreakdownPayload = null;
+            currentSelectedBreakdownRemittance = null;
             renderRiderRemittancesPage();
         }
 
@@ -5137,6 +5793,9 @@
 
             // Reset to page 1 and render
             currentPage = 1;
+            selectedRemittanceId = null;
+            currentSelectedBreakdownPayload = null;
+            currentSelectedBreakdownRemittance = null;
             renderRiderRemittancesPage();
         }
 
@@ -5145,6 +5804,9 @@
             filterDateInput.value = '';
             filteredRiderRemittances = currentRiderRemittances;
             currentPage = 1;
+            selectedRemittanceId = null;
+            currentSelectedBreakdownPayload = null;
+            currentSelectedBreakdownRemittance = null;
             renderRiderRemittancesPage();
         }
 
@@ -5155,6 +5817,10 @@
             filteredRiderRemittances = [];
             currentRiderName = '';
             currentPage = 1;
+            selectedRemittanceId = null;
+            remittanceBreakdownCache = {};
+            currentSelectedBreakdownPayload = null;
+            currentSelectedBreakdownRemittance = null;
             // Hide and reset date filter
             const dateFilter = document.getElementById('riderRecordsDateFilter');
             const filterDateInput = document.getElementById('riderRecordsFilterDate');
@@ -5205,28 +5871,9 @@
             }
         });
 
-        // Add Rider Modal Functions
-        function openAddRiderModal() {
-            document.getElementById('addRiderModal').classList.add('active');
-            document.getElementById('riderName').focus();
-        }
-
-        function closeAddRiderModal() {
-            document.getElementById('addRiderModal').classList.remove('active');
-            document.getElementById('addRiderForm').reset();
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('addRiderModal').addEventListener('click', function(event) {
-            if (event.target === this) {
-                closeAddRiderModal();
-            }
-        });
-
         // Close modal with Escape key
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
-                closeAddRiderModal();
                 closeRemitModal();
                 closeMessageModal();
                 closeConfirmModal();
@@ -5305,15 +5952,7 @@
                 // Reset ADDA DF rows
                 const addaDfRows = document.getElementById('addaDfRows');
                 if (addaDfRows) {
-                    addaDfRows.innerHTML = `
-                        <div class="adda-df-row">
-                            <input type="number" class="adda-df-amount" step="0.01" placeholder="Amount">
-                            <input type="date" class="adda-df-date">
-                            <button type="button" class="adda-df-remove" onclick="removeAddaDfRow(this)" style="display:none;">
-                                Remove
-                            </button>
-                        </div>
-                    `;
+                    addaDfRows.innerHTML = '';
                 }
                 
                 // Update ADDA DF summary
@@ -5577,94 +6216,6 @@
             filterDeductionsByName();
         }
 
-        function submitAddRider() {
-            const form = document.getElementById('addRiderForm');
-
-            if (form.checkValidity()) {
-                const riderName = document.getElementById('riderName').value;
-
-                // Show custom confirmation modal
-                showConfirmModal(`Are you sure you want to add rider "${riderName}"?`, function() {
-                    // Get CSRF token
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-                    // Send AJAX request to save rider (status automatically set to 'pending')
-                    fetch('/riders', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken
-                            },
-                            body: JSON.stringify({
-                                name: riderName
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                const rider = data.rider;
-
-                                // Remove empty state if exists
-                                const emptyState = document.querySelector('.empty-state');
-                                if (emptyState) {
-                                    emptyState.remove();
-                                }
-
-                                // Create new rider row
-                                const riderList = document.querySelector('.rider-list');
-                                const newRiderRow = document.createElement('div');
-                                newRiderRow.className = 'rider-row';
-                                newRiderRow.setAttribute('data-rider-id', rider.id);
-
-                                const statusClass = rider.status === 'pending' ? 'pending' : 'cleared';
-                                const statusText = rider.status === 'pending' ? 'Pending' : 'Cleared';
-
-                                newRiderRow.innerHTML = `
-                            <div class="rider-dropdown">
-                                <div class="rider-dropdown-header" onclick="toggleRiderDropdown(this)">
-                                    <div style="display:flex;align-items:center;gap:9px;">
-                                        <div class="rider-avatar">${rider.name.charAt(0).toUpperCase()}</div>
-                                        <div class="rider-item-info">
-                                            <strong>${rider.name}</strong>
-                                        </div>
-                                    </div>
-                                    <div style="display:flex;align-items:center;gap:6px;">
-                                        <span class="rider-status ${statusClass}">${statusText}</span>
-                                        <i class="fas fa-chevron-down rider-chevron"></i>
-                                    </div>
-                                </div>
-                                <div class="rider-dropdown-body">
-                                    <button class="rider-action-btn" onclick="openRemitModal(${rider.id}, '${rider.name}');event.stopPropagation()">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                        <span>Remit</span>
-                                    </button>
-                                    <button class="rider-action-btn records-btn" onclick="openRiderRecordsModal(${rider.id}, '${rider.name}');event.stopPropagation()">
-                                        <i class="fas fa-history"></i>
-                                        <span>Records</span>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-
-                                riderList.appendChild(newRiderRow);
-
-                                // Close modal and reset form
-                                closeAddRiderModal();
-
-                                // Show success message
-                                showToast(data.message, 'success');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            showToast('The rider name is already exist', 'error');
-                        });
-                });
-            } else {
-                form.reportValidity();
-            }
-        }
-
         // Remit Modal Functions
         function getAutoTotalDeliveriesByRider(riderId) {
             const rawCount = riderTaskDeliveriesMap[String(riderId)] ?? riderTaskDeliveriesMap[riderId] ?? 0;
@@ -5676,6 +6227,53 @@
             const rawCharge = riderDeliveryChargesMap[String(riderId)] ?? riderDeliveryChargesMap[riderId] ?? 0;
             const parsedCharge = parseFloat(rawCharge);
             return Number.isNaN(parsedCharge) ? 0 : Math.max(0, parsedCharge);
+        }
+
+        function getAutoTotalTipsByRider(riderId) {
+            const rawTips = riderTipsMap[String(riderId)] ?? riderTipsMap[riderId] ?? 0;
+            const parsedTips = parseFloat(rawTips);
+            return Number.isNaN(parsedTips) ? 0 : Math.max(0, parsedTips);
+        }
+
+        function getAutoTotalCollectionByRider(riderId) {
+            const rawCollection = riderTotalCollectionMap[String(riderId)] ?? riderTotalCollectionMap[riderId] ?? 0;
+            const parsedCollection = parseFloat(rawCollection);
+            return Number.isNaN(parsedCollection) ? 0 : Math.max(0, parsedCollection);
+        }
+
+        function getAlreadyRemittedAmountByRider(riderId) {
+            const rawRemitted = riderRemittedTotalsMap[String(riderId)] ?? riderRemittedTotalsMap[riderId] ?? 0;
+            const parsedRemitted = parseFloat(rawRemitted);
+            return Number.isNaN(parsedRemitted) ? 0 : Math.max(0, parsedRemitted);
+        }
+
+        function updateRemainingRemitHint() {
+            const hintEl = document.getElementById('remainingRemitHint');
+            const riderId = document.getElementById('remitRiderId')?.value;
+            if (!hintEl || !riderId) return;
+
+            const expectedTotal = getAutoTotalCollectionByRider(riderId);
+            const alreadyRemitted = getAlreadyRemittedAmountByRider(riderId);
+            const remainingBefore = Math.max(expectedTotal - alreadyRemitted, 0);
+            const currentRemit = parseFloat(document.getElementById('totalRemit')?.value || '0') || 0;
+            const remainingAfter = Math.max(remainingBefore - currentRemit, 0);
+
+            if (alreadyRemitted > 0 && remainingBefore > 0) {
+                hintEl.style.display = 'block';
+                hintEl.style.color = '#b45309';
+                hintEl.textContent = `Already remitted: ₱${alreadyRemitted.toFixed(2)} | Remaining: ₱${remainingBefore.toFixed(2)} | After this entry: ₱${remainingAfter.toFixed(2)}`;
+                return;
+            }
+
+            if (remainingBefore <= 0 && expectedTotal > 0) {
+                hintEl.style.display = 'block';
+                hintEl.style.color = '#166534';
+                hintEl.textContent = 'Fully remitted for selected date.';
+                return;
+            }
+
+            hintEl.style.display = 'none';
+            hintEl.textContent = '';
         }
 
         function updateTotalDeliveriesDateHint() {
@@ -5722,10 +6320,59 @@
             hintEl.textContent = `Based on delivery charges for ${displayDate}.`;
         }
 
+        function updateTotalTipsHint() {
+            const hintEl = document.getElementById('totalTipsHint');
+            if (!hintEl) return;
+
+            const statsDateInput = document.getElementById('statsDateInput');
+            const rawDate = statsDateInput && statsDateInput.value ? statsDateInput.value : '';
+            if (!rawDate) {
+                hintEl.textContent = 'Based on order tips for selected date.';
+                return;
+            }
+
+            const parsed = new Date(rawDate + 'T00:00:00');
+            const isValidDate = !Number.isNaN(parsed.getTime());
+            const displayDate = isValidDate ? parsed.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }) : rawDate;
+
+            hintEl.textContent = `Based on order tips for ${displayDate}.`;
+        }
+
+        function updateTotalCollectionHint() {
+            const hintEl = document.getElementById('totalCollectionHint');
+            if (!hintEl) return;
+
+            const statsDateInput = document.getElementById('statsDateInput');
+            const rawDate = statsDateInput && statsDateInput.value ? statsDateInput.value : '';
+            if (!rawDate) {
+                hintEl.textContent = 'Based on total amount for selected date.';
+                return;
+            }
+
+            const parsed = new Date(rawDate + 'T00:00:00');
+            const isValidDate = !Number.isNaN(parsed.getTime());
+            const displayDate = isValidDate ? parsed.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }) : rawDate;
+
+            hintEl.textContent = `Based on total amount for ${displayDate}.`;
+        }
+
         function openRemitModal(riderId, riderName) {
+            const selectedRow = document.querySelector(`[data-rider-id="${riderId}"]`);
+            if (selectedRow && selectedRow.dataset.remitted === 'true') {
+                showToast('This rider is already fully remitted for the selected date.', 'warning');
+                return;
+            }
+
             // Highlight the active dropdown
             document.querySelectorAll('.rider-dropdown').forEach(d => d.classList.remove('active-highlight'));
-            const selectedRow = document.querySelector(`[data-rider-id="${riderId}"]`);
             if (selectedRow) {
                 const dropdown = selectedRow.querySelector('.rider-dropdown');
                 if (dropdown) dropdown.classList.add('active-highlight');
@@ -5737,8 +6384,20 @@
             document.getElementById('displayRiderName').value = riderName;
             document.getElementById('totalDeliveries').value = getAutoTotalDeliveriesByRider(riderId);
             document.getElementById('totalDeliveryFee').value = getAutoTotalDeliveryChargeByRider(riderId);
+            document.getElementById('totalCollection').value = getAutoTotalCollectionByRider(riderId).toFixed(2);
+            document.getElementById('totalTips').value = getAutoTotalTipsByRider(riderId).toFixed(2);
             updateTotalDeliveriesDateHint();
             updateTotalDeliveryFeeHint();
+            updateTotalCollectionHint();
+            updateTotalTipsHint();
+
+            const expectedTotal = getAutoTotalCollectionByRider(riderId);
+            const alreadyRemitted = getAlreadyRemittedAmountByRider(riderId);
+            const remainingBefore = Math.max(expectedTotal - alreadyRemitted, 0);
+            if (alreadyRemitted > 0 && remainingBefore > 0) {
+                document.getElementById('totalRemit').value = remainingBefore.toFixed(2);
+            }
+            updateRemainingRemitHint();
 
             // Reset Mangan entries
             closeManganModal();
@@ -5753,6 +6412,12 @@
         function closeRemitModal() {
             document.getElementById('remitModal').classList.remove('active');
             document.getElementById('remitForm').reset();
+            const hintEl = document.getElementById('remainingRemitHint');
+            if (hintEl) {
+                hintEl.style.display = 'none';
+                hintEl.textContent = '';
+            }
+            resetRemitRemarksRows();
             closeManganModal();
             manganEntries = [];
             syncManganEntriesJson();
@@ -5776,6 +6441,20 @@
         function submitRemit() {
             const form = document.getElementById('remitForm');
             if (form.checkValidity()) {
+                const remarksData = consolidateRemitRemarks();
+                if (!remarksData.valid) {
+                    return;
+                }
+
+                // Get selected payment modes
+                const selectedModes = Array.from(document.querySelectorAll('.payment-mode-checkbox:checked'))
+                    .map(cb => cb.value);
+
+                if (selectedModes.length === 0) {
+                    showToast('Please select at least one Mode of Payment', 'warning');
+                    return;
+                }
+
                 const formData = new FormData(form);
                 const riderId = document.getElementById('remitRiderId').value;
                 const riderName = document.getElementById('remitRiderName').value;
@@ -5784,10 +6463,25 @@
                 const totalRemit = document.getElementById('totalRemit').value;
                 const totalTips = document.getElementById('totalTips').value || 0;
                 const totalCollection = document.getElementById('totalCollection').value;
-                const modeOfPayment = document.getElementById('modeOfPayment').value;
                 const remitPhoto = document.getElementById('remitPhoto').files[0];
-                const remarks = document.getElementById('remarks').value;
-                const remarksAmount = document.getElementById('remarksAmount').value;
+                const remarks = remarksData.combinedRemarks;
+                const remarksAmount = '';
+
+                // Collect payment breakdown amounts
+                const paymentBreakdown = {};
+                selectedModes.forEach(mode => {
+                    const amountInput = document.getElementById(`amount${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+                    paymentBreakdown[mode] = amountInput ? parseFloat(amountInput.value) || 0 : 0;
+                });
+
+                // Convert selected modes to string format
+                const modeOfPayment = selectedModes.length === 1 ? selectedModes[0] : 'multiple';
+                
+                // Remove the old mode_of_payment if exists and set the new one
+                formData.delete('mode_of_payment');
+                formData.set('mode_of_payment', modeOfPayment);
+                formData.set('payment_modes_json', JSON.stringify(selectedModes));
+                formData.set('payment_breakdown_json', JSON.stringify(paymentBreakdown));
 
                 // Store form data for later submission
                 pendingRemittance = {
@@ -5800,9 +6494,12 @@
                     totalTips: totalTips,
                     totalCollection: totalCollection,
                     modeOfPayment: modeOfPayment,
+                    selectedModes: selectedModes,
+                    paymentBreakdown: paymentBreakdown,
                     remitPhoto: remitPhoto,
                     remarks: remarks,
-                    remarksAmount: remarksAmount
+                    remarksAmount: remarksAmount,
+                    remarkEntries: remarksData.entries
                 };
 
                 // Update the details panel
@@ -5811,38 +6508,54 @@
                     riderNameElement.textContent = riderName;
                 }
 
-                // Calculate cash and digital based on mode of payment
-                let cashAmount = 0;
-                let digitalAmount = 0;
-                const collectionAmount = parseFloat(totalCollection);
+                const collectionAmount = parseFloat(totalCollection) || 0;
 
-                if (modeOfPayment === 'cash') {
-                    cashAmount = collectionAmount;
-                    digitalAmount = 0;
-                } else if (modeOfPayment === 'gcash' || modeOfPayment === 'bank_transfer') {
+                // Base cash collection on Total Amount field value.
+                let cashAmount = collectionAmount;
+                let digitalAmount = 0;
+
+                if (!selectedModes.includes('cash')) {
                     cashAmount = 0;
-                    digitalAmount = collectionAmount;
-                } else if (modeOfPayment === 'mixed') {
-                    cashAmount = collectionAmount / 2;
-                    digitalAmount = collectionAmount / 2;
+                }
+                if (selectedModes.includes('gcash')) {
+                    digitalAmount = paymentBreakdown['gcash'] || 0;
+                }
+
+                // If no specific breakdown amounts entered, split equally
+                if (cashAmount === 0 && digitalAmount === 0) {
+                    if (selectedModes.length === 2) {
+                        cashAmount = collectionAmount / 2;
+                        digitalAmount = collectionAmount / 2;
+                    } else if (selectedModes.length === 1) {
+                        if (selectedModes[0] === 'cash') {
+                            cashAmount = collectionAmount;
+                        } else if (selectedModes[0] === 'gcash') {
+                            digitalAmount = collectionAmount;
+                        }
+                    }
                 }
 
                 document.getElementById('cashCollectionDisplay').textContent = '₱' + cashAmount.toFixed(2).replace(
                     /\B(?=(\d{3})+(?!\d))/g, ',');
                 document.getElementById('digitalCollectionDisplay').textContent = '₱' + digitalAmount.toFixed(2).replace(
                     /\B(?=(\d{3})+(?!\d))/g, ',');
-                document.getElementById('netTurnoverDisplay').textContent = '₱' + parseFloat(totalCollection).toFixed(2)
+                document.getElementById('netTurnoverDisplay').textContent = '₱' + parseFloat(totalRemit || 0).toFixed(2)
                     .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
                 // Update remarks in details panel
                 const remarksSection = document.querySelector('.expenses-section .expenses-content');
                 if (remarksSection) {
-                    if (remarks && remarks.trim() !== '') {
-                        const amountText = remarksAmount && parseFloat(remarksAmount) > 0 
-                            ? ` <span style="color: #436026; font-weight: 700;">₱${parseFloat(remarksAmount).toFixed(2)}</span>` 
-                            : '';
+                    if (Array.isArray(remarksData.entries) && remarksData.entries.length > 0) {
+                        const remarksHtml = remarksData.entries.map((entry) => {
+                            const amountPart = entry.amount > 0
+                                ? ` <span style="color: #436026; font-weight: 700;">₱${entry.amount.toFixed(2)}</span>`
+                                : '';
+                            return `<p style="position: relative; z-index: 1; font-weight: 500; margin: 0 0 4px 0;">- ${entry.remarks}${amountPart}</p>`;
+                        }).join('');
+                        remarksSection.innerHTML = remarksHtml;
+                    } else if (remarks && remarks.trim() !== '') {
                         remarksSection.innerHTML =
-                            `<p style="position: relative; z-index: 1; font-weight: 500;">${remarks}${amountText}</p>`;
+                            `<p style="position: relative; z-index: 1; font-weight: 500;">${remarks}</p>`;
                     } else {
                         remarksSection.innerHTML = `<p style="position: relative; z-index: 1; font-weight: 500;">-</p>`;
                     }
@@ -5942,6 +6655,10 @@
                         throw new Error(data.message || 'Failed to submit remittance');
                     }
 
+                    if (pendingRemittance) {
+                        pendingRemittance.saveResult = data;
+                    }
+
                     console.log('Remittance saved, updating rider status...');
 
                     // Update rider status to cleared
@@ -5995,6 +6712,8 @@
 
                     console.log('Rider status updated to cleared successfully!');
 
+                    const saveResult = pendingRemittance && pendingRemittance.saveResult ? pendingRemittance.saveResult : null;
+
                     // Keep badge as Pending — Cleared only shows the next day
                     // when viewing this date as a past date.
 
@@ -6020,7 +6739,12 @@
                     editBtn.style.cursor = 'not-allowed';
 
                     // Show success message
-                    showToast('Receipt confirmed! Rider moved to Cleared Riders History. Page will reload.', 'success');
+                    if (saveResult && saveResult.is_complete === false) {
+                        const remaining = Number(saveResult.remaining_amount || 0);
+                        showToast(`Partial remittance saved in the same record. Remaining: ₱${remaining.toFixed(2)}.`, 'info');
+                    } else {
+                        showToast('Remittance is now complete and saved in the same record. Page will reload.', 'success');
+                    }
 
                     // Reload page after 2 seconds to update the cleared riders table
                     setTimeout(() => {
@@ -6055,9 +6779,33 @@
             document.getElementById('totalRemit').value = pendingRemittance.totalRemit;
             document.getElementById('totalTips').value = pendingRemittance.totalTips;
             document.getElementById('totalCollection').value = pendingRemittance.totalCollection;
-            document.getElementById('modeOfPayment').value = pendingRemittance.modeOfPayment;
-            document.getElementById('remarks').value = pendingRemittance.remarks || '';
-            document.getElementById('remarksAmount').value = pendingRemittance.remarksAmount || '';
+
+            const paymentModeCheckboxes = document.querySelectorAll('.payment-mode-checkbox');
+            paymentModeCheckboxes.forEach(cb => {
+                cb.checked = Array.isArray(pendingRemittance.selectedModes) && pendingRemittance.selectedModes.includes(cb.value);
+            });
+            if (typeof window.refreshPaymentBreakdown === 'function') {
+                window.refreshPaymentBreakdown();
+            }
+            updateRemainingRemitHint();
+
+            resetRemitRemarksRows();
+            if (Array.isArray(pendingRemittance.remarkEntries) && pendingRemittance.remarkEntries.length > 0) {
+                const firstRow = document.querySelector('#remitRemarksRows .remit-remark-row');
+                if (firstRow) {
+                    firstRow.querySelector('.remit-remarks-input').value = pendingRemittance.remarkEntries[0].remarks || '';
+                    firstRow.querySelector('.remit-remarks-amount').value = pendingRemittance.remarkEntries[0].amount || '';
+                }
+                for (let i = 1; i < pendingRemittance.remarkEntries.length; i++) {
+                    addRemitRemarkRow(pendingRemittance.remarkEntries[i].remarks || '', pendingRemittance.remarkEntries[i].amount || '');
+                }
+            } else {
+                const firstRow = document.querySelector('#remitRemarksRows .remit-remark-row');
+                if (firstRow) {
+                    firstRow.querySelector('.remit-remarks-input').value = pendingRemittance.remarks || '';
+                    firstRow.querySelector('.remit-remarks-amount').value = pendingRemittance.remarksAmount || '';
+                }
+            }
 
             // Note: File input cannot be pre-filled for security reasons
             // The user will need to re-upload if they want to change the photo
@@ -6274,9 +7022,12 @@
                         const modeBadge = modeRaw ?
                             `<span class="badge-mode badge-${modeRaw.toLowerCase()}">${modeRaw.toUpperCase()}</span>` :
                             '';
-                        const remarksHtml = r.remarks ?
-                            `<span class="remarks-text">${r.remarks}${r.remarks_amount && parseFloat(r.remarks_amount) > 0 ? ` <span style="color: #436026; font-weight: 700;">\u20b1${parseFloat(r.remarks_amount).toFixed(2)}</span>` : ''}</span>` :
-                            `<span class="remarks-empty">&mdash;</span>`;
+                        const remarksHtml = (() => {
+                            const raw = r.remarks || '';
+                            if (!raw.trim()) return `<span class="remarks-empty">&mdash;</span>`;
+                            const lines = raw.split(/\s*\|\s*|\r?\n/).map(line => line.trim()).filter(Boolean);
+                            return `<div class="remarks-lines">${lines.map(line => `<div class="remarks-line">${escapeHtml(line)}</div>`).join('')}</div>`;
+                        })();
                         detailRows += `<tr>
                             <td style="text-align:center"><span class="task-num">${rowNum}</span></td>
                             <td><strong>${riderName}</strong></td>
@@ -6507,6 +7258,8 @@
         tfoot td:first-child { border-radius: 0 0 0 11px; }
         tfoot td:last-child  { border-radius: 0 0 11px 0; }
         .remarks-text { color: #555; font-size: 12px; font-style: italic; }
+        .remarks-lines { display: grid; gap: 4px; }
+        .remarks-line { color: #555; font-size: 12px; line-height: 1.35; white-space: normal; word-break: break-word; }
         .remarks-empty { color: #bbb; font-size: 12px; }
 
         /* ── Footer strip ── */
@@ -7992,9 +8745,223 @@
             </body></html>`);
             win.document.close();
         }
+
+        // ===== Payment Mode Multiple Selection Handler =====
+        function initializePaymentModes() {
+            const checkboxes = document.querySelectorAll('.payment-mode-checkbox');
+            const breakdownSection = document.getElementById('paymentBreakdownSection');
+            const breakdownFields = document.getElementById('paymentBreakdownFields');
+            const totalCollection = document.getElementById('totalCollection');
+
+            function updatePaymentBreakdown() {
+                const selectedModes = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+
+                if (selectedModes.length === 0) {
+                    breakdownSection.style.display = 'none';
+                    return;
+                }
+
+                breakdownSection.style.display = 'block';
+                const collectionAmount = parseFloat(totalCollection.value) || 0;
+                
+                // Build breakdown fields HTML
+                let fieldsHTML = '';
+                let totalPayment = 0;
+
+                selectedModes.forEach(mode => {
+                    const modeLabel = mode === 'cash' ? 'Cash' : 'GCash';
+                    const inputId = `amount${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+                    
+                    fieldsHTML += `
+                        <div style="display: grid; grid-template-columns: 1fr 150px; gap: 12px; align-items: center;">
+                            <label style="font-weight: 600; color: #2d4016;">${modeLabel}:</label>
+                            <input 
+                                type="number" 
+                                id="${inputId}" 
+                                class="payment-amount-input" 
+                                step="0.01" 
+                                min="0"
+                                placeholder="0.00"
+                                value="${collectionAmount / selectedModes.length}"
+                                style="background: #fff; border: 1.5px solid #d6eacc; padding: 8px 12px; border-radius: 6px; font-weight: 600,"
+                                onchange="updateTotalPaymentDisplay()">
+                        </div>
+                    `;
+                });
+
+                breakdownFields.innerHTML = fieldsHTML;
+                updateTotalPaymentDisplay();
+
+                // Add event listeners to new inputs
+                document.querySelectorAll('.payment-amount-input').forEach(input => {
+                    input.addEventListener('input', updateTotalPaymentDisplay);
+                });
+            }
+
+            // Update total display
+            window.updateTotalPaymentDisplay = function() {
+                const amounts = Array.from(document.querySelectorAll('.payment-amount-input'))
+                    .map(input => parseFloat(input.value) || 0);
+                const total = amounts.reduce((sum, amount) => sum + amount, 0);
+                const display = document.getElementById('totalPaymentDisplay');
+                if (display) {
+                    display.value = '₱' + total.toFixed(2);
+                }
+
+                const totalRemitInput = document.getElementById('totalRemit');
+                if (totalRemitInput) {
+                    totalRemitInput.value = total > 0 ? total.toFixed(2) : '';
+                }
+
+                updateRemainingRemitHint();
+            };
+
+            // Add event listeners to checkboxes
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updatePaymentBreakdown);
+            });
+
+            window.refreshPaymentBreakdown = updatePaymentBreakdown;
+
+            // Initialize on load
+            updatePaymentBreakdown();
+        }
+
+        function syncRemitRemarkRemoveButtons() {
+            const rows = document.querySelectorAll('#remitRemarksRows .remit-remark-row');
+            rows.forEach(row => {
+                const removeBtn = row.querySelector('.remit-remark-remove');
+                if (removeBtn) {
+                    removeBtn.style.visibility = rows.length > 1 ? 'visible' : 'hidden';
+                }
+            });
+        }
+
+        function addRemitRemarkRow(remarkValue = '', amountValue = '') {
+            const container = document.getElementById('remitRemarksRows');
+            const sourceRow = container ? container.querySelector('.remit-remark-row') : null;
+            if (!container || !sourceRow) return;
+
+            const newRow = sourceRow.cloneNode(true);
+            const remarkInput = newRow.querySelector('.remit-remarks-input');
+            const amountInput = newRow.querySelector('.remit-remarks-amount');
+            if (remarkInput) remarkInput.value = remarkValue;
+            if (amountInput) amountInput.value = amountValue;
+            container.appendChild(newRow);
+            syncRemitRemarkRemoveButtons();
+        }
+
+        function removeRemitRemarkRow(button) {
+            const container = document.getElementById('remitRemarksRows');
+            if (!container) return;
+            const rows = container.querySelectorAll('.remit-remark-row');
+            const row = button.closest('.remit-remark-row');
+            if (!row) return;
+
+            if (rows.length <= 1) {
+                const remarkInput = row.querySelector('.remit-remarks-input');
+                const amountInput = row.querySelector('.remit-remarks-amount');
+                if (remarkInput) remarkInput.value = '';
+                if (amountInput) amountInput.value = '';
+                return;
+            }
+
+            row.remove();
+            syncRemitRemarkRemoveButtons();
+        }
+
+        function resetRemitRemarksRows() {
+            const container = document.getElementById('remitRemarksRows');
+            if (!container) return;
+
+            const rows = Array.from(container.querySelectorAll('.remit-remark-row'));
+            if (!rows.length) return;
+
+            const firstRow = rows[0];
+            rows.slice(1).forEach(row => row.remove());
+
+            const remarkInput = firstRow.querySelector('.remit-remarks-input');
+            const amountInput = firstRow.querySelector('.remit-remarks-amount');
+            if (remarkInput) remarkInput.value = '';
+            if (amountInput) amountInput.value = '';
+
+            const remarksHidden = document.getElementById('consolidatedRemarks');
+            const remarksAmountHidden = document.getElementById('consolidatedRemarksAmount');
+            if (remarksHidden) remarksHidden.value = '';
+            if (remarksAmountHidden) remarksAmountHidden.value = '';
+
+            syncRemitRemarkRemoveButtons();
+        }
+
+        function consolidateRemitRemarks() {
+            const rows = document.querySelectorAll('#remitRemarksRows .remit-remark-row');
+            const entries = [];
+
+            for (const row of rows) {
+                const remarks = (row.querySelector('.remit-remarks-input')?.value || '').trim();
+                const amountRaw = (row.querySelector('.remit-remarks-amount')?.value || '').trim();
+
+                if (!remarks && !amountRaw) {
+                    continue;
+                }
+
+                if (!remarks && amountRaw) {
+                    showToast('Please add a remark text for the amount entered.', 'warning');
+                    return {
+                        valid: false
+                    };
+                }
+
+                const amount = amountRaw ? parseFloat(amountRaw) : 0;
+                if (Number.isNaN(amount) || amount < 0) {
+                    showToast('Remarks amount must be a valid non-negative number.', 'warning');
+                    return {
+                        valid: false
+                    };
+                }
+
+                entries.push({
+                    remarks,
+                    amount
+                });
+            }
+
+            const combinedRemarks = entries.map((entry) => {
+                const amountPart = entry.amount > 0 ? ` - ₱${entry.amount.toFixed(2)}` : '';
+                return `- ${entry.remarks}${amountPart}`;
+            }).join(' | ');
+
+            const remarksHidden = document.getElementById('consolidatedRemarks');
+            const remarksAmountHidden = document.getElementById('consolidatedRemarksAmount');
+            if (remarksHidden) remarksHidden.value = combinedRemarks;
+            if (remarksAmountHidden) remarksAmountHidden.value = '';
+
+            return {
+                valid: true,
+                entries,
+                combinedRemarks,
+                totalAmount: 0
+            };
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('paymentModesContainer')) {
+                initializePaymentModes();
+            }
+            syncRemitRemarkRemoveButtons();
+
+            const totalRemitInput = document.getElementById('totalRemit');
+            if (totalRemitInput) {
+                totalRemitInput.addEventListener('input', updateRemainingRemitHint);
+            }
+        });
     </script>
 
     @include('partials.floating-widgets')
 </body>
 
 </html>
+

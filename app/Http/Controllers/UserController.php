@@ -24,10 +24,31 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        $authUser = Auth::user();
+        if (!$authUser instanceof User || !$authUser->isAdmin()) {
+            abort(403);
+        }
+
         $query = User::query();
+        $availablePages = User::ACCESSIBLE_PAGES;
         
         // Check if showing archived members
         $showArchived = $request->has('archived') && $request->archived == '1';
+
+        $roleOptionsQuery = User::query();
+        if ($showArchived) {
+            $roleOptionsQuery->where('status', 'inactive');
+        } else {
+            $roleOptionsQuery->where('status', 'active');
+        }
+
+        $roleOptions = $roleOptionsQuery
+            ->whereNotNull('role')
+            ->where('role', '!=', '')
+            ->distinct()
+            ->pluck('role')
+            ->sort()
+            ->values();
 
         // Search filter
         if ($request->has('search') && $request->search != '') {
@@ -54,7 +75,7 @@ class UserController extends Controller
         }
 
         $users = $query->orderBy('created_at', 'desc')->paginate(10);
-        return view('member-management', compact('users', 'showArchived'));
+        return view('member-management', compact('users', 'showArchived', 'roleOptions', 'availablePages'));
     }
 
     /**
@@ -62,6 +83,11 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $authUser = Auth::user();
+        if (!$authUser instanceof User || !$authUser->isAdmin()) {
+            abort(403);
+        }
+
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:2',
@@ -72,6 +98,8 @@ class UserController extends Controller
             'role' => 'required|in:finance_officer',
             'rank' => 'required|in:I,II,III,IV,V',
             'status' => 'required|in:active,inactive',
+            'accessible_pages' => 'required|array|min:1',
+            'accessible_pages.*' => 'in:' . implode(',', array_keys(User::ACCESSIBLE_PAGES)),
         ]);
 
         if ($validator->fails()) {
@@ -103,6 +131,7 @@ class UserController extends Controller
             'password' => Hash::make($generatedPassword),
             'role' => $combinedRole,
             'status' => $request->status,
+            'accessible_pages' => array_values(array_unique($request->input('accessible_pages', User::DEFAULT_MEMBER_PAGES))),
         ]);
 
         // Send email with generated password to user
@@ -164,6 +193,11 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        $authUser = Auth::user();
+        if (!$authUser instanceof User || !$authUser->isAdmin()) {
+            abort(403);
+        }
+
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:2',
@@ -174,6 +208,8 @@ class UserController extends Controller
             'role' => 'required|in:finance_officer,admin',
             'rank' => 'nullable|in:I,II,III,IV,V',
             'status' => 'required|in:active,inactive',
+            'accessible_pages' => 'nullable|array|min:1',
+            'accessible_pages.*' => 'in:' . implode(',', array_keys(User::ACCESSIBLE_PAGES)),
         ]);
 
         // Add conditional validation for rank if role is finance_officer
@@ -199,6 +235,10 @@ class UserController extends Controller
             $finalRole = $request->role . '_' . $request->rank;
         }
 
+        $accessiblePages = $request->role === 'admin'
+            ? User::DEFAULT_ADMIN_PAGES
+            : array_values(array_unique($request->input('accessible_pages', $user->resolvedAccessiblePages())));
+
         $data = [
             'name' => $fullName,
             'first_name' => $request->first_name,
@@ -209,6 +249,7 @@ class UserController extends Controller
             'phone_number' => $request->phone_number,
             'role' => $finalRole,
             'status' => $request->status,
+            'accessible_pages' => $accessiblePages,
         ];
 
         $user->update($data);
@@ -229,6 +270,11 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+        $authUser = Auth::user();
+        if (!$authUser instanceof User || !$authUser->isAdmin()) {
+            abort(403);
+        }
+
         // Prevent archiving the currently authenticated user
         if ($user->id === Auth::id()) {
             return redirect()->route('members.index')
@@ -254,6 +300,11 @@ class UserController extends Controller
      */
     public function restore(User $user)
     {
+        $authUser = Auth::user();
+        if (!$authUser instanceof User || !$authUser->isAdmin()) {
+            abort(403);
+        }
+
         // Set status to active to restore the member
         $user->update(['status' => 'active']);
 

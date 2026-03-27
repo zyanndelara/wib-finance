@@ -1,5 +1,6 @@
 @php
     $activePage = $activePage ?? '';
+    $authUser = auth()->user();
 @endphp
 
 <!-- Mobile Menu Toggle -->
@@ -19,40 +20,60 @@
 
     <div class="sidebar-menu">
         <span class="menu-section-label">Main</span>
-        <a href="{{ route('dashboard') }}" class="menu-item {{ $activePage === 'dashboard' ? 'active' : '' }}">
-            <span class="menu-icon"><i class="fas fa-home"></i></span>
-            <span>Dashboard</span>
-        </a>
-        <a href="{{ route('remittance') }}" class="menu-item {{ $activePage === 'remittance' ? 'active' : '' }}">
-            <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-            <span>Remittance</span>
-        </a>
-        <a href="{{ route('bank-deposit') }}" class="menu-item {{ $activePage === 'bank-deposit' ? 'active' : '' }}">
-            <span class="menu-icon"><i class="fas fa-university"></i></span>
-            <span>Bank &amp; Deposit</span>
-        </a>
+        @if($authUser?->hasPageAccess('dashboard'))
+            <a href="{{ route('dashboard') }}" class="menu-item {{ $activePage === 'dashboard' ? 'active' : '' }}">
+                <span class="menu-icon"><i class="fas fa-home"></i></span>
+                <span>Dashboard</span>
+            </a>
+        @endif
+        @if($authUser?->hasPageAccess('financial-requests'))
+            <a href="{{ route('financial-requests.index') }}" class="menu-item {{ $activePage === 'financial-requests' ? 'active' : '' }}">
+                <span class="menu-icon"><i class="fas fa-hand-holding-dollar"></i></span>
+                <span>Financial Requests</span>
+            </a>
+        @endif
+        @if($authUser?->hasPageAccess('remittance'))
+            <a href="{{ route('remittance') }}" class="menu-item {{ $activePage === 'remittance' ? 'active' : '' }}">
+                <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+                <span>Remittance</span>
+            </a>
+        @endif
+        @if($authUser?->hasPageAccess('bank-deposit'))
+            <a href="{{ route('bank-deposit') }}" class="menu-item {{ $activePage === 'bank-deposit' ? 'active' : '' }}">
+                <span class="menu-icon"><i class="fas fa-university"></i></span>
+                <span>Bank &amp; Deposit</span>
+            </a>
+        @endif
 
         <div class="menu-divider"></div>
         <span class="menu-section-label">Management</span>
-        <a href="{{ route('merchants') }}" class="menu-item {{ $activePage === 'merchants' ? 'active' : '' }}">
-            <span class="menu-icon"><i class="fas fa-store"></i></span>
-            <span>Merchants</span>
-        </a>
-        <a href="{{ route('members.index') }}" class="menu-item {{ $activePage === 'members' ? 'active' : '' }}">
-            <span class="menu-icon"><i class="fas fa-users-cog"></i></span>
-            <span>Member Management</span>
-        </a>
-        <a href="{{ route('audit-logs') }}" class="menu-item {{ $activePage === 'audit-logs' ? 'active' : '' }}">
-            <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
-            <span>Audit Logs</span>
-        </a>
+        @if($authUser?->hasPageAccess('merchants'))
+            <a href="{{ route('merchants') }}" class="menu-item {{ $activePage === 'merchants' ? 'active' : '' }}">
+                <span class="menu-icon"><i class="fas fa-store"></i></span>
+                <span>Merchants</span>
+            </a>
+        @endif
+        @if($authUser?->hasPageAccess('members'))
+            <a href="{{ route('members.index') }}" class="menu-item {{ $activePage === 'members' ? 'active' : '' }}">
+                <span class="menu-icon"><i class="fas fa-users-cog"></i></span>
+                <span>Member Management</span>
+            </a>
+        @endif
+        @if($authUser?->hasPageAccess('audit-logs'))
+            <a href="{{ route('audit-logs') }}" class="menu-item {{ $activePage === 'audit-logs' ? 'active' : '' }}">
+                <span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>
+                <span>Audit Logs</span>
+            </a>
+        @endif
 
         <div class="menu-divider"></div>
         <span class="menu-section-label">Account</span>
-        <a href="{{ route('profile') }}" class="menu-item {{ $activePage === 'profile' ? 'active' : '' }}">
-            <span class="menu-icon"><i class="fas fa-user"></i></span>
-            <span>Profile</span>
-        </a>
+        @if($authUser?->hasPageAccess('profile'))
+            <a href="{{ route('profile') }}" class="menu-item {{ $activePage === 'profile' ? 'active' : '' }}">
+                <span class="menu-icon"><i class="fas fa-user"></i></span>
+                <span>Profile</span>
+            </a>
+        @endif
     </div>
 
     <div class="sidebar-footer">

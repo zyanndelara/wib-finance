@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('images/logowhite.png') }}">
     <title>Member Management - When in Baguio Inc.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -599,6 +600,109 @@
             display: block;
         }
 
+        /* Page access cards */
+        .page-access {
+            margin-bottom: 16px;
+        }
+
+        .page-access-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .page-access-title {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            color: #1f2937;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .page-access-title .required {
+            color: #dc2626;
+        }
+
+        .page-access-help {
+            font-size: 11px;
+            color: #6b7280;
+            font-weight: 600;
+            background: #eef3e7;
+            border: 1px solid #d7e3c7;
+            border-radius: 999px;
+            padding: 4px 10px;
+            white-space: nowrap;
+        }
+
+        .page-access-card {
+            background: linear-gradient(180deg, #f9fbf6 0%, #f3f7ee 100%);
+            border: 1px solid #d9e5ca;
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .page-access-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 9px;
+        }
+
+        .page-access-item {
+            margin: 0;
+        }
+
+        .page-access-label {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            border: 1px solid #dce7cf;
+            border-radius: 9px;
+            background: #ffffff;
+            padding: 9px 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .page-access-label:hover {
+            border-color: #9ab47f;
+            box-shadow: 0 2px 8px rgba(67, 96, 38, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .page-access-label input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+            accent-color: #436026;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .page-access-label i {
+            color: #56753a;
+            width: 14px;
+            text-align: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .page-access-label span {
+            color: #1f2937;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .page-access-note {
+            display: block;
+            margin-top: 7px;
+            color: #64748b;
+            font-size: 11px;
+        }
+
         /* Confirmation Modal */
         .confirm-modal-content {
             background: white;
@@ -808,6 +912,16 @@
                 grid-template-columns: 1fr;
             }
 
+            .page-access-header {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .page-access-grid {
+                grid-template-columns: 1fr;
+            }
+
             .content-header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -918,12 +1032,19 @@
                     <div class="filter-box">
                         <select name="role" onchange="this.form.submit()">
                             <option value="">All Roles</option>
-                            <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                            <option value="finance_officer_i" {{ request('role') == 'finance_officer_i' ? 'selected' : '' }}>Finance Officer I</option>
-                            <option value="finance_officer_ii" {{ request('role') == 'finance_officer_ii' ? 'selected' : '' }}>Finance Officer II</option>
-                            <option value="finance_officer_iii" {{ request('role') == 'finance_officer_iii' ? 'selected' : '' }}>Finance Officer III</option>
-                            <option value="finance_officer_iv" {{ request('role') == 'finance_officer_iv' ? 'selected' : '' }}>Finance Officer IV</option>
-                            <option value="finance_officer_v" {{ request('role') == 'finance_officer_v' ? 'selected' : '' }}>Finance Officer V</option>
+                            @foreach(($roleOptions ?? collect()) as $roleOption)
+                                @php
+                                    $parts = explode('_', $roleOption);
+                                    $lastPart = strtoupper(end($parts));
+                                    $romanRanks = ['I', 'II', 'III', 'IV', 'V'];
+                                    $rankSuffix = in_array($lastPart, $romanRanks, true) ? array_pop($parts) : null;
+                                    $roleLabel = ucwords(implode(' ', $parts));
+                                    if ($rankSuffix) {
+                                        $roleLabel .= ' ' . strtoupper($rankSuffix);
+                                    }
+                                @endphp
+                                <option value="{{ $roleOption }}" {{ request('role') == $roleOption ? 'selected' : '' }}>{{ $roleLabel }}</option>
+                            @endforeach
                         </select>
                     </div>
                 @endif
@@ -1070,6 +1191,37 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-group page-access" id="edit_page_access_section">
+                    <div class="page-access-header">
+                        <p class="page-access-title"><i class="fas fa-user-shield"></i> Page Access</p>
+                        <span class="page-access-help">Choose allowed modules</span>
+                    </div>
+                    <div class="page-access-card">
+                        <div class="page-access-grid">
+                        @foreach(($availablePages ?? []) as $pageKey => $pageLabel)
+                            @php
+                                $pageIcons = [
+                                    'dashboard' => 'fa-gauge-high',
+                                    'remittance' => 'fa-file-invoice-dollar',
+                                    'bank-deposit' => 'fa-building-columns',
+                                    'merchants' => 'fa-store',
+                                    'members' => 'fa-users-gear',
+                                    'audit-logs' => 'fa-clipboard-list',
+                                    'profile' => 'fa-user',
+                                ];
+                            @endphp
+                            <div class="page-access-item">
+                                <label class="page-access-label">
+                                    <input type="checkbox" name="accessible_pages[]" value="{{ $pageKey }}" class="edit-access-page-checkbox">
+                                    <i class="fas {{ $pageIcons[$pageKey] ?? 'fa-circle' }}"></i>
+                                    <span>{{ $pageLabel }}</span>
+                                </label>
+                            </div>
+                        @endforeach
+                        </div>
+                    </div>
+                    <small class="page-access-note">Select pages this user can open.</small>
+                </div>
                 <input type="hidden" name="status" id="edit_status" value="active">
                 <div style="display: flex; gap: 10px; justify-content: center;">
                     <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
@@ -1163,6 +1315,45 @@
                         @enderror
                     </div>
                 </div>
+                <div class="form-group page-access" id="add_page_access_section">
+                    <div class="page-access-header">
+                        <p class="page-access-title"><i class="fas fa-user-shield"></i> Page Access <span class="required">*</span></p>
+                        <span class="page-access-help">Choose allowed modules</span>
+                    </div>
+                    <div class="page-access-card">
+                        <div class="page-access-grid">
+                        @foreach(($availablePages ?? []) as $pageKey => $pageLabel)
+                            @php
+                                $defaultPages = \App\Models\User::DEFAULT_MEMBER_PAGES;
+                                $oldPages = old('accessible_pages', $defaultPages);
+                                $pageIcons = [
+                                    'dashboard' => 'fa-gauge-high',
+                                    'remittance' => 'fa-file-invoice-dollar',
+                                    'bank-deposit' => 'fa-building-columns',
+                                    'merchants' => 'fa-store',
+                                    'members' => 'fa-users-gear',
+                                    'audit-logs' => 'fa-clipboard-list',
+                                    'profile' => 'fa-user',
+                                ];
+                            @endphp
+                            <div class="page-access-item">
+                                <label class="page-access-label">
+                                    <input type="checkbox" name="accessible_pages[]" value="{{ $pageKey }}" {{ in_array($pageKey, $oldPages, true) ? 'checked' : '' }}>
+                                    <i class="fas {{ $pageIcons[$pageKey] ?? 'fa-circle' }}"></i>
+                                    <span>{{ $pageLabel }}</span>
+                                </label>
+                            </div>
+                        @endforeach
+                        </div>
+                    </div>
+                    <small class="page-access-note">At least one page must be selected.</small>
+                    @error('accessible_pages')
+                        <span class="error-text">{{ $message }}</span>
+                    @enderror
+                    @error('accessible_pages.*')
+                        <span class="error-text">{{ $message }}</span>
+                    @enderror
+                </div>
                 <input type="hidden" name="status" value="{{ old('status', 'active') }}">
                 <div class="form-group">
                     <label>Password</label>
@@ -1225,12 +1416,22 @@
     </div>
 
     <script>
+        const defaultMemberPages = @json(\App\Models\User::DEFAULT_MEMBER_PAGES);
+
         // Add dot to middle initial before form submission
         function addDotToMiddleInitial(fieldId) {
             const field = document.getElementById(fieldId);
             if (field && field.value && !field.value.endsWith('.')) {
                 field.value = field.value + '.';
             }
+        }
+
+        function setEditPageAccess(pages) {
+            const selectedPages = Array.isArray(pages) && pages.length ? pages : defaultMemberPages;
+            document.querySelectorAll('.edit-access-page-checkbox').forEach((checkbox) => {
+                checkbox.checked = selectedPages.includes(checkbox.value);
+                checkbox.disabled = false;
+            });
         }
 
         // Toggle sidebar for mobile
@@ -1272,6 +1473,7 @@
             const modal = document.getElementById('editModal');
             const form = document.getElementById('editForm');
             const roleRankRow = document.getElementById('edit_role_rank_row');
+            const pageAccessSection = document.getElementById('edit_page_access_section');
             
             // Ensure form is in edit mode (not view mode)
             enableEditForm();
@@ -1289,13 +1491,16 @@
             if (user.role === 'admin') {
                 // Hide role and rank fields for admin
                 roleRankRow.style.display = 'none';
+                pageAccessSection.style.display = 'none';
                 document.getElementById('edit_role_hidden').value = 'admin';
                 document.getElementById('edit_rank').value = '';
                 document.getElementById('edit_rank').removeAttribute('required');
             } else {
                 // Show role and rank fields for non-admin users
                 roleRankRow.style.display = 'flex';
+                pageAccessSection.style.display = '';
                 document.getElementById('edit_rank').setAttribute('required', 'required');
+                setEditPageAccess(user.accessible_pages);
                 
                 // Extract rank from role (e.g., "finance_officer_IV" -> "IV")
                 if (user.role) {
@@ -1328,6 +1533,7 @@
             const modal = document.getElementById('editModal');
             const form = document.getElementById('editForm');
             const roleRankRow = document.getElementById('edit_role_rank_row');
+            const pageAccessSection = document.getElementById('edit_page_access_section');
             
             // Populate fields same as edit
             document.getElementById('edit_first_name').value = user.first_name || '';
@@ -1340,6 +1546,7 @@
             
             // Hide role and rank for admin
             roleRankRow.style.display = 'none';
+            pageAccessSection.style.display = 'none';
             
             // Disable all input fields for view-only mode
             document.querySelectorAll('#editForm input, #editForm select').forEach(field => {
@@ -1375,6 +1582,11 @@
                     field.style.cursor = '';
                 }
             });
+
+            const pageAccessSection = document.getElementById('edit_page_access_section');
+            if (pageAccessSection) {
+                pageAccessSection.style.display = '';
+            }
             
             // Show submit button
             const submitBtn = document.querySelector('#editForm button[type="submit"]');
@@ -1615,3 +1827,4 @@
     @include('partials.floating-widgets')
 </body>
 </html>
+

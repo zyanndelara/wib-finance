@@ -13,6 +13,7 @@ use App\Http\Controllers\RiderPayrollController;
 use App\Http\Controllers\RiderDeductionController;
 use App\Http\Controllers\MerchantController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\FinancialRequestController;
 use App\Models\AuditLog;
 
 
@@ -45,6 +46,7 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('
 
 // Protected Routes (Require Authentication)
 Route::middleware(['auth', 'prevent.back'])->group(function () {
+    Route::middleware('page.access:dashboard')->group(function () {
     Route::get('/dashboard', function () {
         $totalCollections = \App\Models\Remittance::sum('total_collection');
         $totalDiscrepancies = \App\Models\BankDepositConfirmation::sum('discrepancy');
@@ -79,25 +81,29 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
 
         return view('dashboard', compact('totalCollections', 'totalDiscrepancies', 'monthlyOrders', 'chartYears'));
     })->name('dashboard');
+    });
 
     Route::post('/force-password-change', [AuthController::class, 'forcePasswordChange'])->name('force.password.change');
+    Route::get('/notifications/price-updates', [MerchantController::class, 'priceNotificationsFeed'])->name('notifications.price-updates');
 
-    Route::get('/remittance', [RiderController::class, 'index'])->name('remittance');
-    Route::post('/riders', [RiderController::class, 'store'])->name('riders.store');
-    Route::put('/riders/{rider}', [RiderController::class, 'update'])->name('riders.update');
-    Route::delete('/riders/{rider}', [RiderController::class, 'destroy'])->name('riders.destroy');
+    Route::middleware('page.access:remittance')->group(function () {
+        Route::get('/remittance', [RiderController::class, 'index'])->name('remittance');
+        Route::post('/riders', [RiderController::class, 'store'])->name('riders.store');
+        Route::put('/riders/{rider}', [RiderController::class, 'update'])->name('riders.update');
+        Route::delete('/riders/{rider}', [RiderController::class, 'destroy'])->name('riders.destroy');
 
-    // Remittance Routes
-    Route::post('/remittances', [RemittanceController::class, 'store'])->name('remittances.store');
-    Route::post('/rider-payroll', [RiderPayrollController::class, 'store'])->name('rider-payroll.store');
-    Route::get('/rider-payroll/{id}/payslip', [RiderPayrollController::class, 'payslip'])->name('rider-payroll.payslip');
-    Route::post('/rider-deductions', [RiderDeductionController::class, 'store'])->name('rider-deductions.store');
-    Route::get('/remittances', [RemittanceController::class, 'index'])->name('remittances.index');
-    Route::get('/remittances/{remittance}', [RemittanceController::class, 'show'])->name('remittances.show');
-    Route::put('/remittances/{remittance}', [RemittanceController::class, 'update'])->name('remittances.update');
-    Route::delete('/remittances/{remittance}', [RemittanceController::class, 'destroy'])->name('remittances.destroy');
-    Route::get('/riders/{rider}/remittances', [RemittanceController::class, 'getRiderRemittances'])->name('riders.remittances');
-    Route::get('/remittances-report', [RemittanceController::class, 'report'])->name('remittances.report');
+        // Remittance Routes
+        Route::post('/remittances', [RemittanceController::class, 'store'])->name('remittances.store');
+        Route::post('/rider-payroll', [RiderPayrollController::class, 'store'])->name('rider-payroll.store');
+        Route::get('/rider-payroll/{id}/payslip', [RiderPayrollController::class, 'payslip'])->name('rider-payroll.payslip');
+        Route::post('/rider-deductions', [RiderDeductionController::class, 'store'])->name('rider-deductions.store');
+        Route::get('/remittances', [RemittanceController::class, 'index'])->name('remittances.index');
+        Route::get('/remittances/{remittance}', [RemittanceController::class, 'show'])->name('remittances.show');
+        Route::put('/remittances/{remittance}', [RemittanceController::class, 'update'])->name('remittances.update');
+        Route::delete('/remittances/{remittance}', [RemittanceController::class, 'destroy'])->name('remittances.destroy');
+        Route::get('/riders/{rider}/remittances', [RemittanceController::class, 'getRiderRemittances'])->name('riders.remittances');
+        Route::get('/remittances/{remittance}/merchant-breakdown', [RemittanceController::class, 'getRemittanceMerchantBreakdown'])->name('remittances.merchant-breakdown');
+        Route::get('/remittances-report', [RemittanceController::class, 'report'])->name('remittances.report');
 
     // Non-remitting riders lookup (used by the stat card modal)
     Route::get('/non-remitting-riders', function (\Illuminate\Http\Request $request) {
@@ -184,8 +190,10 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
             'is_today' => $isToday,
             'riders'   => $rows,
         ]);
-    })->name('non-remitting-riders');
+        })->name('non-remitting-riders');
+    });
 
+    Route::middleware('page.access:bank-deposit')->group(function () {
     Route::get('/bank-deposit', function (\Illuminate\Http\Request $request) {
         // Determine the date to filter by
         $filterDate = $request->filled('date') ? $request->date : now()->format('Y-m-d');
@@ -502,20 +510,33 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
             'totalDiscrepancy', 'totalChange', 'generatedBy', 'generatedByRole'
         ));
     })->name('bank-deposit.report');
+    });
 
-    Route::get('/merchants', [MerchantController::class, 'index'])->name('merchants');
-    Route::post('/merchants', [MerchantController::class, 'store'])->name('merchants.store');
-    Route::put('/merchants/{merchant}', [MerchantController::class, 'update'])->name('merchants.update');
-    Route::post('/merchants/bulk-update', [MerchantController::class, 'bulkUpdate'])->name('merchants.bulk-update');
-    Route::delete('/merchants/{merchant}', [MerchantController::class, 'destroy'])->name('merchants.destroy');
+    Route::middleware('page.access:merchants')->group(function () {
+        Route::get('/merchants', [MerchantController::class, 'index'])->name('merchants');
+        Route::post('/merchants', [MerchantController::class, 'store'])->name('merchants.store');
+        Route::put('/merchants/{merchant}', [MerchantController::class, 'update'])->name('merchants.update');
+        Route::post('/merchants/bulk-update', [MerchantController::class, 'bulkUpdate'])->name('merchants.bulk-update');
+        Route::delete('/merchants/{merchant}', [MerchantController::class, 'destroy'])->name('merchants.destroy');
+    });
+
+    Route::middleware('page.access:financial-requests')->group(function () {
+        Route::get('/financial-requests', [FinancialRequestController::class, 'index'])->name('financial-requests.index');
+        Route::post('/financial-requests', [FinancialRequestController::class, 'store'])->name('financial-requests.store');
+        Route::patch('/financial-requests/{financialRequest}/approve', [FinancialRequestController::class, 'approve'])->name('financial-requests.approve');
+        Route::patch('/financial-requests/{financialRequest}/reject', [FinancialRequestController::class, 'reject'])->name('financial-requests.reject');
+    });
 
     // Member Management Routes
-    Route::get('/member-management', [UserController::class, 'index'])->name('members.index');
-    Route::post('/members', [UserController::class, 'store'])->name('members.store');
-    Route::put('/members/{user}', [UserController::class, 'update'])->name('members.update');
-    Route::delete('/members/{user}', [UserController::class, 'destroy'])->name('members.destroy');
-    Route::patch('/members/{user}/restore', [UserController::class, 'restore'])->name('members.restore');
+    Route::middleware('page.access:members')->group(function () {
+        Route::get('/member-management', [UserController::class, 'index'])->name('members.index');
+        Route::post('/members', [UserController::class, 'store'])->name('members.store');
+        Route::put('/members/{user}', [UserController::class, 'update'])->name('members.update');
+        Route::delete('/members/{user}', [UserController::class, 'destroy'])->name('members.destroy');
+        Route::patch('/members/{user}/restore', [UserController::class, 'restore'])->name('members.restore');
+    });
 
+    Route::middleware('page.access:audit-logs')->group(function () {
     Route::get('/audit-logs', function (\Illuminate\Http\Request $request) {
         $query = AuditLog::with('user')->latest();
 
@@ -542,22 +563,25 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
 
         $logs = $query->paginate(10)->withQueryString();
 
-        $modules = ['Remittance', 'Bank & Deposit', 'Member Management', 'Profile', 'General'];
+        $modules = ['Remittance', 'Bank & Deposit', 'Member Management', 'Financial Requests', 'Profile', 'General'];
 
         return view('audit-logs', compact('logs', 'modules'));
     })->name('audit-logs');
+    });
 
     // Profile Routes
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
-    Route::post('/profile/resend-verification', [ProfileController::class, 'resendVerification'])->name('profile.resend-verification');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::middleware('page.access:profile')->group(function () {
+        Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+        Route::post('/profile/resend-verification', [ProfileController::class, 'resendVerification'])->name('profile.resend-verification');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // 2FA Setup Routes (require auth)
-    Route::get('/profile/2fa/setup', [ProfileController::class, 'setup2fa'])->name('profile.2fa.setup');
-    Route::post('/profile/2fa/confirm', [ProfileController::class, 'confirm2fa'])->name('profile.2fa.confirm');
-    Route::post('/profile/2fa/disable', [ProfileController::class, 'disable2fa'])->name('profile.2fa.disable');
+        // 2FA Setup Routes (require auth)
+        Route::get('/profile/2fa/setup', [ProfileController::class, 'setup2fa'])->name('profile.2fa.setup');
+        Route::post('/profile/2fa/confirm', [ProfileController::class, 'confirm2fa'])->name('profile.2fa.confirm');
+        Route::post('/profile/2fa/disable', [ProfileController::class, 'disable2fa'])->name('profile.2fa.disable');
+    });
 
     // Chat Routes
     Route::get('/chat/messages', [ChatController::class, 'getMessages'])->name('chat.messages');

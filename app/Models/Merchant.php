@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
 
 class Merchant extends Model
 {
@@ -21,6 +20,7 @@ class Merchant extends Model
         'merchant_id',
         'restaurant_name',
         'merchant_type',
+        'partner_type',
         'street',
         'city',
         'state',
@@ -67,12 +67,12 @@ class Merchant extends Model
 
     public function getTypeAttribute()
     {
-        return $this->merchant_type;
+        return $this->attributes['partner_type'] ?? null;
     }
 
     public function setTypeAttribute($value)
     {
-        $this->attributes['merchant_type'] = $value;
+        $this->attributes['partner_type'] = $value;
     }
 
     public function getAddressAttribute()
@@ -109,17 +109,17 @@ class Merchant extends Model
 
     public function getTotalOrdersAttribute()
     {
-        return Schema::hasColumn($this->getTable(), 'total_orders') ? ($this->attributes['total_orders'] ?? 0) : 0;
+        return $this->attributes['total_orders'] ?? 0;
     }
 
     public function getTotalSalesAttribute()
     {
-        return Schema::hasColumn($this->getTable(), 'total_sales') ? ($this->attributes['total_sales'] ?? 0) : 0;
+        return $this->attributes['total_sales'] ?? 0;
     }
 
     public function getTotalCommissionAttribute()
     {
-        return Schema::hasColumn($this->getTable(), 'total_commission') ? ($this->attributes['total_commission'] ?? 0) : 0;
+        return $this->attributes['total_commission'] ?? 0;
     }
 
     public function getCreatedAtAttribute()
@@ -138,7 +138,7 @@ class Merchant extends Model
 
     public function getTypeColumn(): string
     {
-        return 'merchant_type';
+        return 'partner_type';
     }
 
     public function getNameColumn(): string

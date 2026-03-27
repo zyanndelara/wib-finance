@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('images/logowhite.png') }}">
     <title>Audit Logs - When in Baguio Inc.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -1607,11 +1608,15 @@
                 `<span class="badge ${cls}">${d.status.charAt(0).toUpperCase() + d.status.slice(1)}</span>`;
 
             const isMemberMgmt = (d.module || '').toLowerCase().includes('member');
-            document.getElementById('financialSection').style.display = isMemberMgmt ? 'none' : '';
-            document.getElementById('financialDivider').style.display  = isMemberMgmt ? 'none' : '';
+            const hasAmount = !!d.amount && d.amount !== '-';
+            const hasSourceBank = !!d.sourceBank && d.sourceBank !== '-';
+            const shouldShowFinancial = !isMemberMgmt && (hasAmount || hasSourceBank);
 
-            document.getElementById('detailAmount').textContent       = d.amount !== '-' ? '$' + d.amount : '-';
-            document.getElementById('detailSourceBank').textContent   = d.sourceBank;
+            document.getElementById('financialSection').style.display = shouldShowFinancial ? '' : 'none';
+            document.getElementById('financialDivider').style.display  = shouldShowFinancial ? '' : 'none';
+
+            document.getElementById('detailAmount').textContent       = hasAmount ? '$' + d.amount : '-';
+            document.getElementById('detailSourceBank').textContent   = hasSourceBank ? d.sourceBank : '-';
             document.getElementById('detailInitiatedUser').textContent = d.initiatedUser;
 
             // Attached file
@@ -1649,3 +1654,4 @@
     @include('partials.floating-widgets')
 </body>
 </html>
+

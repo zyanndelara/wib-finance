@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('images/logowhite.png') }}">
     <title>Rider Payslip - {{ $payroll->rider_name }}</title>
     <style>
         * {
@@ -161,21 +162,26 @@
             grid-template-columns: 1fr 1fr;
             gap: 0;
             border-bottom: 1px solid #ccc;
+            background: #fbfcf8;
         }
 
         .slip-info-left {
-            padding: 10px 16px;
+            padding: 10px 16px 8px;
             border-right: 1px solid #ddd;
         }
 
         .slip-info-right {
-            padding: 10px 16px;
+            padding: 10px 16px 8px;
         }
 
         .info-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 5px;
+            display: grid;
+            grid-template-columns: 145px minmax(0, 1fr);
+            column-gap: 10px;
+            align-items: center;
+            margin-bottom: 0;
+            min-height: 26px;
+            border-bottom: 1px dotted #d8ddcf;
             font-size: 11px;
         }
 
@@ -183,13 +189,19 @@
             font-weight: 700;
             color: #444;
             white-space: nowrap;
+            letter-spacing: 0.2px;
         }
 
         .info-value {
             color: #222;
-            border-bottom: 1px solid #bbb;
-            flex: 1;
-            min-width: 120px;
+            min-width: 0;
+            padding: 3px 0;
+            overflow-wrap: anywhere;
+        }
+
+        .info-value.info-highlight {
+            font-weight: 700;
+            color: #2d5f0e;
         }
 
         /* ───── TRANSACTION TABLE ───── */
@@ -451,6 +463,10 @@
                 margin: 0.5cm;
                 size: A4;
             }
+
+            .info-row {
+                min-height: 24px;
+            }
         }
     </style>
 </head>
@@ -483,16 +499,22 @@
         </div>
 
         <!-- ── TITLE BAR ── -->
+        @php
+            $payrollCreatedAt = \Carbon\Carbon::parse($payroll->created_at);
+            $documentNumber = 'WIBP' . $payrollCreatedAt->format('ym') . str_pad($payroll->id, 4, '0', STR_PAD_LEFT);
+            $payrollReceivedDateText = $payrollCreatedAt->format('F d, Y') . ' (' . $payrollCreatedAt->format('l') . ')';
+        @endphp
+
         <div class="slip-title-bar">
             <div class="doc-title">Freelance Delivery Rider Payslip</div>
             <div class="period-block">
                 <div class="period-field">
                     Month
-                    <span class="period-value">{{ \Carbon\Carbon::parse($payroll->created_at)->format('F') }}</span>
+                    <span class="period-value">{{ $payrollCreatedAt->format('F') }}</span>
                 </div>
                 <div class="period-field">
                     Year
-                    <span class="period-value">{{ \Carbon\Carbon::parse($payroll->created_at)->format('Y') }}</span>
+                    <span class="period-value">{{ $payrollCreatedAt->format('Y') }}</span>
                 </div>
             </div>
         </div>
@@ -501,38 +523,38 @@
         <div class="slip-info-grid">
             <div class="slip-info-left">
                 <div class="info-row">
-                    <span class="info-label">Invoice for</span>
-                    <span class="info-value">{{ $payroll->rider_name }}</span>
+                    <span class="info-label">Rider Name</span>
+                    <span class="info-value info-highlight">{{ $payroll->rider_name }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">&nbsp;</span>
-                    <span class="info-value">&nbsp;</span>
-                </div>
-                <div class="info-row" style="margin-top:4px;">
-                    <span class="info-value" style="border:none; color:#888; font-size:10px;">&nbsp;</span>
+                    <span class="info-label">Rider ID</span>
+                    <span class="info-value">WIBFDR{{ str_pad($riderId, 3, '0', STR_PAD_LEFT) }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Email</span>
                     <span class="info-value">{{ $rider->email ?? '' }}</span>
                 </div>
-            </div>
-            <div class="slip-info-right">
                 <div class="info-row">
                     <span class="info-label">Contact No.</span>
                     <span class="info-value">{{ $rider->phone_number ?? '' }}</span>
                 </div>
+            </div>
+            <div class="slip-info-right">
                 <div class="info-row">
-                    <span class="info-label">ID Number</span>
-                    <span class="info-value">WIBFDR{{ str_pad($riderId, 3, '0', STR_PAD_LEFT) }}</span>
+                    <span class="info-label">Payroll Received Date</span>
+                    <span class="info-value info-highlight">{{ $payrollReceivedDateText }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Salary Schedule</span>
+                    <span class="info-value">{{ $payroll->salary_schedule }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Document Number</span>
-                    <span
-                        class="info-value">{{ 'WIBP' . \Carbon\Carbon::parse($payroll->created_at)->format('y') . \Carbon\Carbon::parse($payroll->created_at)->format('m') . str_pad($payroll->id, 4, '0', STR_PAD_LEFT) }}</span>
+                    <span class="info-value">{{ $documentNumber }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Tax Identification Number</span>
-                    <span class="info-value">&nbsp;</span>
+                    <span class="info-label">Prepared By</span>
+                    <span class="info-value">{{ $generatedBy->name ?? 'WIB Finance Officer' }}</span>
                 </div>
             </div>
         </div>
@@ -733,16 +755,7 @@
 
     </div><!-- end .slip-wrapper -->
 
-    <script>
-        // Auto-print when the page loads
-        window.addEventListener('load', function() {
-            // Small delay so styles fully render
-            setTimeout(function() {
-                window.print();
-            }, 600);
-        });
-    </script>
-
 </body>
 
 </html>
+

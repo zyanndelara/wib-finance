@@ -82,6 +82,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('images/logowhite.png') }}">
     <title>Dashboard - When in Baguio Inc.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -142,15 +143,9 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-radius: var(--radius-lg);
-            border: 1px solid rgba(44, 71, 44, 0.14);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.86) 0%, rgba(248, 252, 240, 0.86) 100%);
-            box-shadow: var(--card-shadow);
-            padding: 22px 24px;
-            backdrop-filter: blur(3px);
+            padding: 0;
             gap: 18px;
             flex-wrap: wrap;
-            animation: riseIn 0.55s ease both;
         }
 
         .header-copy {
@@ -569,7 +564,7 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 16px;
-                padding: 18px;
+                padding: 0;
             }
 
             .content-header h1 {
@@ -633,12 +628,6 @@
         <div class="content-header">
             <div class="header-copy">
                 <h1>Dashboard Overview</h1>
-                <p class="dashboard-subtitle">Track collections, monitor funds, and spot issues quickly from one place.</p>
-                <div class="quick-actions">
-                    <a href="{{ route('remittance') }}" class="action-chip"><i class="fas fa-file-invoice-dollar"></i> Remittance</a>
-                    <a href="{{ route('bank-deposit') }}" class="action-chip"><i class="fas fa-building-columns"></i> Bank &amp; Deposit</a>
-                    <a href="{{ route('merchants') }}" class="action-chip"><i class="fas fa-store"></i> Merchants</a>
-                </div>
             </div>
             @include('partials.user-indicator')
         </div>
@@ -1021,3 +1010,4 @@
 </body>
 
 </html>
+

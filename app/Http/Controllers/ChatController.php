@@ -24,6 +24,16 @@ class ChatController extends Controller
             if (!$userId) {
                 return response()->json(['messages' => [], 'conversations' => $this->getConversationList()]);
             }
+
+            // Archived users (status=inactive) should not appear/open in admin chatbox.
+            $isActiveRecipient = User::whereKey($userId)
+                ->where('role', '!=', 'admin')
+                ->where('status', 'active')
+                ->exists();
+
+            if (!$isActiveRecipient) {
+                return response()->json(['messages' => [], 'conversations' => $this->getConversationList()]);
+            }
         } else {
             $userId = $user->id;
         }
@@ -92,7 +102,16 @@ class ChatController extends Controller
 
         if ($user->role === 'admin') {
             $request->validate(['user_id' => 'required|exists:users,id']);
-            $userId = $request->user_id;
+            $recipient = User::whereKey($request->user_id)
+                ->where('role', '!=', 'admin')
+                ->where('status', 'active')
+                ->first();
+
+            if (!$recipient) {
+                return response()->json(['error' => 'Cannot send message to an archived user.'], 422);
+            }
+
+            $userId = $recipient->id;
         } else {
             $userId = $user->id;
         }
@@ -158,7 +177,7 @@ class ChatController extends Controller
     }
 
     /**
-     * Return the list of ALL non-admin users for the admin inbox,
+        * Return the list of ACTIVE non-admin users for the admin inbox,
      * with last-message preview and unread count where applicable.
      * Users who have never chatted still appear so admin can initiate.
      */
@@ -177,8 +196,9 @@ class ChatController extends Controller
             ->get()
             ->keyBy('user_id');
 
-        // Get ALL non-admin users
+        // Get active non-admin users only (archived users are excluded)
         $users = User::where('role', '!=', 'admin')
+            ->where('status', 'active')
             ->orderBy('name')
             ->get();
 

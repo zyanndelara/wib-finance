@@ -144,6 +144,18 @@ class RiderPayrollController extends Controller
                 $validated['adda_df'] = 0;
             }
 
+            // Handle payment mode - support both single and multiple modes
+            if ($request->filled('payment_modes_json')) {
+                try {
+                    $modes = json_decode($request->payment_modes_json, true);
+                    if (is_array($modes) && count($modes) > 0) {
+                        $validated['mode_of_payment'] = json_encode($modes);
+                    }
+                } catch (\Exception $e) {
+                    // Fallback to original mode if JSON decode fails
+                }
+            }
+
             Log::info('Validation passed', $validated);
 
             $payroll = RiderPayroll::create($validated);

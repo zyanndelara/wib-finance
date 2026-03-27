@@ -93,6 +93,8 @@ class RiderController extends Controller
 
         // Build delivery charges map from mt_order.delivery_charge joined with mt_driver_task by order_id
         $riderDeliveryChargesMap = [];
+        $riderTipsMap = [];
+        $riderTotalCollectionMap = [];
         $taskStatsDateParsed = \Carbon\Carbon::parse($request->get('stats_date', today()->toDateString()))->toDateString();
         
         try {
@@ -102,11 +104,11 @@ class RiderController extends Controller
             });
             
             if ($riderKeyColumn && Schema::hasTable('mt_driver_task')) {
-                // Get delivery charges from mt_order (in wibdb) joined with mt_driver_task by order_id
+                // Get delivery charges from mt_order (in wibfinance) joined with mt_driver_task by order_id
                 // Use raw join for cross-database queries
                 $chargeQuery = DB::table('mt_driver_task')
-                    ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wibdb.mt_order.delivery_charge), 0) as total_delivery_charge")
-                    ->leftJoin('wibdb.mt_order', 'mt_driver_task.order_id', '=', 'wibdb.mt_order.order_id')
+                    ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wibfinance.mt_order.delivery_charge), 0) as total_delivery_charge")
+                    ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
                     ->groupBy('mt_driver_task.' . $riderKeyColumn);
                 
                 // Scope by selected date using delivery_date from mt_driver_task
@@ -125,10 +127,51 @@ class RiderController extends Controller
                         return (float) $charge;
                     })
                     ->toArray();
+
+                // Get tips from mt_order.cart_tip_value using the same rider/date scope.
+                $tipsQuery = DB::table('mt_driver_task')
+                    ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wibfinance.mt_order.cart_tip_value), 0) as total_tips")
+                    ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
+                    ->groupBy('mt_driver_task.' . $riderKeyColumn);
+
+                if ($taskDateColumn) {
+                    $tipsQuery->whereDate("mt_driver_task.{$taskDateColumn}", $taskStatsDateParsed);
+                }
+
+                $riderTipsMap = $tipsQuery
+                    ->pluck('total_tips', 'rider_key')
+                    ->map(function ($tips) {
+                        return (float) $tips;
+                    })
+                    ->toArray();
+
+                // Get total order amount from mt_order.total_w_tax using the same rider/date scope.
+                try {
+                    $totalCollectionQuery = DB::table('mt_driver_task')
+                        ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wibfinance.mt_order.total_w_tax), 0) as total_collection")
+                        ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
+                        ->groupBy('mt_driver_task.' . $riderKeyColumn);
+
+                    if ($taskDateColumn) {
+                        $totalCollectionQuery->whereDate("mt_driver_task.{$taskDateColumn}", $taskStatsDateParsed);
+                    }
+
+                    $riderTotalCollectionMap = $totalCollectionQuery
+                        ->pluck('total_collection', 'rider_key')
+                        ->map(function ($collection) {
+                            return (float) $collection;
+                        })
+                        ->toArray();
+                } catch (\Exception $e) {
+                    // If total order amount cannot be calculated, keep empty map.
+                    $riderTotalCollectionMap = [];
+                }
             }
         } catch (\Exception $e) {
             // If delivery charges cannot be calculated, fall back to empty map
             $riderDeliveryChargesMap = [];
+            $riderTipsMap = [];
+            $riderTotalCollectionMap = [];
         }
 
         // Calculate counts and collections — scoped to selected date (default: today)
@@ -159,7 +202,8 @@ class RiderController extends Controller
         // On past dates there is no concept of a live warning — hide it entirely.
         if ($isViewingToday) {
             // A rider shows "No Remit Yesterday" if they existed before today,
-            // did NOT submit a remittance yesterday, and have NOT yet settled today.
+            // had deliveries yesterday, did NOT submit a remittance yesterday,
+            // and have NOT yet settled today.
             // This check is based purely on remittance records so it works
             // regardless of whether the nightly scheduler has run.
             $remittedYesterdayIds = Remittance::whereDate('remittance_date', $yesterday)
@@ -171,9 +215,42 @@ class RiderController extends Controller
                 ->unique()
                 ->toArray();
 
+            $ridersWithDeliveriesYesterday = [];
+            if (Schema::hasTable('mt_driver_task')) {
+                $driverTaskColumns = Schema::getColumnListing('mt_driver_task');
+                $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($driverTaskColumns) {
+                    return in_array($column, $driverTaskColumns, true);
+                });
+                $taskKeyColumn = in_array('task_id', $driverTaskColumns, true) ? 'task_id' : null;
+                $taskDateColumn = collect(['delivery_date', 'date_created', 'created_at', 'date_added'])
+                    ->first(function ($column) use ($driverTaskColumns) {
+                        return in_array($column, $driverTaskColumns, true);
+                    });
+
+                if ($riderKeyColumn && $taskKeyColumn && $taskDateColumn) {
+                    $ridersWithDeliveriesYesterday = DB::table('mt_driver_task')
+                        ->selectRaw("{$riderKeyColumn} as rider_key, COUNT({$taskKeyColumn}) as total_deliveries")
+                        ->whereNotNull($taskKeyColumn)
+                        ->whereDate($taskDateColumn, $yesterday)
+                        ->groupBy($riderKeyColumn)
+                        ->havingRaw("COUNT({$taskKeyColumn}) > 0")
+                        ->pluck('rider_key')
+                        ->map(function ($riderId) {
+                            return (int) $riderId;
+                        })
+                        ->toArray();
+                }
+            }
+
             $blockedRiderIds = DB::table('mt_driver')
                 ->whereIn('status', ['active', 'cleared'])
                 ->whereDate('date_created', '<', \Carbon\Carbon::today())
+                ->when(!empty($ridersWithDeliveriesYesterday), function ($query) use ($ridersWithDeliveriesYesterday) {
+                    $query->whereIn('driver_id', $ridersWithDeliveriesYesterday);
+                }, function ($query) {
+                    // If there are no deliveries yesterday, nobody should be blocked.
+                    $query->whereRaw('1 = 0');
+                })
                 ->whereNotIn('driver_id', $remittedYesterdayIds)
                 ->whereNotIn('driver_id', $remittedTodayIds)
                 ->pluck('driver_id')
@@ -196,6 +273,42 @@ class RiderController extends Controller
         $clearedCount = Remittance::whereDate('remittance_date', $statsDateParsed)
             ->where('status', 'confirmed')
             ->count();
+
+        $remittedTotalsByRider = Remittance::query()
+            ->whereDate('remittance_date', $statsDateParsed)
+            ->selectRaw('rider_id, COALESCE(SUM(total_remit), 0) as total_remitted')
+            ->groupBy('rider_id')
+            ->pluck('total_remitted', 'rider_id')
+            ->map(function ($amount) {
+                return (float) $amount;
+            })
+            ->toArray();
+
+        $remittedRiderIds = collect($riderTotalCollectionMap)
+            ->filter(function ($expectedTotal, $riderId) use ($remittedTotalsByRider) {
+                $expected = (float) $expectedTotal;
+                $remitted = (float) ($remittedTotalsByRider[$riderId] ?? 0);
+                return $expected > 0 && $remitted + 0.0001 >= $expected;
+            })
+            ->keys()
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->values()
+            ->all();
+
+        $shortRiderIds = collect($riderTotalCollectionMap)
+            ->filter(function ($expectedTotal, $riderId) use ($remittedTotalsByRider) {
+                $expected = (float) $expectedTotal;
+                $remitted = (float) ($remittedTotalsByRider[$riderId] ?? 0);
+                return $expected > 0 && $remitted > 0 && $remitted + 0.0001 < $expected;
+            })
+            ->keys()
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->values()
+            ->all();
         $cashCollection = Remittance::whereDate('remittance_date', $statsDateParsed)
             ->where('mode_of_payment', 'cash')
             ->sum('total_collection');
@@ -298,7 +411,7 @@ class RiderController extends Controller
             ->orderBy('restaurant_name')
             ->get(['merchant_id as id', 'restaurant_name as name']);
 
-        return view('remittance', compact('riders', 'payrolls', 'deductions', 'deductionsByRider', 'allDeductionsFlat', 'remittances', 'nonRemittingRiderCount', 'clearedCount', 'cashCollection', 'digitalCollection', 'statsDate', 'statsDateParsed', 'blockedRiderIds', 'clearedRiderIds', 'riderRemittanceDateMap', 'riderTaskDeliveriesMap', 'riderDeliveryChargesMap', 'merchants'));
+        return view('remittance', compact('riders', 'payrolls', 'deductions', 'deductionsByRider', 'allDeductionsFlat', 'remittances', 'nonRemittingRiderCount', 'clearedCount', 'cashCollection', 'digitalCollection', 'statsDate', 'statsDateParsed', 'blockedRiderIds', 'clearedRiderIds', 'remittedRiderIds', 'shortRiderIds', 'remittedTotalsByRider', 'riderRemittanceDateMap', 'riderTaskDeliveriesMap', 'riderDeliveryChargesMap', 'riderTipsMap', 'riderTotalCollectionMap', 'merchants'));
     }
 
     public function store(Request $request)

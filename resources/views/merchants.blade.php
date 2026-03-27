@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('images/logowhite.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Merchants - When in Baguio Inc.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -480,8 +481,8 @@
                 <i class="fas fa-chart-line sc-icon"></i>
                 <div class="sc-body">
                     <div class="sc-label">GT Sales</div>
-                    <div class="sc-value">&#8369;{{ number_format($gtSales, 2) }}</div>
-                    <div class="sc-sub">Grand total across all merchants</div>
+                    <div class="sc-value" id="stat_gt_sales">&#8369;{{ number_format($gtSales, 2) }}</div>
+                    <div class="sc-sub">The Original Good Taste Restaurant sales</div>
                 </div>
             </div>
 
@@ -508,25 +509,22 @@
                     <div style="width:1px;height:24px;background:#e5e7eb;"></div>
                     <div style="display:flex;align-items:center;gap:5px;">
                         <span style="font-size:11px;font-weight:600;color:#9ca3af;white-space:nowrap;"><i
-                                class="fas fa-circle" style="font-size:7px;"></i> Status</span>
-                        <select id="merchantStatusFilter" onchange="filterMerchants()" class="filter-select">
-                            <option value="all">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
+                                class="fas fa-calendar" style="font-size:10px;"></i> Period</span>
+                        <select id="merchantPeriodFilter" onchange="applyPeriodFilter()" class="filter-select">
+                            <option value="daily" {{ ($selectedPeriod ?? 'daily') === 'daily' ? 'selected' : '' }}>Daily</option>
+                            <option value="weekly" {{ ($selectedPeriod ?? 'daily') === 'weekly' ? 'selected' : '' }}>Weekly</option>
+                            <option value="monthly" {{ ($selectedPeriod ?? 'daily') === 'monthly' ? 'selected' : '' }}>Monthly</option>
+                            <option value="bimonth" {{ ($selectedPeriod ?? 'daily') === 'bimonth' ? 'selected' : '' }}>Bi Month</option>
+                            <option value="trimonth" {{ ($selectedPeriod ?? 'daily') === 'trimonth' ? 'selected' : '' }}>Tri Month</option>
                         </select>
                     </div>
                     <div style="width:1px;height:24px;background:#e5e7eb;"></div>
-                    <div style="display:flex;align-items:center;gap:5px;">
+                    <div style="display:flex;align-items:center;gap:6px;">
                         <span style="font-size:11px;font-weight:600;color:#9ca3af;white-space:nowrap;"><i
-                                class="fas fa-calendar" style="font-size:10px;"></i> Period</span>
-                        <select id="merchantPeriodFilter" onchange="filterMerchants()" class="filter-select">
-                            <option value="all">All Period</option>
-                            <option value="daily">Daily</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly">Monthly</option>
-                            <option value="bimonth">Bi Month</option>
-                            <option value="trimonth">Tri Month</option>
-                        </select>
+                                class="fas fa-calendar-day" style="font-size:10px;"></i> Date</span>
+                        <input type="date" id="merchantDateFilter" value="{{ ($selectedDate ?? now())->toDateString() }}"
+                            onchange="applyPeriodFilter()"
+                            style="border:1.5px solid #e5e7eb;border-radius:8px;padding:8px 10px;font-size:12px;color:#374151;background:#fff;outline:none;min-width:140px;">
                     </div>
                     <div style="width:1px;height:24px;background:#e5e7eb;"></div>
                     <button type="button" onclick="openAddModal()"
@@ -584,21 +582,21 @@
                                 Merchant</th>
                             <th
                                 style="padding:13px 16px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
-                                Type</th>
+                                Partner Type</th>
                             <th
                                 style="padding:13px 16px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
                                 Commission Type</th>
                             <th
-                                style="padding:13px 16px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
+                                style="padding:13px 16px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;display:none;">
                                 Commission Details</th>
                             <th
                                 style="padding:13px 16px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
                                 Status</th>
                             <th
-                                style="padding:13px 16px;text-align:right;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
+                                style="padding:13px 16px;text-align:right;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;display:none;">
                                 Orders</th>
                             <th
-                                style="padding:13px 16px;text-align:right;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
+                                style="padding:13px 16px;text-align:right;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;display:none;">
                                 Sales</th>
                             <th
                                 style="padding:13px 16px;text-align:right;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
@@ -616,12 +614,30 @@
                     </thead>
                     <tbody>
                         @foreach ($merchants as $merchant)
+                            @php
+                                $normalizedType = strtolower(str_replace(['_', ' '], '-', trim((string) $merchant->type)));
+                                if ($normalizedType === 'nonpartner') {
+                                    $normalizedType = 'non-partner';
+                                }
+                                $normalizedStatus = strtolower(
+                                    str_replace([' ', '-'], '_', trim((string) ($merchant->status ?? 'inactive'))),
+                                );
+                                $isPartnerType = $normalizedType === 'partner';
+                                $typeLabel =
+                                    $isPartnerType
+                                        ? 'Partner'
+                                        : ($normalizedType === 'non-partner'
+                                            ? 'Non-Partner'
+                                            : ucwords(str_replace('-', ' ', $normalizedType)));
+                            @endphp
                             <tr id="merchant-row-{{ $merchant->id }}" class="merchant-row"
                                 data-name="{{ strtolower($merchant->name) }}"
                                 data-category="{{ strtolower($merchant->category ?? '') }}"
                                 data-address="{{ strtolower($merchant->address ?? '') }}"
-                                data-type="{{ $merchant->type }}" data-status="{{ $merchant->status }}"
-                                data-created="{{ $merchant->created_at->toDateString() }}">
+                                data-type="{{ $normalizedType }}" data-status="{{ $normalizedStatus }}"
+                                data-created="{{ $merchant->created_at->toDateString() }}"
+                                style="cursor:pointer;"
+                                onclick="if(event.target.closest('input, button') === null) { openViewModal({{ $merchant->id }}); }">
                                 <td>
                                     <div style="display:flex;align-items:center;gap:10px;">
                                         <div
@@ -640,12 +656,31 @@
                                 </td>
                                 <td>
                                     <span
-                                        style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;{{ $merchant->type === 'partner' ? 'background:#dcfce7;color:#166534;' : 'background:#fef9c3;color:#854d0e;' }}">
-                                        {{ ucfirst($merchant->type) }}
+                                        style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;{{ $isPartnerType ? 'background:#dcfce7;color:#166534;' : 'background:#fef9c3;color:#854d0e;' }}">
+                                        {{ $typeLabel }}
                                     </span>
                                 </td>
                                 @php
-                                    $commType = $merchant->commission_type ?? 'percentage_based';
+                                    $rawCommType = strtolower(
+                                        str_replace([' ', '-'], '_', trim((string) ($merchant->commission_type ?? 'percentage_based'))),
+                                    );
+                                    $commissionTypeAliases = [
+                                        'percentage' => 'percentage_based',
+                                        'percent' => 'percentage_based',
+                                        'percentagebased' => 'percentage_based',
+                                        'percentage_based' => 'percentage_based',
+                                        'fixed_item' => 'fixed_per_item',
+                                        'fixed_per_item' => 'fixed_per_item',
+                                        'category_fixed' => 'category_based_fixed',
+                                        'category_based_fixed' => 'category_based_fixed',
+                                        'fixed_order' => 'fixed_per_order',
+                                        'fixed_per_order' => 'fixed_per_order',
+                                        'mixed' => 'mixed',
+                                    ];
+                                    $commType = $commissionTypeAliases[$rawCommType] ?? $rawCommType;
+                                    if ($commType === '') {
+                                        $commType = 'percentage_based';
+                                    }
                                     $ctStyles = [
                                         'percentage_based' => 'background:#dcfce7;color:#166534;',
                                         'fixed_per_item' => 'background:#ede9fe;color:#5b21b6;',
@@ -669,7 +704,7 @@
                                         {{ $ctLabel2 }}
                                     </span>
                                 </td>
-                                <td>
+                                <td style="display:none;">
                                     @if ($commType === 'percentage_based')
                                         <div style="font-size:12px;line-height:1.8;">
                                             <span style="color:#374151;font-weight:600;"><i class="fas fa-percent"
@@ -741,17 +776,33 @@
                                             <span style="color:#7c4fd1;font-weight:700;">
                                                 ₱{{ number_format($merchant->commission_mixed_amount ?? 0, 2) }}</span>
                                         </div>
+                                    @else
+                                        <span style="color:#9ca3af;font-size:12px;"><i class="fas fa-circle-info"
+                                                style="margin-right:4px;"></i>No commission details configured</span>
                                     @endif
                                 </td>
                                 <td>
+                                    @php
+                                        $statusStyles = [
+                                            'active' => 'background:#dcfce7;color:#166534;',
+                                            'pending' => 'background:#fef9c3;color:#854d0e;',
+                                            'expired' => 'background:#fee2e2;color:#991b1b;',
+                                            'inactive' => 'background:#f3f4f6;color:#374151;',
+                                        ];
+                                        $statusStyle = $statusStyles[$normalizedStatus] ?? 'background:#f3f4f6;color:#374151;';
+                                        $statusLabel =
+                                            $normalizedStatus !== ''
+                                                ? ucwords(str_replace('_', ' ', $normalizedStatus))
+                                                : 'Unknown';
+                                    @endphp
                                     <span
-                                        style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;{{ $merchant->status === 'active' ? 'background:#dcfce7;color:#166534;' : 'background:#fee2e2;color:#991b1b;' }}">
-                                        {{ ucfirst($merchant->status) }}
+                                        style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;{{ $statusStyle }}">
+                                        {{ $statusLabel }}
                                     </span>
                                 </td>
-                                <td style="text-align:right;font-size:13px;font-weight:700;color:#374151;">
+                                <td style="text-align:right;font-size:13px;font-weight:700;color:#374151;display:none;">
                                     {{ number_format($merchant->total_orders ?? 0) }}</td>
-                                <td style="text-align:right;font-size:13px;font-weight:700;color:#374151;">
+                                <td style="text-align:right;font-size:13px;font-weight:700;color:#374151;display:none;">
                                     ₱{{ number_format($merchant->total_sales ?? 0, 2) }}</td>
                                 <td style="text-align:right;font-size:13px;font-weight:700;color:#357a3a;">
                                     ₱{{ number_format($merchant->total_commission ?? 0, 2) }}</td>
@@ -777,7 +828,7 @@
                             </tr>
                         @endforeach
                         <tr id="merchantEmptyRow" style="display:none;">
-                            <td colspan="11" style="text-align:center;padding:60px 20px;color:#888;">
+                            <td colspan="10" style="text-align:center;padding:60px 20px;color:#888;">
                                 <i class="fas fa-store"
                                     style="font-size:48px;margin-bottom:16px;display:block;opacity:.3;"></i>
                                 <p style="font-size:15px;">No merchants found. Try adjusting your filters.</p>
@@ -1485,7 +1536,24 @@
                 'category' => $m->category ?? '',
                 'address' => $m->address ?? '',
                 'commission_rate' => $m->commission_rate,
-                'commission_type' => $m->commission_type ?? 'percentage_based',
+                'commission_type' => (function ($value) {
+                    $raw = strtolower(str_replace([' ', '-'], '_', trim((string) ($value ?? 'percentage_based'))));
+                    $aliases = [
+                        'percentage' => 'percentage_based',
+                        'percent' => 'percentage_based',
+                        'percentagebased' => 'percentage_based',
+                        'percentage_based' => 'percentage_based',
+                        'fixed_item' => 'fixed_per_item',
+                        'fixed_per_item' => 'fixed_per_item',
+                        'category_fixed' => 'category_based_fixed',
+                        'category_based_fixed' => 'category_based_fixed',
+                        'fixed_order' => 'fixed_per_order',
+                        'fixed_per_order' => 'fixed_per_order',
+                        'mixed' => 'mixed',
+                    ];
+
+                    return $aliases[$raw] ?? ($raw ?: 'percentage_based');
+                })($m->commission_type),
                 'commission_food_amount' => $m->commission_food_amount,
                 'commission_drinks_amount' => $m->commission_drinks_amount,
                 'commission_small_amount' => $m->commission_small_amount,
@@ -1493,7 +1561,7 @@
                 'commission_mixed_percentage' => $m->commission_mixed_percentage,
                 'commission_mixed_amount' => $m->commission_mixed_amount,
                 'commission_items' => $m->commission_items ?? [],
-                'status' => $m->status,
+                'status' => strtolower(str_replace([' ', '-'], '_', trim((string) ($m->status ?? 'inactive')))),
                 'total_orders' => $m->total_orders ?? 0,
                 'total_sales' => $m->total_sales ?? 0,
                 'total_commission' => $m->total_commission ?? 0,
@@ -1504,6 +1572,130 @@
     <script>
         // Merchant data JSON for edit pre-fill
         const merchantsData = @json($merchantsJson);
+        const merchantTypeLabels = {
+            partner: 'Partner',
+            'non-partner': 'Non-Partner'
+        };
+
+        function normalizeMerchantType(type) {
+            const normalized = String(type || '')
+                .trim()
+                .toLowerCase()
+                .replace(/[_\s]+/g, '-');
+
+            if (normalized === 'nonpartner') return 'non-partner';
+            if (normalized === 'partner') return 'partner';
+            return normalized;
+        }
+
+        function merchantTypeLabel(type) {
+            const normalized = normalizeMerchantType(type);
+            if (!normalized) return 'Unknown';
+            if (merchantTypeLabels[normalized]) return merchantTypeLabels[normalized];
+            return normalized.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+        }
+
+        function normalizeMerchantRecordType(merchant) {
+            merchant.type = normalizeMerchantType(merchant.type) || 'non-partner';
+            return merchant;
+        }
+
+        function normalizeCommissionType(type) {
+            const normalized = String(type || '')
+                .trim()
+                .toLowerCase()
+                .replace(/[\s-]+/g, '_');
+
+            const aliases = {
+                percentage: 'percentage_based',
+                percent: 'percentage_based',
+                percentagebased: 'percentage_based',
+                percentage_based: 'percentage_based',
+                fixed_item: 'fixed_per_item',
+                fixed_per_item: 'fixed_per_item',
+                category_fixed: 'category_based_fixed',
+                category_based_fixed: 'category_based_fixed',
+                fixed_order: 'fixed_per_order',
+                fixed_per_order: 'fixed_per_order',
+                mixed: 'mixed'
+            };
+
+            if (!normalized) return 'percentage_based';
+            return aliases[normalized] || normalized;
+        }
+
+        function normalizeMerchantRecordCommission(merchant) {
+            merchant.commission_type = normalizeCommissionType(merchant.commission_type);
+            if (!Array.isArray(merchant.commission_items)) {
+                merchant.commission_items = [];
+            }
+            return merchant;
+        }
+
+        function normalizeMerchantRecord(merchant) {
+            normalizeMerchantRecordType(merchant);
+            normalizeMerchantRecordCommission(merchant);
+            merchant.status = normalizeMerchantStatus(merchant.status) || 'inactive';
+            return merchant;
+        }
+
+        function normalizeMerchantStatus(status) {
+            return String(status || '')
+                .trim()
+                .toLowerCase()
+                .replace(/[_\s-]+/g, '_');
+        }
+
+        function merchantStatusLabel(status) {
+            const normalized = normalizeMerchantStatus(status);
+            const labels = {
+                active: 'Active',
+                inactive: 'Inactive',
+                pending: 'Pending',
+                expired: 'Expired'
+            };
+
+            if (labels[normalized]) return labels[normalized];
+            return normalized ? normalized.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Unknown';
+        }
+
+        function merchantStatusStyle(status) {
+            const normalized = normalizeMerchantStatus(status);
+            if (normalized === 'active') return 'background:#dcfce7;color:#166534;';
+            if (normalized === 'pending') return 'background:#fef9c3;color:#854d0e;';
+            if (normalized === 'expired') return 'background:#fee2e2;color:#991b1b;';
+            return 'background:#f3f4f6;color:#374151;';
+        }
+
+        function populateMerchantTypeFilter() {
+            const select = document.getElementById('merchantTypeFilter');
+            if (!select) return;
+
+            const selected = select.value || 'all';
+            const normalizedTypes = Object.values(merchantsData)
+                .map(m => normalizeMerchantType(m.type))
+                .filter(Boolean);
+
+            const allTypes = Array.from(new Set(['partner', 'non-partner', ...normalizedTypes]));
+            const orderedTypes = [
+                ...allTypes.filter(t => t === 'partner'),
+                ...allTypes.filter(t => t === 'non-partner'),
+                ...allTypes.filter(t => t !== 'partner' && t !== 'non-partner').sort()
+            ];
+
+            select.innerHTML = '<option value="all">All Types</option>';
+            orderedTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = merchantTypeLabel(type);
+                select.appendChild(option);
+            });
+
+            const hasPreviousValue = selected === 'all' || orderedTypes.includes(selected);
+            select.value = hasPreviousValue ? selected : 'all';
+        }
+
+        Object.values(merchantsData).forEach(normalizeMerchantRecord);
 
         // ── Modal helpers ──
         function openModal(id) {
@@ -1666,18 +1858,25 @@
                     return;
                 }
                 const data = await resp.json();
-                if (data.success && data.merchant) {
-                    const added = data.merchant;
-                    merchantsData[added.id] = added;
-                    insertMerchantRow(added);
+                if (data.success) {
+                    const added = data.merchant ? normalizeMerchantRecord(data.merchant) : null;
+                    if (added && added.id) {
+                        merchantsData[added.id] = added;
+                        const existingRow = document.getElementById('merchant-row-' + added.id);
+                        if (existingRow) {
+                            updateMerchantRow(added);
+                        } else {
+                            insertMerchantRow(added);
+                        }
+                    }
                     updateStatCards();
+                    populateMerchantTypeFilter();
+                    _currentPage = 1;
                     applyFilter();
                     closeModal('addModal');
                     e.target.reset();
-                    showToast(data.message, 'success');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
+                    checkDuplicateMerchantName();
+                    showToast(data.message || 'Merchant added successfully.', 'success');
                 } else {
                     const msg = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message ||
                         'An error occurred.');
@@ -1695,6 +1894,7 @@
         function openViewModal(id) {
             const m = merchantsData[id];
             if (!m) return;
+            const normalizedType = normalizeMerchantType(m.type);
 
             // Header
             document.getElementById('viewModalTitle').textContent = m.name;
@@ -1702,8 +1902,9 @@
 
             // Type badge
             const typeBadge = document.getElementById('view_type_badge');
-            typeBadge.textContent = m.type === 'partner' ? 'Partner' : 'Non-Partner';
-            typeBadge.style.background = m.type === 'partner' ? 'rgba(134,239,172,.25)' : 'rgba(253,224,71,.2)';
+            typeBadge.textContent = merchantTypeLabel(normalizedType);
+            typeBadge.style.background = normalizedType === 'partner' ? 'rgba(134,239,172,.25)' :
+                'rgba(253,224,71,.2)';
 
             // Stats strip
             document.getElementById('view_total_orders').textContent = Number(m.total_orders || 0).toLocaleString();
@@ -1712,20 +1913,20 @@
 
             // Status badge
             const stEl = document.getElementById('view_status');
-            const isActive = m.status === 'active';
-            stEl.textContent = isActive ? 'Active' : 'Inactive';
-            stEl.style.cssText = isActive ?
-                'font-size:13px;font-weight:700;padding:4px 14px;border-radius:20px;background:#dcfce7;color:#166534;' :
-                'font-size:13px;font-weight:700;padding:4px 14px;border-radius:20px;background:#fee2e2;color:#991b1b;';
+            const statusStyle = merchantStatusStyle(m.status);
+            stEl.textContent = merchantStatusLabel(m.status);
+            stEl.style.cssText =
+                `font-size:13px;font-weight:700;padding:4px 14px;border-radius:20px;${statusStyle}`;
 
             // Commission type label
-            document.getElementById('view_commission_type').textContent = commissionTypeLabels[m.commission_type] || m
-                .commission_type || '—';
+            const normalizedCommissionType = normalizeCommissionType(m.commission_type);
+            document.getElementById('view_commission_type').textContent =
+                commissionTypeLabels[normalizedCommissionType] || normalizedCommissionType || '—';
 
-            const isCatView = m.commission_type === 'category_based_fixed';
-            const isOrderView = m.commission_type === 'fixed_per_order';
-            const isMixedView = m.commission_type === 'mixed';
-            const isItemView = m.commission_type === 'fixed_per_item';
+            const isCatView = normalizedCommissionType === 'category_based_fixed';
+            const isOrderView = normalizedCommissionType === 'fixed_per_order';
+            const isMixedView = normalizedCommissionType === 'mixed';
+            const isItemView = normalizedCommissionType === 'fixed_per_item';
             const showRate = !isCatView && !isOrderView && !isMixedView && !isItemView;
 
             document.getElementById('view_rate_col').style.display = showRate ? '' : 'none';
@@ -1735,7 +1936,8 @@
             document.getElementById('view_item_fields').style.display = isItemView ? '' : 'none';
 
             document.getElementById('view_commission_rate').textContent =
-                showRate && m.commission_rate !== null ? m.commission_rate + (m.commission_type === 'percentage_based' ?
+                showRate && m.commission_rate !== null ? m.commission_rate + (normalizedCommissionType ===
+                    'percentage_based' ?
                     '%' : '/item') : '—';
             document.getElementById('view_commission_food_amount').textContent = isCatView && m.commission_food_amount ?
                 '₱' + parseFloat(m.commission_food_amount).toFixed(2) : '—';
@@ -1781,9 +1983,9 @@
             document.getElementById('editModalTitle').textContent = m.name;
             document.getElementById('editMerchantId').value = m.id;
             document.getElementById('edit_name').value = m.name;
-            document.getElementById('edit_type').value = m.type;
+            document.getElementById('edit_type').value = normalizeMerchantType(m.type) || 'non-partner';
             document.getElementById('edit_status').value = m.status;
-            document.getElementById('edit_commission_type').value = m.commission_type || 'percentage_based';
+            document.getElementById('edit_commission_type').value = normalizeCommissionType(m.commission_type);
             document.getElementById('edit_commission_rate').value = m.commission_rate;
             document.getElementById('edit_commission_food_amount').value = m.commission_food_amount || '';
             document.getElementById('edit_commission_drinks_amount').value = m.commission_drinks_amount || '';
@@ -1792,7 +1994,8 @@
             document.getElementById('edit_commission_mixed_percentage').value = m.commission_mixed_percentage || '';
             document.getElementById('edit_commission_mixed_amount').value = m.commission_mixed_amount || '';
             resetItemRows('edit');
-            if (m.commission_type === 'fixed_per_item' && m.commission_items && m.commission_items.length) {
+            if (normalizeCommissionType(m.commission_type) === 'fixed_per_item' && m.commission_items && m
+                .commission_items.length) {
                 m.commission_items.forEach(item => addItemRow('edit', item.label || '', item.amount || ''));
             }
             updateCommissionLabel('edit');
@@ -1832,10 +2035,12 @@
                 });
                 const data = await resp.json();
                 if (data.success) {
-                    const updated = data.merchant;
+                    const updated = normalizeMerchantRecord(data.merchant);
                     merchantsData[updated.id] = updated;
                     updateMerchantRow(updated);
                     updateStatCards();
+                    populateMerchantTypeFilter();
+                    applyFilter();
                     closeModal('editModal');
                     showToast(data.message, 'success');
                 } else {
@@ -1881,6 +2086,7 @@
                     if (tr) tr.remove();
                     delete merchantsData[id];
                     updateStatCards();
+                    populateMerchantTypeFilter();
                     applyFilter();
                     closeModal('deleteModal');
                     showToast(data.message, 'success');
@@ -1919,7 +2125,7 @@
         }
 
         function renderCommissionDetails(m) {
-            const ct = m.commission_type || 'percentage_based';
+            const ct = normalizeCommissionType(m.commission_type);
             if (ct === 'percentage_based') {
                 return `<div style="font-size:12px;line-height:1.8;"><span style="color:#374151;font-weight:600;"><i class="fas fa-percent" style="margin-right:4px;font-size:10px;"></i>Rate:</span> <span style="color:#357a3a;font-weight:700;">${m.commission_rate ?? 0}%</span></div>`;
             }
@@ -1943,25 +2149,28 @@
             if (ct === 'mixed') {
                 return `<div style="font-size:12px;line-height:1.8;"><span style="color:#5a3a7a;font-weight:600;"><i class="fas fa-percent" style="margin-right:4px;font-size:10px;"></i>Percentage:</span> <span style="color:#7c4fd1;font-weight:700;">${m.commission_mixed_percentage ?? 0}%</span></div><div style="font-size:12px;line-height:1.8;"><span style="color:#5a3a7a;font-weight:600;"><i class="fas fa-coins" style="margin-right:4px;font-size:10px;"></i>Fixed Amount:</span> <span style="color:#7c4fd1;font-weight:700;">₱${_numFmt(m.commission_mixed_amount??0)}</span></div>`;
             }
-            return '';
+            return `<span style="color:#9ca3af;font-size:12px;"><i class="fas fa-circle-info" style="margin-right:4px;"></i>No commission details configured</span>`;
         }
 
         function updateMerchantRow(m) {
             const tr = document.getElementById('merchant-row-' + m.id);
             if (!tr) return;
+            const rowType = normalizeMerchantType(m.type) || 'non-partner';
+            const rowStatus = normalizeMerchantStatus(m.status) || 'inactive';
             // Update filter data attributes
             tr.dataset.name = (m.name || '').toLowerCase();
             tr.dataset.address = (m.address || '').toLowerCase();
-            tr.dataset.type = m.type;
-            tr.dataset.status = m.status;
+            tr.dataset.type = rowType;
+            tr.dataset.status = rowStatus;
             const cells = tr.cells;
             // Cell 0 - Merchant name + address
             cells[0].innerHTML =
                 `<div style="display:flex;align-items:center;gap:10px;"><div style="width:38px;height:38px;border-radius:10px;background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-store" style="font-size:15px;color:#3b6e2f;"></i></div><div><div style="font-weight:700;font-size:14px;color:#111827;">${escHtml(m.name)}</div>${m.address ? `<div style="font-size:11px;color:#9ca3af;margin-top:1px;">${escHtml(String(m.address).substring(0,40))}${m.address.length>40?'…':''}</div>` : ''}</div></div>`;
             // Cell 1 - Type badge
-            const typeSt = m.type === 'partner' ? 'background:#dcfce7;color:#166534;' : 'background:#fef9c3;color:#854d0e;';
+            const typeSt = rowType === 'partner' ? 'background:#dcfce7;color:#166534;' :
+                'background:#fef9c3;color:#854d0e;';
             cells[1].innerHTML =
-                `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;${typeSt}">${_ucfirst(m.type)}</span>`;
+                `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;${typeSt}">${merchantTypeLabel(rowType)}</span>`;
             // Cell 2 - Commission type badge
             const ctStyles = {
                 percentage_based: 'background:#dcfce7;color:#166534;',
@@ -1977,20 +2186,21 @@
                 fixed_per_order: 'Fixed / Order',
                 mixed: 'Mixed'
             };
-            const ct = m.commission_type || 'percentage_based';
+            const ct = normalizeCommissionType(m.commission_type);
             cells[2].innerHTML =
                 `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;${ctStyles[ct]||'background:#f3f4f6;color:#374151;'}">${ctLabels[ct]||ct}</span>`;
             // Cell 3 - Commission details
+            cells[3].style.display = 'none';
             cells[3].innerHTML = renderCommissionDetails(m);
             // Cell 4 - Status badge
-            const stSt = m.status === 'active' ? 'background:#dcfce7;color:#166534;' : 'background:#fee2e2;color:#991b1b;';
+            const stSt = merchantStatusStyle(m.status);
             cells[4].innerHTML =
-                `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;${stSt}">${_ucfirst(m.status)}</span>`;
-            // Cell 5 - Orders
-            cells[5].style.cssText = 'text-align:right;font-size:13px;font-weight:700;color:#374151;';
+                `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;${stSt}">${merchantStatusLabel(m.status)}</span>`;
+            // Cell 5 - Orders (kept hidden to preserve table layout)
+            cells[5].style.cssText = 'text-align:right;font-size:13px;font-weight:700;color:#374151;display:none;';
             cells[5].textContent = Number(m.total_orders || 0).toLocaleString();
-            // Cell 6 - Sales
-            cells[6].style.cssText = 'text-align:right;font-size:13px;font-weight:700;color:#374151;';
+            // Cell 6 - Sales (kept hidden to preserve table layout)
+            cells[6].style.cssText = 'text-align:right;font-size:13px;font-weight:700;color:#374151;display:none;';
             cells[6].textContent = '₱' + _numFmt(m.total_sales || 0);
             // Cell 7 - WIB Commission
             cells[7].style.cssText = 'text-align:right;font-size:13px;font-weight:700;color:#357a3a;';
@@ -2000,12 +2210,14 @@
         // ── Stat card live update ──
         function updateStatCards() {
             const all = Object.values(merchantsData);
-            const partners = all.filter(m => m.type === 'partner');
-            const nonPartners = all.filter(m => m.type === 'non-partner');
+            const partners = all.filter(m => normalizeMerchantType(m.type) === 'partner');
+            const nonPartners = all.filter(m => normalizeMerchantType(m.type) === 'non-partner');
+            const gtMerchant = all.find(m => String(m.name || '').trim().toLowerCase() === 'the original good taste restaurant');
 
             const totalCommission = all.reduce((sum, m) => sum + Number(m.total_commission || 0), 0);
             const partnerSales = partners.reduce((sum, m) => sum + Number(m.total_sales || 0), 0);
             const nonPartnerSales = nonPartners.reduce((sum, m) => sum + Number(m.total_sales || 0), 0);
+            const gtMerchantSales = Number(gtMerchant?.total_sales || 0);
 
             const totalEl = document.getElementById('stat_total');
             if (totalEl) totalEl.textContent = '₱' + _numFmt(totalCommission);
@@ -2025,6 +2237,9 @@
             if (nonPartnerSubEl) {
                 nonPartnerSubEl.textContent = nonPartners.length + ' non-partner merchant' + (nonPartners.length !== 1 ? 's' : '');
             }
+
+            const gtSalesEl = document.getElementById('stat_gt_sales');
+            if (gtSalesEl) gtSalesEl.textContent = '₱' + _numFmt(gtMerchantSales);
         }
 
         // ── Insert new merchant row into table ──
@@ -2032,7 +2247,10 @@
             const firstRow = document.querySelector('.merchant-row');
             const tbody = firstRow ? firstRow.closest('tbody') : document.querySelector('table tbody');
             if (!tbody) return;
-            const typeSt = m.type === 'partner' ? 'background:#dcfce7;color:#166534;' : 'background:#fef9c3;color:#854d0e;';
+            const rowType = normalizeMerchantType(m.type) || 'non-partner';
+            const rowStatus = normalizeMerchantStatus(m.status) || 'inactive';
+            const typeSt = rowType === 'partner' ? 'background:#dcfce7;color:#166534;' :
+                'background:#fef9c3;color:#854d0e;';
             const ctStyles = {
                 percentage_based: 'background:#dcfce7;color:#166534;',
                 fixed_per_item: 'background:#ede9fe;color:#5b21b6;',
@@ -2047,8 +2265,8 @@
                 fixed_per_order: 'Fixed / Order',
                 mixed: 'Mixed'
             };
-            const ct = m.commission_type || 'percentage_based';
-            const stSt = m.status === 'active' ? 'background:#dcfce7;color:#166534;' : 'background:#fee2e2;color:#991b1b;';
+            const ct = normalizeCommissionType(m.commission_type);
+            const stSt = merchantStatusStyle(m.status);
             const today = new Date().toISOString().slice(0, 10);
             const tr = document.createElement('tr');
             tr.id = 'merchant-row-' + m.id;
@@ -2056,24 +2274,30 @@
             tr.dataset.name = (m.name || '').toLowerCase();
             tr.dataset.category = (m.category || '').toLowerCase();
             tr.dataset.address = (m.address || '').toLowerCase();
-            tr.dataset.type = m.type;
-            tr.dataset.status = m.status;
+            tr.dataset.type = rowType;
+            tr.dataset.status = rowStatus;
             tr.dataset.created = today;
             tr.innerHTML = `
                 <td><div style="display:flex;align-items:center;gap:10px;"><div style="width:38px;height:38px;border-radius:10px;background:#e8f5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-store" style="font-size:15px;color:#3b6e2f;"></i></div><div><div style="font-weight:700;font-size:14px;color:#111827;">${escHtml(m.name)}</div>${m.address?`<div style="font-size:11px;color:#9ca3af;margin-top:1px;">${escHtml(String(m.address).substring(0,40))}${m.address.length>40?'…':''}</div>`:''}</div></div></td>
-                <td><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;${typeSt}">${_ucfirst(m.type)}</span></td>
+                <td><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;${typeSt}">${merchantTypeLabel(rowType)}</span></td>
                 <td><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;${ctStyles[ct]||'background:#f3f4f6;color:#374151;'}">${ctLabels[ct]||ct}</span></td>
-                <td>${renderCommissionDetails(m)}</td>
-                <td><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;${stSt}">${_ucfirst(m.status)}</span></td>
-                <td style="text-align:right;font-size:13px;font-weight:700;color:#374151;">${Number(m.total_orders||0).toLocaleString()}</td>
-                <td style="text-align:right;font-size:13px;font-weight:700;color:#374151;">₱${_numFmt(m.total_sales||0)}</td>
+                <td style="display:none;">${renderCommissionDetails(m)}</td>
+                <td><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;${stSt}">${merchantStatusLabel(m.status)}</span></td>
+                <td style="text-align:right;font-size:13px;font-weight:700;color:#374151;display:none;">${Number(m.total_orders||0).toLocaleString()}</td>
+                <td style="text-align:right;font-size:13px;font-weight:700;color:#374151;display:none;">₱${_numFmt(m.total_sales||0)}</td>
                 <td style="text-align:right;font-size:13px;font-weight:700;color:#357a3a;">₱${_numFmt(m.total_commission||0)}</td>
-                <td style="text-align:center;"><div style="display:flex;gap:6px;justify-content:center;"><button onclick="openViewModal(${m.id})" class="merchant-action-btn" style="background:#eff6ff;color:#1a7ed1;border:1px solid #bfdbfe;border-radius:8px;padding:7px 13px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-weight:700;box-shadow:0 1px 3px rgba(26,126,209,.1);"><i class="fas fa-eye"></i> View</button><button onclick="openEditModal(${m.id})" class="merchant-action-btn" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;border-radius:8px;padding:7px 13px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-weight:700;box-shadow:0 1px 3px rgba(217,119,6,.1);"><i class="fas fa-edit"></i> Edit</button></div></td>
+                <td style="text-align:center;"><div style="display:flex;gap:6px;justify-content:center;"><button onclick="openViewModal(${m.id})" class="merchant-action-btn" style="background:#eff6ff;color:#1a7ed1;border:1px solid #bfdbfe;border-radius:8px;padding:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;box-shadow:0 1px 3px rgba(26,126,209,.1);"><i class="fas fa-eye"></i></button><button onclick="openEditModal(${m.id})" class="merchant-action-btn" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;border-radius:8px;padding:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;box-shadow:0 1px 3px rgba(217,119,6,.1);"><i class="fas fa-edit"></i></button></div></td>
                 <td style="text-align:center;width:40px;"><input type="checkbox" class="bulkSelectRow" value="${m.id}" style="accent-color:#357a3a;width:16px;height:16px;"></td>
             `;
+            const firstExistingRow = tbody.querySelector('.merchant-row');
             const emptyRow = document.getElementById('merchantEmptyRow');
-            if (emptyRow) tbody.insertBefore(tr, emptyRow);
-            else tbody.appendChild(tr);
+            if (firstExistingRow) {
+                tbody.insertBefore(tr, firstExistingRow);
+            } else if (emptyRow) {
+                tbody.insertBefore(tr, emptyRow);
+            } else {
+                tbody.appendChild(tr);
+            }
         }
 
         // ── Toast ──
@@ -2149,20 +2373,25 @@
             applyFilter();
         }
 
+        function applyPeriodFilter() {
+            const period = document.getElementById('merchantPeriodFilter').value;
+            const selectedDate = (document.getElementById('merchantDateFilter')?.value || '').trim();
+            const url = new URL(window.location.href);
+
+            url.searchParams.set('period', period || 'daily');
+
+            if (selectedDate) {
+                url.searchParams.set('stats_date', selectedDate);
+            } else {
+                url.searchParams.delete('stats_date');
+            }
+
+            window.location.href = url.toString();
+        }
+
         function applyFilter() {
             const search = document.getElementById('merchantSearch').value.toLowerCase().trim();
-            const type = document.getElementById('merchantTypeFilter').value;
-            const status = document.getElementById('merchantStatusFilter').value;
-            const period = document.getElementById('merchantPeriodFilter').value;
-
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - dayOfWeek);
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const startOfBiMonth = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-            const startOfTriMonth = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+            const type = normalizeMerchantType(document.getElementById('merchantTypeFilter').value);
 
             _filteredRows = [];
 
@@ -2170,9 +2399,7 @@
                 const name = row.dataset.name || '';
                 const category = row.dataset.category || '';
                 const address = row.dataset.address || '';
-                const rowType = row.dataset.type;
-                const rowStatus = row.dataset.status;
-                const created = new Date(row.dataset.created + 'T00:00:00');
+                const rowType = normalizeMerchantType(row.dataset.type);
 
                 const matchSearch = !search ||
                     name.includes(search) ||
@@ -2180,17 +2407,9 @@
                     address.includes(search);
 
                 const matchType = type === 'all' || rowType === type;
-                const matchStatus = status === 'all' || rowStatus === status;
-
-                let matchPeriod = true;
-                if (period === 'daily') matchPeriod = created >= today;
-                if (period === 'weekly') matchPeriod = created >= startOfWeek;
-                if (period === 'monthly') matchPeriod = created >= startOfMonth;
-                if (period === 'bimonth') matchPeriod = created >= startOfBiMonth;
-                if (period === 'trimonth') matchPeriod = created >= startOfTriMonth;
 
                 row.style.display = 'none';
-                if (matchSearch && matchType && matchStatus && matchPeriod) {
+                if (matchSearch && matchType) {
                     _filteredRows.push(row);
                 }
             });
@@ -2217,8 +2436,10 @@
             // Info label
             const countEl = document.getElementById('merchantCount');
             if (countEl) countEl.textContent = total + ' merchant' + (total !== 1 ? 's' : '');
-            const partnerCount = _filteredRows.filter(r => r.dataset.type === 'partner').length;
-            const nonPartnerCount = _filteredRows.filter(r => r.dataset.type === 'non-partner').length;
+            const partnerCount = _filteredRows.filter(r => normalizeMerchantType(r.dataset.type) === 'partner')
+                .length;
+            const nonPartnerCount = _filteredRows.filter(r => normalizeMerchantType(r.dataset.type) ===
+                'non-partner').length;
             const partnerBadge = document.getElementById('partnerBadge');
             if (partnerBadge) partnerBadge.textContent = partnerCount + ' partner';
             const nonPartnerBadge = document.getElementById('nonPartnerBadge');
@@ -2309,6 +2530,7 @@
 
         // Init pagination on page load
         document.addEventListener('DOMContentLoaded', () => {
+            populateMerchantTypeFilter();
             filterMerchants();
             setupBulkSelection();
         });
@@ -2484,6 +2706,33 @@
             <div style="padding:20px;flex:1;overflow-y:auto;background:#fafbfc;">
                 <form id="bulkEditForm">
 
+                    <!-- Type Section -->
+                    <div
+                        style="background:#fff;border-radius:8px;padding:16px;margin-bottom:16px;border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,.03);">
+                        <div
+                            style="display:flex;align-items:center;gap:6px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #f1f3f4;">
+                            <div style="background:#357a3a;color:#fff;padding:6px;border-radius:6px;">
+                                <i class="fas fa-tag" style="font-size:12px;"></i>
+                            </div>
+                            <h4 style="margin:0;font-size:14px;font-weight:600;color:#1f2937;">Merchant Type</h4>
+                        </div>
+
+                        <div>
+                            <label
+                                style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">
+                                Partner Type
+                            </label>
+                            <select id="bulk_type" name="type"
+                                style="width:100%;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;background:#fff;transition:all .2s;font-weight:500;"
+                                onfocus="this.style.borderColor='#357a3a';this.style.boxShadow='0 0 0 2px rgba(53,122,58,.1)'"
+                                onblur="this.style.borderColor='#e5e7eb';this.style.boxShadow='none'">
+                                <option value="">Keep Current</option>
+                                <option value="partner">Partner</option>
+                                <option value="non-partner">Non-Partner</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- Commission Configuration Section -->
                     <div
                         style="background:#fff;border-radius:8px;padding:16px;margin-bottom:16px;border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,.03);">
@@ -2650,10 +2899,10 @@
                                 style="width:100%;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;background:#fff;transition:all .2s;font-weight:500;"
                                 onfocus="this.style.borderColor='#6b7280';this.style.boxShadow='0 0 0 2px rgba(107,114,128,.1)'"
                                 onblur="this.style.borderColor='#e5e7eb';this.style.boxShadow='none'">
-                                <option value="">🔄 Keep Current</option>
-                                <option value="active">✅ Active</option>
-                                <option value="inactive">❌ Inactive</option>
-                                <option value="pending">⏳ Pending</option>
+                                <option value="">Keep Current</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="pending">Pending</option>
                             </select>
                         </div>
                     </div>
@@ -2704,3 +2953,4 @@
 </body>
 
 </html>
+

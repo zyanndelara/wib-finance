@@ -661,6 +661,16 @@
         })
         .then(r => r.json())
         .then(data => {
+            // Admin safety: if the selected user is now archived/inactive,
+            // backend excludes them from conversations, so return to list view.
+            if (CHAT_IS_ADMIN && chatAdminUserId && Array.isArray(data.conversations)) {
+                const stillVisible = data.conversations.some(c => Number(c.user_id) === Number(chatAdminUserId));
+                if (!stillVisible) {
+                    chatGoBack();
+                    return;
+                }
+            }
+
             if (initial) {
                 const container = document.getElementById('chatMessages');
                 const welcome   = document.getElementById('chatWelcomeMsg');

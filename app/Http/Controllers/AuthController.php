@@ -26,6 +26,12 @@ class AuthController extends Controller {
         ]);
 
         $user = Auth::user();
+        if (!$user instanceof User) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'Unable to update password. Please log in again.',
+            ]);
+        }
+
         $user->password = Hash::make($request->new_password);
         $user->force_password_change = false;
         $user->save();
@@ -99,6 +105,19 @@ class AuthController extends Controller {
         if (Auth::attempt($credentials, $remember)) {
             RateLimiter::clear($throttleKey);
             $request->session()->regenerate();
+            $authenticatedUser = Auth::user();
+
+            if (!$authenticatedUser instanceof User) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Unable to start your session. Please try logging in again.',
+                ]);
+            }
+
+            $landingRoute = $authenticatedUser->firstAccessibleRouteName();
 
             // If 2FA is enabled, hold the user in a pending session and redirect to challenge
             if (Auth::user()->two_factor_enabled) {
@@ -112,9 +131,9 @@ class AuthController extends Controller {
                         if (in_array($hashed, $trustedTokens)) {
                             // Trusted device — skip 2FA challenge
                             if (Auth::user()->force_password_change && Auth::user()->role !== 'admin') {
-                                return redirect()->intended('/dashboard')->with('force_password_change', true);
+                                return redirect()->route($landingRoute)->with('force_password_change', true);
                             }
-                            return redirect()->intended('/dashboard')->with('success', 'Welcome back, ' . Auth::user()->name . '!');
+                            return redirect()->route($landingRoute)->with('success', 'Welcome back, ' . Auth::user()->name . '!');
                         }
                     }
                 }
@@ -132,9 +151,9 @@ class AuthController extends Controller {
 
                 // Check if user needs to change password, except for admin role
                 if (Auth::user()->force_password_change && Auth::user()->role !== 'admin') {
-                    return redirect()->intended('/dashboard')->with('force_password_change', true);
+                    return redirect()->route($landingRoute)->with('force_password_change', true);
                 }
-            return redirect()->intended('/dashboard')->with('success', 'Welcome back, ' . Auth::user()->name . '!');
+            return redirect()->route($landingRoute)->with('success', 'Welcome back, ' . Auth::user()->name . '!');
         }
 
         RateLimiter::hit($throttleKey, 60);

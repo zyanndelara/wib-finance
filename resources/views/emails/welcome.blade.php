@@ -1,8 +1,9 @@
-Ôªø<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('images/logowhite.png') }}">
     <title>Welcome to When in Baguio Inc.</title>
     <style>
         body {
@@ -132,10 +133,10 @@ fHAirTh/kdkKi2rYSy+jsQSeQpb8AUdwY4hzaBV+gJFG7lWFUDiSX1U/0r4OBQafE2ugM8LfpCk/AILZ
             </div>
             
             <div class="warning-box">
-                <p><strong>‚ö†Ô∏è Important Security Notice:</strong></p>
-                <p>‚Ä¢ Please change your password after your first login</p>
-                <p>‚Ä¢ Do not share your password with anyone</p>
-                <p>‚Ä¢ Keep this email secure or delete it after changing your password</p>
+                <p><strong>?? Important Security Notice:</strong></p>
+                <p>ï Please change your password after your first login</p>
+                <p>ï Do not share your password with anyone</p>
+                <p>ï Keep this email secure or delete it after changing your password</p>
             </div>
             
             <div style="text-align: center;">
@@ -150,9 +151,10 @@ fHAirTh/kdkKi2rYSy+jsQSeQpb8AUdwY4hzaBV+gJFG7lWFUDiSX1U/0r4OBQafE2ugM8LfpCk/AILZ
         </div>
         
         <div class="email-footer">
-            <p>¬© {{ date('Y') }} When in Baguio Inc. All rights reserved.</p>
+            <p>© {{ date('Y') }} When in Baguio Inc. All rights reserved.</p>
             <p>This is an automated message, please do not reply to this email.</p>
         </div>
     </div>
 </body>
 </html>
+

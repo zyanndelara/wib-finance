@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register middleware aliases
         $middleware->alias([
             'prevent.back' => \App\Http\Middleware\PreventBackHistory::class,
+            'page.access' => \App\Http\Middleware\EnsurePageAccess::class,
         ]);
         // Track last seen timestamp for all authenticated web requests
         $middleware->web(append: [

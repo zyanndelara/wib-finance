@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('images/logowhite.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Bank & Deposit - When in Baguio Inc.</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1621,17 +1622,17 @@
                                 if ($riderDiscrepancy !== null) {
                                     if ($riderDiscrepancy > 0) {
                                         $discColor = '#d97706';
-                                        $discText  = '+?' . number_format($riderDiscrepancy, 2);
+                                        $discText  = '+' . number_format($riderDiscrepancy, 2);
                                     } elseif ($riderDiscrepancy < 0) {
                                         $discColor = '#dc2626';
-                                        $discText  = '-?' . number_format(abs($riderDiscrepancy), 2);
+                                        $discText  = '-' . number_format(abs($riderDiscrepancy), 2);
                                     } else {
                                         $discColor = '#059669';
-                                        $discText  = '?0.00';
+                                        $discText  = '0.00';
                                     }
                                 } else {
                                     $discColor = '#9ca3af';
-                                    $discText  = '�';
+                                    $discText  = '-';
                                 }
                                 $riderLatestRemittance = \App\Models\Remittance::where('rider_id', $summary->rider_id)
                                     ->latest()
@@ -1646,8 +1647,20 @@
                                 } else {
                                     $validationStatus = 'not validated';
                                 }
+                                $hasDenominationData = $riderConfirmation && (
+                                    ((int)($riderConfirmation->denom_1000 ?? 0) > 0) ||
+                                    ((int)($riderConfirmation->denom_500 ?? 0) > 0) ||
+                                    ((int)($riderConfirmation->denom_200 ?? 0) > 0) ||
+                                    ((int)($riderConfirmation->denom_100 ?? 0) > 0) ||
+                                    ((int)($riderConfirmation->denom_50 ?? 0) > 0) ||
+                                    ((int)($riderConfirmation->denom_20 ?? 0) > 0) ||
+                                    ((int)($riderConfirmation->denom_20b ?? 0) > 0) ||
+                                    ((int)($riderConfirmation->denom_10 ?? 0) > 0) ||
+                                    ((int)($riderConfirmation->denom_5 ?? 0) > 0) ||
+                                    ((int)($riderConfirmation->denom_1 ?? 0) > 0)
+                                );
                             @endphp
-                            <tr class="rider-row" data-rider-id="{{ $summary->rider_id }}" data-rider-name="{{ $summary->rider->name }}" data-remit-amount="{{ $summary->total_remit_amount }}" data-validated="{{ $validationStatus === 'validated' ? 'true' : 'false' }}" onclick="selectRiderFromTable(this)" style="cursor: pointer; transition: all 0.2s ease;{{ $validationStatus === 'validated' ? ' opacity: 0.65;' : '' }}">
+                            <tr class="rider-row" data-rider-id="{{ $summary->rider_id }}" data-rider-name="{{ $summary->rider->name }}" data-remit-amount="{{ $summary->total_remit_amount }}" data-validated="{{ $validationStatus === 'validated' ? 'true' : 'false' }}" data-has-denomination="{{ $hasDenominationData ? 'true' : 'false' }}" onclick="selectRiderFromTable(this)" style="cursor: pointer; transition: all 0.2s ease;{{ $validationStatus === 'validated' ? ' opacity: 0.65;' : '' }}">
                                 <td>
                                     <div style="display: flex; flex-direction: column; gap: 2px;">
                                         <span style="font-weight: 600; color: #2d3436;">{{ $summary->rider->name }}</span>
@@ -1661,7 +1674,7 @@
                                 </td>
                                 <td>
                                     <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                                        <span style="font-weight: 700; color: #059669; font-size: 14px;">?{{ number_format($summary->total_remit_amount, 2) }}</span>
+                                        <span style="font-weight: 700; color: #059669; font-size: 14px;">{{ number_format($summary->total_remit_amount, 2) }}</span>
                                     </div>
                                 </td>
                                 <td>
@@ -1699,15 +1712,15 @@
                                 <td>
                                     @php $riderConfirmed = $riderConfirmation ? $riderConfirmation->total_amount : 0; @endphp
                                     <span id="confirmed-amount-{{ $summary->rider_id }}" style="font-weight: 700; font-size: 13px; color: {{ $riderConfirmed > 0 ? '#059669' : '#9ca3af' }};">
-                                        ?{{ number_format($riderConfirmed, 2) }}
+                                        {{ number_format($riderConfirmed, 2) }}
                                     </span>
                                 </td>
                                 <td>{{ auth()->user()->name }}</td>
                                 <td style="text-align:center;" onclick="event.stopPropagation()">
                                     <div style="display:inline-flex;flex-direction:row;gap:6px;align-items:center;justify-content:center;">
-                                        <button onclick="editRiderRow(this.closest('tr'))"
+                                        <button id="edit-btn-{{ $summary->rider_id }}" onclick="editRiderRow(this.closest('tr'))"
                                             title="Edit"
-                                            style="width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;background:rgba(5,150,105,0.08);color:#059669;border:1.5px solid #059669;border-radius:7px;cursor:pointer;transition:all 0.2s ease;flex-shrink:0;"
+                                            style="width:30px;height:30px;display:{{ $hasDenominationData ? 'inline-flex' : 'none' }};align-items:center;justify-content:center;background:rgba(5,150,105,0.08);color:#059669;border:1.5px solid #059669;border-radius:7px;cursor:pointer;transition:all 0.2s ease;flex-shrink:0;"
                                             onmouseover="this.style.background='#059669';this.style.color='#fff';this.style.transform='scale(1.1)'"
                                             onmouseout="this.style.background='rgba(5,150,105,0.08)';this.style.color='#059669';this.style.transform='scale(1)'">
                                             <i class="fas fa-pen" style="font-size:11px;"></i>
@@ -1887,7 +1900,7 @@
                     <!-- Bank Field (outside denomination breakdown) -->
                     <div style="display: flex; align-items: center; justify-content: space-between; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; margin-top: 10px;">
                         <span id="bankLabel" style="font-size: 13px; font-weight: 700; color: #374151;">Bank</span>
-                        <input type="text" id="bankInput" placeholder="0.00" readonly style="border: 2px solid #e5e7eb; border-radius: 6px; padding: 4px 8px; font-size: 13px; font-weight: 700; color: #374151; text-align: right; background: white; flex: 1; min-width: 0; margin-left: 12px; outline: none;">
+                        <input type="text" id="bankInput" placeholder="₱0.00" readonly style="border: 2px solid #e5e7eb; border-radius: 6px; padding: 4px 8px; font-size: 13px; font-weight: 700; color: #374151; text-align: right; background: white; flex: 1; min-width: 0; margin-left: 12px; outline: none;">
                     </div>
                     <!-- Confirm Button (outside denomination breakdown) -->
                     <button onclick="confirmDenomination()" id="confirmDenomBtn" style="width: 100%; margin-top: 10px; padding: 8px 0; background: #436026; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;">
@@ -2239,7 +2252,7 @@
                 const originalAmount = parseFloat(bankInput.dataset.originalAmount) || 0;
                 bankInput.removeAttribute('readonly');
                 if (originalAmount > 0) {
-                    bankInput.value = originalAmount.toFixed(2);
+                    bankInput.value = '₱' + originalAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                     bankInput.style.borderColor = '#436026';
                     bankInput.style.borderWidth = '2px';
                     bankInput.style.borderStyle = 'solid';
@@ -2354,23 +2367,23 @@
             _pendingConfirm = { riderId, riderName, originalAmount, totalAmount, denomData, balance };
 
             document.getElementById('modal-rider-name').textContent  = riderName;
-            document.getElementById('modal-bank-amount').textContent  = '?' + originalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('modal-denom-total').textContent  = '?' + totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('modal-bank-amount').textContent  = originalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('modal-denom-total').textContent  = totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
 
             const balanceEl = document.getElementById('modal-balance');
             const balanceLabelEl = document.getElementById('modal-balance-label');
             if (balance > 0) {
                 // Bank > Total: denominations short ? Discrepancy
-                balanceEl.textContent = '-?' + balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+                balanceEl.textContent = '-' + balance.toLocaleString('en-US', {minimumFractionDigits: 2});
                 balanceEl.style.color = '#dc2626';
                 if (balanceLabelEl) { balanceLabelEl.textContent = 'Discrepancy'; balanceLabelEl.style.color = '#dc2626'; }
             } else if (balance === 0) {
-                balanceEl.textContent = '?0.00';
+                balanceEl.textContent = '0.00';
                 balanceEl.style.color = '#059669';
                 if (balanceLabelEl) { balanceLabelEl.textContent = 'Balance'; balanceLabelEl.style.color = '#6b7280'; }
             } else {
                 // Total > Bank: denominations over ? Balance (excess)
-                balanceEl.textContent = '+?' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2});
+                balanceEl.textContent = '+' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2});
                 balanceEl.style.color = '#d97706';
                 if (balanceLabelEl) { balanceLabelEl.textContent = 'Balance'; balanceLabelEl.style.color = '#6b7280'; }
             }
@@ -2379,14 +2392,14 @@
             const warningText = document.getElementById('modal-warning-text');
             if (balance > 0) {
                 // Denominations short
-                warningText.textContent = 'Denomination total is ?' + balance.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' short of the bank amount. This will be recorded as a discrepancy.';
+                warningText.textContent = 'Denomination total is ' + balance.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' short of the bank amount. This will be recorded as a discrepancy.';
                 warningEl.style.display = 'block';
                 warningEl.style.background = '#fff1f2';
                 warningEl.style.border = '1px solid #fecaca';
                 warningEl.style.color = '#b91c1c';
             } else if (balance < 0) {
                 // Denominations over
-                warningText.textContent = 'Denomination total exceeds bank amount by ?' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2}) + '. Verify the breakdown is correct.';
+                warningText.textContent = 'Denomination total exceeds bank amount by ' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2}) + '. Verify the breakdown is correct.';
                 warningEl.style.display = 'block';
                 warningEl.style.background = '#fffbeb';
                 warningEl.style.border = '1px solid #fcd34d';
@@ -2447,22 +2460,22 @@
                 tr.innerHTML = `
                     <td style="padding:7px 12px; color:${pieces > 0 ? '#111827' : '#d1d5db'};">${item.label}</td>
                     <td style="padding:7px 12px; text-align:center; font-weight:${pieces > 0 ? '700' : '400'}; color:${pieces > 0 ? '#374151' : '#d1d5db'}; font-size:14px;">${pieces > 0 ? pieces : '�'}</td>
-                    <td style="padding:7px 12px; text-align:right; font-weight:${pieces > 0 ? '700' : '400'}; color:${pieces > 0 ? '#059669' : '#d1d5db'};">${pieces > 0 ? '?' + amount.toLocaleString('en-US', {minimumFractionDigits: 2}) : '�'}</td>
+                    <td style="padding:7px 12px; text-align:right; font-weight:${pieces > 0 ? '700' : '400'}; color:${pieces > 0 ? '#059669' : '#d1d5db'};">${pieces > 0 ? amount.toLocaleString('en-US', {minimumFractionDigits: 2}) : '�'}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
             const total = parseFloat(d.total) || 0;
-            document.getElementById('dh-total').textContent = '?' + total.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('dh-total').textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2});
 
             const bank = parseFloat(d.bank) || 0;
-            document.getElementById('dh-bank').textContent = '?' + bank.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('dh-bank').textContent = bank.toLocaleString('en-US', {minimumFractionDigits: 2});
 
             const disc = parseFloat(d.discrepancy) || 0;
             const discEl = document.getElementById('dh-discrepancy');
-            if (disc > 0)      { discEl.textContent = '+?' + disc.toLocaleString('en-US', {minimumFractionDigits: 2}); discEl.style.color = '#d97706'; }
-            else if (disc < 0) { discEl.textContent = '-?' + Math.abs(disc).toLocaleString('en-US', {minimumFractionDigits: 2}); discEl.style.color = '#dc2626'; }
-            else               { discEl.textContent = '?0.00'; discEl.style.color = '#059669'; }
+            if (disc > 0)      { discEl.textContent = '+' + disc.toLocaleString('en-US', {minimumFractionDigits: 2}); discEl.style.color = '#d97706'; }
+            else if (disc < 0) { discEl.textContent = '-' + Math.abs(disc).toLocaleString('en-US', {minimumFractionDigits: 2}); discEl.style.color = '#dc2626'; }
+            else               { discEl.textContent = '0.00'; discEl.style.color = '#059669'; }
 
             modal.style.display = 'flex';
         }
@@ -2514,6 +2527,7 @@
                     // Update action badge based on discrepancy: Validated if 0, Validating otherwise
                     const badge = document.getElementById('action-badge-' + riderId);
                     const riderRowEl = document.querySelector('.rider-row[data-rider-id="' + riderId + '"]');
+                    const editBtn = document.getElementById('edit-btn-' + riderId);
                     if (badge) {
                         if (balance === 0) {
                             badge.style.display = 'inline-flex';
@@ -2538,6 +2552,13 @@
                         }
                     }
 
+                    if (riderRowEl) {
+                        riderRowEl.dataset.hasDenomination = 'true';
+                    }
+                    if (editBtn) {
+                        editBtn.style.display = 'inline-flex';
+                    }
+
                     // Update discrepancy column cell with confirmed balance value
                     const discCell = document.getElementById('discrepancy-cell-' + riderId);
                     if (discCell) {
@@ -2545,14 +2566,14 @@
                         const discrepancyVal = totalAmount - originalAmount;
                         if (balance > 0) {
                             // Bank > Total: short ? Discrepancy (negative)
-                            discCell.textContent = '-?' + balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+                            discCell.textContent = '-' + balance.toLocaleString('en-US', {minimumFractionDigits: 2});
                             discCell.style.color = '#dc2626';
                         } else if (balance < 0) {
                             // Total > Bank: over ? show excess as positive balance
-                            discCell.textContent = '+?' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2});
+                            discCell.textContent = '+' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2});
                             discCell.style.color = '#d97706';
                         } else {
-                            discCell.textContent = '?0.00';
+                            discCell.textContent = '0.00';
                             discCell.style.color = '#059669';
                         }
                         // Keep dataset in sync so inline discrepancy edit works without page refresh
@@ -2568,7 +2589,7 @@
                     // Update Confirmed Amount cell live
                     const confirmedAmountSpan = document.getElementById('confirmed-amount-' + riderId);
                     if (confirmedAmountSpan) {
-                        confirmedAmountSpan.textContent = '?' + totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
+                        confirmedAmountSpan.textContent = totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2});
                         confirmedAmountSpan.style.color = '#059669';
                     }
 
@@ -2717,7 +2738,7 @@
                     if (originalAmount === 0 || total === 0) {
                         // No rider selected or no denominations entered � show original amount, leave discrepancy alone
                         if (originalAmount > 0) {
-                            bankInput.value = originalAmount.toFixed(2);
+                            bankInput.value = '₱' + originalAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                             bankInput.style.borderColor = '#436026';
                             bankInput.style.borderWidth = '2px';
                             bankInput.style.borderStyle = 'solid';
@@ -2727,7 +2748,7 @@
                         }
                         if (bankLabel) { bankLabel.textContent = 'Bank'; bankLabel.style.color = '#374151'; }
                     } else if (remaining === 0) {
-                        bankInput.value = '0.00';
+                        bankInput.value = '₱0.00';
                         bankInput.style.borderColor = '#059669';
                         bankInput.style.borderWidth = '2px';
                         bankInput.style.borderStyle = 'solid';
@@ -2745,7 +2766,7 @@
                         }
                         }
                     } else if (remaining > 0) {
-                        bankInput.value = '-?' + remaining.toFixed(2);
+                        bankInput.value = '-₱' + remaining.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                         bankInput.style.borderColor = '#dc2626';
                         bankInput.style.borderWidth = '2px';
                         bankInput.style.borderStyle = 'solid';
@@ -2758,13 +2779,13 @@
                             const riderIdP = selectedRowP.getAttribute('data-rider-id');
                             const discCellP = document.getElementById('discrepancy-cell-' + riderIdP);
                             if (discCellP) {
-                                discCellP.textContent = '-?' + remaining.toLocaleString('en-US', {minimumFractionDigits: 2});
+                                discCellP.textContent = '-' + remaining.toLocaleString('en-US', {minimumFractionDigits: 2});
                                 discCellP.style.color = '#dc2626';
                             }
                         }
                         }
                     } else {
-                        bankInput.value = '+?' + Math.abs(remaining).toFixed(2);
+                        bankInput.value = '+₱' + Math.abs(remaining).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                         bankInput.style.borderColor = '#d97706';
                         bankInput.style.borderWidth = '2px';
                         bankInput.style.borderStyle = 'solid';
@@ -2907,6 +2928,11 @@
             const cell      = document.getElementById('discrepancy-cell-' + riderId);
             if (!cell) return;
 
+            if (row.dataset.hasDenomination !== 'true') {
+                showToast('Edit is available only when denomination data exists for ' + riderName + '.', 'warning', 3000);
+                return;
+            }
+
             // Prevent double-opening
             if (cell.querySelector('.disc-edit-input')) return;
 
@@ -2971,9 +2997,9 @@
                 .then(data => {
                     if (data.success) {
                         let newText, newColor;
-                        if (newVal > 0)      { newText = '+?' + newVal.toLocaleString('en-US', {minimumFractionDigits: 2}); newColor = '#d97706'; }
-                        else if (newVal < 0) { newText = '-?' + Math.abs(newVal).toLocaleString('en-US', {minimumFractionDigits: 2}); newColor = '#dc2626'; }
-                        else                 { newText = '?0.00'; newColor = '#059669'; }
+                        if (newVal > 0)      { newText = '+' + newVal.toLocaleString('en-US', {minimumFractionDigits: 2}); newColor = '#d97706'; }
+                        else if (newVal < 0) { newText = '-' + Math.abs(newVal).toLocaleString('en-US', {minimumFractionDigits: 2}); newColor = '#dc2626'; }
+                        else                 { newText = '0.00'; newColor = '#059669'; }
 
                         cell.textContent           = newText;
                         cell.style.color           = newColor;
@@ -2984,7 +3010,7 @@
                         const newTotal = data.new_total;
                         const confirmedSpan = document.getElementById('confirmed-amount-' + riderId);
                         if (confirmedSpan && newTotal !== undefined) {
-                            confirmedSpan.textContent = '?' + parseFloat(newTotal).toLocaleString('en-US', {minimumFractionDigits: 2});
+                            confirmedSpan.textContent = parseFloat(newTotal).toLocaleString('en-US', {minimumFractionDigits: 2});
                             confirmedSpan.style.color = parseFloat(newTotal) > 0 ? '#059669' : '#9ca3af';
                         }
 
@@ -3063,7 +3089,7 @@
             bankInput.dataset.originalAmount = parseFloat(remitAmount).toFixed(2);
             
             // Auto-populate bank input with rider's daily remit
-            bankInput.value = parseFloat(remitAmount).toFixed(2);
+            bankInput.value = '₱' + parseFloat(remitAmount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             bankInput.style.borderColor = '#436026';
             bankInput.style.borderWidth = '2px';
             bankInput.style.borderStyle = 'solid';
@@ -3406,3 +3432,4 @@
     @include('partials.floating-widgets')
 </body>
 </html>
+
