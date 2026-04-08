@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 @if (auth()->user()->force_password_change && auth()->user()->role !== 'admin')
     <div id="forceChangeModal"
@@ -369,43 +369,68 @@
         .charts-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 14px;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: stretch;
         }
 
         .chart-box {
-            background: rgba(255, 255, 255, 0.9);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.98);
             border-radius: 16px;
-            padding: 18px;
-            box-shadow: var(--card-shadow);
+            padding: 12px 12px 10px;
+            box-shadow: 0 3px 10px rgba(25, 42, 20, 0.05);
             transition: all 0.3s ease;
-            border: 1px solid rgba(67, 96, 38, 0.12);
+            border: 1px solid rgba(67, 96, 38, 0.07);
             animation: riseIn 0.5s ease both;
+            overflow: hidden;
+            min-height: 100%;
+        }
+
+        .chart-box::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto auto 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(63, 99, 60, 0.9) 0%, rgba(111, 149, 77, 0.7) 100%);
         }
 
         .chart-box:hover {
-            box-shadow: 0 12px 24px rgba(35, 54, 22, 0.17);
-            transform: translateY(-3px);
+            box-shadow: 0 8px 18px rgba(35, 54, 22, 0.08);
+            transform: translateY(-1px);
         }
 
         .chart-box h3 {
-            font-size: 15px;
+            font-size: 12px;
             font-weight: bold;
-            margin-bottom: 12px;
+            font-family: 'Sora', sans-serif;
+            margin-bottom: 6px;
             color: var(--brand-900);
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(67, 96, 38, 0.16);
+            padding: 0 0 6px;
+            border-bottom: 1px solid rgba(67, 96, 38, 0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chart-box h3 span {
+            display: inline-flex;
+            align-items: center;
+            letter-spacing: 0.05px;
         }
 
         .chart-filter {
-            padding: 6px 10px;
-            border-radius: 6px;
+            min-width: 82px;
+            padding: 5px 9px;
+            border-radius: 9px;
             font-size: 12px;
-            background: var(--surface-soft);
-            border: 1px solid rgba(63, 99, 60, 0.2);
+            background: #fcfdf9;
+            border: 1px solid rgba(63, 99, 60, 0.14);
             cursor: pointer;
             transition: all 0.3s ease;
             color: var(--brand-800);
@@ -415,24 +440,112 @@
 
         .chart-filter:hover {
             border-color: #436026;
-            box-shadow: 0 2px 6px rgba(67, 96, 38, 0.2);
+            box-shadow: 0 2px 5px rgba(67, 96, 38, 0.08);
         }
 
         .chart-filter:focus {
             border-color: #436026;
-            box-shadow: 0 0 0 3px rgba(67, 96, 38, 0.1);
+            box-shadow: 0 0 0 2px rgba(67, 96, 38, 0.06);
         }
 
         .chart-placeholder {
             width: 100%;
-            height: 250px;
+            flex: 1;
+            min-height: 110px;
+            padding: 2px 0 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(160deg, #f6f8f0 0%, #fefefc 100%);
-            border-radius: 8px;
+            background: linear-gradient(160deg, rgba(250, 251, 245, 0.82) 0%, rgba(255, 255, 255, 0.95) 100%);
+            border-radius: 10px;
             color: #666;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(67, 96, 38, 0.05);
+        }
+
+        .chart-placeholder canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .chart-box--wide {
+            grid-column: 1 / -1;
+        }
+
+        .chart-box--wide .chart-placeholder {
+            min-height: 110px;
+        }
+
+        /* Orders Trend Chart Enhancement */
+        .orders-trend-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fafdf9 100%) !important;
+            border: 1px solid rgba(67, 96, 38, 0.1) !important;
+            box-shadow: 0 4px 20px rgba(25, 42, 20, 0.08) !important;
+        padding: 8px 10px 8px !important;
+        }
+
+        .orders-trend-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(67, 96, 38, 0.08);
+            margin: -8px -10px 8px -10px;
+            background: linear-gradient(90deg, rgba(67, 96, 38, 0.02) 0%, rgba(67, 96, 38, 0.01) 100%);
+        }
+
+        .orders-trend-title {
+            flex: 1;
+        }
+
+        .orders-trend-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 0 0 8px 0;
+            margin-bottom: 4px;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            padding: 8px 10px;
+            background: linear-gradient(135deg, rgba(67, 96, 38, 0.04) 0%, rgba(67, 96, 38, 0.02) 100%);
+            border: 1px solid rgba(67, 96, 38, 0.08);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            background: linear-gradient(135deg, rgba(67, 96, 38, 0.08) 0%, rgba(67, 96, 38, 0.04) 100%);
+            transform: translateY(-1px);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #6c7568;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #436026;
+            font-family: 'Sora', sans-serif;
+        }
+
+        @media (max-width: 768px) {
+            .orders-trend-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .orders-trend-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         .transaction-history {
@@ -560,6 +673,10 @@
                 grid-template-columns: 1fr;
             }
 
+            .chart-box--wide {
+                grid-column: auto;
+            }
+
             .content-header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -599,7 +716,15 @@
             }
 
             .chart-box {
-                padding: 16px;
+                padding: 10px;
+            }
+
+            .chart-placeholder {
+                min-height: 110px;
+            }
+
+            .chart-box--wide .chart-placeholder {
+                min-height: 110px;
             }
 
             .transaction-history {
@@ -699,17 +824,38 @@
         </div>
 
         <!-- Orders by Month Trend -->
-        <div class="chart-box" style="margin-bottom:30px;">
-            <h3>
-                <span>Orders by Month Trend</span>
-                <select class="chart-filter" id="ordersByMonthYear" onchange="updateOrdersByMonth(this.value)">
+        <div class="chart-box chart-box--wide orders-trend-card" style="margin-bottom:22px;">
+            <div class="orders-trend-header">
+                <div class="orders-trend-title">
+                    <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #1f3624; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-chart-bar" style="color: #436026; font-size: 16px;"></i>
+                        Orders by Month Trend
+                    </h3>
+                </div>
+                <select class="chart-filter" id="ordersByMonthYear" onchange="updateOrdersByMonth(this.value)" style="font-size: 12px; padding: 6px 10px;">
                     @foreach ($chartYears as $yr)
                         <option value="{{ $yr }}" {{ $loop->first ? 'selected' : '' }}>{{ $yr }}
                         </option>
                     @endforeach
                 </select>
-            </h3>
-            <div class="chart-placeholder">
+            </div>
+            
+            <div class="orders-trend-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Total Orders</span>
+                    <span class="stat-value" id="totalOrdersStat">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Peak Month</span>
+                    <span class="stat-value" id="peakMonthStat">-</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Avg. Orders</span>
+                    <span class="stat-value" id="avgOrdersStat">0</span>
+                </div>
+            </div>
+            
+            <div class="chart-placeholder" style="min-height: 50px; padding: 6px;">
                 <canvas id="ordersByMonthChart"></canvas>
             </div>
         </div>
@@ -799,11 +945,36 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top',
-                        align: 'end',
                         labels: {
-                            boxWidth: 25,
-                            padding: 10
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            color: '#4f5e4a',
+                            padding: 14,
+                            font: {
+                                family: 'Manrope',
+                                size: 11,
+                                weight: '600'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(24, 34, 22, 0.94)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#eef4ea',
+                        padding: 12,
+                        cornerRadius: 10,
+                        displayColors: false,
+                        titleFont: {
+                            family: 'Sora',
+                            size: 12,
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            family: 'Manrope',
+                            size: 11,
+                            weight: '500'
                         }
                     }
                 },
@@ -812,16 +983,28 @@
                         stacked: true,
                         grid: {
                             display: false
+                        },
+                        ticks: {
+                            color: '#6c7568',
+                            font: {
+                                family: 'Manrope',
+                                size: 11
+                            }
                         }
                     },
                     y: {
                         stacked: true,
                         beginAtZero: true,
                         grid: {
-                            color: '#e5e5e5'
+                            color: 'rgba(67, 96, 38, 0.08)'
                         },
                         ticks: {
-                            stepSize: 100
+                            stepSize: 100,
+                            color: '#6c7568',
+                            font: {
+                                family: 'Manrope',
+                                size: 11
+                            }
                         }
                     }
                 }
@@ -852,13 +1035,9 @@
             expenseBalanceChart.update();
         }
 
-        // Orders by Month Chart connected to merchant orders totals
+        // Orders by Month Chart connected to mt_order order_id counts
         const ordersData = @json($monthlyOrders);
         const defaultYear = {{ $chartYears[0] }};
-
-        function buildZeroOrderPoints(values) {
-            return values.map(v => Number(v) === 0 ? 0 : null);
-        }
 
         const ordersCtx = document.getElementById('ordersByMonthChart').getContext('2d');
         const ordersByMonthChart = new Chart(ordersCtx, {
@@ -866,46 +1045,115 @@
             data: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 datasets: [{
-                    type: 'line',
-                    label: 'Zero Orders',
-                    data: buildZeroOrderPoints(ordersData[defaultYear] || Array(12).fill(0)),
-                    showLine: false,
-                    pointRadius: 5,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: '#b84040',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    order: 0
-                }, {
-                    label: 'Overall Orders',
+                    label: 'Orders',
                     data: ordersData[defaultYear] || Array(12).fill(0),
                     backgroundColor: function(context) {
                         const value = context.dataset.data[context.dataIndex];
-                        return value === 0 ? 'rgba(67,96,38,0.15)' : '#436026';
+                        if (value === 0) return 'rgba(67, 96, 38, 0.12)';
+                        // Create gradient color based on value
+                        const maxValue = Math.max(...(ordersData[defaultYear] || [0]));
+                        const percentage = value / maxValue;
+                        if (percentage < 0.3) return '#a8d5a8';
+                        if (percentage < 0.6) return '#6fb84d';
+                        if (percentage < 0.8) return '#436026';
+                        return '#2a4118';
                     },
                     borderRadius: 6,
                     borderSkipped: false,
-                    hoverBackgroundColor: '#ffd300',
-                    order: 1
+                    hoverBackgroundColor: '#436026',
+                    borderColor: 'transparent',
+                    categoryPercentage: 0.8,
+                    barPercentage: 0.85,
+                    order: 1,
+                    transition: {
+                        duration: 400
+                    }
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 20,
+                        bottom: 10,
+                        left: 10,
+                        right: 10
+                    }
+                },
                 plugins: {
+                    filler: {
+                        propagate: true
+                    },
                     legend: {
                         display: true,
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            color: '#4f5e4a',
+                            padding: 14,
+                            font: {
+                                family: 'Manrope',
+                                size: 12,
+                                weight: '600'
+                            },
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.datasets.map((dataset, i) => ({
+                                        text: dataset.label,
+                                        fillStyle: dataset.backgroundColor || dataset.borderColor,
+                                        hidden: !chart.isDatasetVisible(i),
+                                        index: i,
+                                        pointStyle: 'circle'
+                                    }));
+                                }
+                                return [];
+                            }
+                        }
                     },
                     tooltip: {
+                        backgroundColor: 'rgba(24, 34, 22, 0.96)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#eef4ea',
+                        borderColor: 'rgba(67, 96, 38, 0.3)',
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 10,
+                        displayColors: true,
+                        caretPadding: 15,
+                        titleFont: {
+                            family: 'Sora',
+                            size: 13,
+                            weight: '700'
+                        },
+                        bodyFont: {
+                            family: 'Manrope',
+                            size: 12,
+                            weight: '500'
+                        },
                         callbacks: {
+                            title: function(ctx) {
+                                return ctx[0].label + ' 2026';
+                            },
                             label: function(ctx) {
-                                if (ctx.dataset.label === 'Zero Orders') {
-                                    return ' Zero orders this month';
+                                if (ctx.dataset.label === 'Trend Line') {
+                                    return '';
                                 }
-                                return ctx.parsed.y === 0 ?
-                                    ' Orders: 0' :
-                                    ' Orders: ' + ctx.parsed.y.toLocaleString('en-PH');
+                                const value = ctx.parsed.y;
+                                return ' ' + ctx.dataset.label + ': ' + value.toLocaleString('en-PH');
+                            },
+                            afterLabel: function(ctx) {
+                                if (ctx.dataset.label === 'Orders') {
+                                    const value = ctx.parsed.y;
+                                    if (value === 0) {
+                                        return '⚠ Zero orders this month';
+                                    }
+                                }
+                                return '';
                             }
                         }
                     }
@@ -913,16 +1161,40 @@
                 scales: {
                     x: {
                         grid: {
-                            display: false
+                            display: true,
+                            drawBorder: false,
+                            color: 'rgba(67, 96, 38, 0.04)',
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            color: '#6c7568',
+                            font: {
+                                family: 'Manrope',
+                                size: 12,
+                                weight: '600'
+                            },
+                            padding: 10
                         }
                     },
                     y: {
                         beginAtZero: true,
                         grid: {
-                            color: '#e5e5e5'
+                            color: 'rgba(67, 96, 38, 0.08)',
+                            drawBorder: false,
+                            lineWidth: 1
                         },
                         ticks: {
+                            color: '#6c7568',
+                            font: {
+                                family: 'Manrope',
+                                size: 11,
+                                weight: '500'
+                            },
+                            padding: 10,
                             callback: function(value) {
+                                if (value >= 1000) {
+                                    return (value / 1000).toFixed(0) + 'k';
+                                }
                                 return value.toLocaleString('en-PH');
                             }
                         }
@@ -931,12 +1203,39 @@
             }
         });
 
+        function updateOrdersStatistics(yearData) {
+            const filteredData = yearData.filter(v => v > 0);
+            const total = filteredData.reduce((a, b) => a + b, 0);
+            const avg = filteredData.length > 0 ? Math.round(total / filteredData.length) : 0;
+            
+            let maxValue = 0;
+            let peakMonth = '-';
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            yearData.forEach((value, index) => {
+                if (value > maxValue) {
+                    maxValue = value;
+                    peakMonth = months[index];
+                }
+            });
+            
+            document.getElementById('totalOrdersStat').textContent = total.toLocaleString('en-PH');
+            document.getElementById('peakMonthStat').textContent = peakMonth !== '-' ? peakMonth + ' (' + maxValue.toLocaleString('en-PH') + ')' : '-';
+            document.getElementById('avgOrdersStat').textContent = avg.toLocaleString('en-PH');
+        }
+
         function updateOrdersByMonth(year) {
             const yearData = ordersData[year] || Array(12).fill(0);
-            ordersByMonthChart.data.datasets[0].data = buildZeroOrderPoints(yearData);
-            ordersByMonthChart.data.datasets[1].data = yearData;
-            ordersByMonthChart.update();
+            ordersByMonthChart.data.datasets[0].data = yearData;
+            updateOrdersStatistics(yearData);
+            ordersByMonthChart.update('active');
         }
+        
+        // Initialize chart with data on page load
+        const initialData = ordersData[defaultYear] || Array(12).fill(0);
+        ordersByMonthChart.data.datasets[0].data = initialData;
+        updateOrdersStatistics(initialData);
+        ordersByMonthChart.update();
 
         // Change Sales Trend View
         function changeSalesTrendView(period) {

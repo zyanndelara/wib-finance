@@ -9,6 +9,7 @@ class Merchant extends Model
 {
     use HasFactory;
 
+    protected $connection = 'wibfinance';
     protected $table = 'mt_merchant';
     protected $primaryKey = 'merchant_id';
     public $incrementing = true;

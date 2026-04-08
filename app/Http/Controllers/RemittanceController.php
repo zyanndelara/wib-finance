@@ -16,7 +16,7 @@ class RemittanceController extends Controller
     {
         try {
             $request->validate([
-                'rider_id' => 'required|exists:mt_driver,driver_id',
+                'rider_id' => 'required|exists:wibfinance.mt_driver,driver_id',
                 'total_deliveries' => 'required|integer|min:0',
                 'total_delivery_fee' => 'required|numeric|min:0',
                 'total_remit' => 'required|numeric|min:0',
@@ -46,9 +46,12 @@ class RemittanceController extends Controller
             ->whereDate('remittance_date', $targetRemittanceDate)
             ->sum('total_remit');
 
+        $legacyDb = DB::connection('wibfinance');
+        $legacySchema = Schema::connection('wibfinance');
+
         $expectedTotalAmount = 0.0;
-        if (Schema::hasTable('mt_driver_task')) {
-            $driverTaskColumns = Schema::getColumnListing('mt_driver_task');
+        if ($legacySchema->hasTable('mt_driver_task')) {
+            $driverTaskColumns = $legacySchema->getColumnListing('mt_driver_task');
             $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($driverTaskColumns) {
                 return in_array($column, $driverTaskColumns, true);
             });
@@ -58,7 +61,7 @@ class RemittanceController extends Controller
                 });
 
             if ($riderKeyColumn && $taskDateColumn) {
-                $expectedTotalAmount = (float) DB::table('mt_driver_task')
+                $expectedTotalAmount = (float) $legacyDb->table('mt_driver_task')
                     ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
                     ->where("mt_driver_task.{$riderKeyColumn}", $request->rider_id)
                     ->whereDate("mt_driver_task.{$taskDateColumn}", $targetRemittanceDate)
@@ -319,8 +322,11 @@ class RemittanceController extends Controller
             ? \Carbon\Carbon::parse($remittance->remittance_date)->toDateString()
             : \Carbon\Carbon::parse($remittance->created_at)->toDateString();
 
+        $legacyDb = DB::connection('wibfinance');
+        $legacySchema = Schema::connection('wibfinance');
+
         try {
-            if (!Schema::hasTable('mt_driver_task')) {
+            if (!$legacySchema->hasTable('mt_driver_task')) {
                 return response()->json([
                     'success' => true,
                     'remittance_id' => $remittance->id,
@@ -331,7 +337,7 @@ class RemittanceController extends Controller
                 ]);
             }
 
-            $taskColumns = Schema::getColumnListing('mt_driver_task');
+            $taskColumns = $legacySchema->getColumnListing('mt_driver_task');
             $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($taskColumns) {
                 return in_array($column, $taskColumns, true);
             });
@@ -351,7 +357,7 @@ class RemittanceController extends Controller
                 ]);
             }
 
-            $detailRows = DB::table('mt_driver_task')
+            $detailRows = $legacyDb->table('mt_driver_task')
                 ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
                 ->leftJoin('mt_merchant', 'wibfinance.mt_order.merchant_id', '=', 'mt_merchant.merchant_id')
                 ->where("mt_driver_task.{$riderKeyColumn}", $remittance->rider_id)

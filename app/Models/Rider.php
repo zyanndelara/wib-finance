@@ -9,6 +9,7 @@ class Rider extends Model
 {
     use HasFactory;
 
+    protected $connection = 'wibfinance';
     protected $table = 'mt_driver';
     protected $primaryKey = 'driver_id';
     public $incrementing = false;

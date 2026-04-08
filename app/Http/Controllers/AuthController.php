@@ -1,5 +1,4 @@
-<?php
-
+﻿<?php
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -129,7 +128,7 @@ class AuthController extends Controller {
                         $hashed        = hash('sha256', $rawToken);
                         $trustedTokens = Auth::user()->two_factor_trusted_devices ?? [];
                         if (in_array($hashed, $trustedTokens)) {
-                            // Trusted device — skip 2FA challenge
+                            // Trusted device â€” skip 2FA challenge
                             if (Auth::user()->force_password_change && Auth::user()->role !== 'admin') {
                                 return redirect()->route($landingRoute)->with('force_password_change', true);
                             }
@@ -138,7 +137,7 @@ class AuthController extends Controller {
                     }
                 }
 
-                // Not a trusted device — store user ID for the challenge page,
+                // Not a trusted device â€” store user ID for the challenge page,
                 // log out so the user is NOT authenticated yet, then regenerate
                 // the session AFTER logout to preserve the pending session data.
                 $userId = Auth::user()->id;
@@ -178,7 +177,7 @@ class AuthController extends Controller {
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:fm_users',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -234,14 +233,14 @@ class AuthController extends Controller {
         $email = strtolower(trim($request->email));
 
         // Always show the same response to prevent email enumeration
-        $userExists = DB::table('users')->where('email', $email)->exists();
+        $userExists = DB::table('fm_users')->where('email', $email)->exists();
 
         if ($userExists) {
             // Generate a cryptographically secure 6-digit PIN
             $pin = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-            // Store hashed PIN in password_reset_tokens table
-            DB::table('password_reset_tokens')->updateOrInsert(
+            // Store hashed PIN in fm_password_reset_tokens table
+            DB::table('fm_password_reset_tokens')->updateOrInsert(
                 ['email' => $email],
                 [
                     'email'      => $email,
@@ -313,7 +312,7 @@ class AuthController extends Controller {
         $pin   = $request->pin1 . $request->pin2 . $request->pin3
                . $request->pin4 . $request->pin5 . $request->pin6;
 
-        $record = DB::table('password_reset_tokens')
+        $record = DB::table('fm_password_reset_tokens')
             ->where('email', $email)
             ->first();
 
@@ -327,10 +326,10 @@ class AuthController extends Controller {
                 ->with('email', $email);
         }
 
-        // PIN is valid — replace the PIN record with a hashed reset token stored in the DB
+        // PIN is valid â€” replace the PIN record with a hashed reset token stored in the DB
         $resetToken = Str::random(64);
 
-        DB::table('password_reset_tokens')->updateOrInsert(
+        DB::table('fm_password_reset_tokens')->updateOrInsert(
             ['email' => $email],
             [
                 'token'      => Hash::make($resetToken),
@@ -355,7 +354,7 @@ class AuthController extends Controller {
                 ->withErrors(['email' => 'Invalid reset link. Please start again.']);
         }
 
-        $record = DB::table('password_reset_tokens')
+        $record = DB::table('fm_password_reset_tokens')
             ->where('email', strtolower(trim($email)))
             ->first();
 
@@ -383,7 +382,7 @@ class AuthController extends Controller {
 
         $email = strtolower(trim($request->email));
 
-        $record = DB::table('password_reset_tokens')
+        $record = DB::table('fm_password_reset_tokens')
             ->where('email', $email)
             ->first();
 
@@ -406,7 +405,7 @@ class AuthController extends Controller {
         $user->save();
 
         // Delete the token so it cannot be reused
-        DB::table('password_reset_tokens')->where('email', $email)->delete();
+        DB::table('fm_password_reset_tokens')->where('email', $email)->delete();
 
         return redirect()->route('login')
             ->with('password_reset_success', true);

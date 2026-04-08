@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use App\Models\AuditLog;
+use App\Models\User;
 use SendinBlue\Client\Configuration;
 use SendinBlue\Client\Api\TransactionalEmailsApi;
 use SendinBlue\Client\Model\SendSmtpEmail;
@@ -50,7 +51,7 @@ class ProfileController extends Controller
      */
     public function update(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->authenticatedUser();
 
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
@@ -113,7 +114,7 @@ class ProfileController extends Controller
                 ->withInput();
         }
 
-        $user = Auth::user();
+        $user = $this->authenticatedUser();
 
         // Check if current password is correct
         if (!Hash::check($request->current_password, $user->password)) {
@@ -137,7 +138,7 @@ class ProfileController extends Controller
      */
     public function resendVerification(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->authenticatedUser();
 
         if ($user->hasVerifiedEmail()) {
             return redirect()->back()->with('info', 'Your email is already verified.');
@@ -163,7 +164,7 @@ class ProfileController extends Controller
                 ->withInput();
         }
 
-        $user = Auth::user();
+        $user = $this->authenticatedUser();
 
         // Verify password
         if (!Hash::check($request->password, $user->password)) {
@@ -220,7 +221,7 @@ class ProfileController extends Controller
      */
     public function setup2fa()
     {
-        $user = Auth::user();
+        $user = $this->authenticatedUser();
 
         if (!$user->two_factor_secret) {
             $totp = TOTP::generate();
@@ -252,7 +253,7 @@ class ProfileController extends Controller
     {
         $request->validate(['code' => 'required|string|digits:6']);
 
-        $user   = Auth::user();
+        $user   = $this->authenticatedUser();
         $secret = decrypt($user->two_factor_secret);
         $totp   = TOTP::createFromSecret($secret);
 
@@ -276,7 +277,7 @@ class ProfileController extends Controller
     {
         $request->validate(['password' => 'required']);
 
-        $user = Auth::user();
+        $user = $this->authenticatedUser();
 
         if (!Hash::check($request->password, $user->password)) {
             return back()->withErrors(['disable_password' => 'The password is incorrect.']);
@@ -293,5 +294,16 @@ class ProfileController extends Controller
         return redirect()->route('profile')
             ->with('success', 'Two-Factor Authentication has been disabled.')
             ->withoutCookie('wib_2fa_device');
+    }
+
+    private function authenticatedUser(): User
+    {
+        $user = Auth::user();
+
+        if (!$user instanceof User) {
+            abort(401, 'Unauthenticated.');
+        }
+
+        return $user;
     }
 }

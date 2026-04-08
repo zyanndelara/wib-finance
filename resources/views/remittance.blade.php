@@ -108,8 +108,9 @@
 
         .remittance-container {
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
             gap: 20px;
+            align-items: start;
 
         }
 
@@ -121,6 +122,9 @@
             border: 1px solid #e5e7eb;
             transition: box-shadow 0.2s ease;
             animation: fadeInUp 0.5s ease;
+            min-width: 0;
+            position: relative;
+            z-index: 1;
         }
 
         .rider-queue-panel:hover {
@@ -705,6 +709,9 @@
             border-top: none;
             transition: box-shadow 0.2s ease;
             animation: fadeInUp 0.5s ease 0.1s both;
+            min-width: 0;
+            position: relative;
+            z-index: 0;
         }
 
         .remittance-details-panel:hover {
@@ -2092,53 +2099,6 @@
                                 </div>
                             </div>
 
-                            <!-- Two Column Grid for Salary Components and ADDA DF -->
-                            <div class="payroll-sections-grid">
-                                <!-- Salary Components Section -->
-                                <div class="payroll-section">
-                                    <div class="payroll-section-title">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                        Salary Components
-                                    </div>
-                                    <div class="form-row">
-                                        <label class="form-label">Base Salary:</label>
-                                        <input type="number" name="base_salary" class="form-input" step="0.01" placeholder="Enter base salary">
-                                    </div>
-                                    <div class="form-row">
-                                        <label class="form-label">Incentives:</label>
-                                        <input type="number" name="incentives" class="form-input" step="0.01" placeholder="Enter incentives">
-                                    </div>
-                                    <div class="form-row">
-                                        <label class="form-label">26 Days Renumeration:</label>
-                                        <input type="number" name="renumeration_26_days" class="form-input" step="0.01" placeholder="Enter 26 days renumeration">
-                                    </div>
-                                </div>
-
-                                <!-- ADDA DF Section -->
-                                <div class="payroll-section">
-                                    <div class="payroll-section-title">
-                                        <i class="fas fa-calendar-plus"></i>
-                                        ADDA DF
-                                    </div>
-                                    <div class="form-row">
-                                        <label class="form-label">ADDA DF:</label>
-                                        <div class="adda-df-container">
-                                            <div id="addaDfAllowedDaysNotice" style="display:none; margin-bottom:8px; padding:6px 10px; background:#fff3cd; border-left:3px solid #ffc107; font-size:12px; color:#856404; border-radius:4px;">
-                                                <i class="fas fa-info-circle"></i> <span id="addaDfAllowedDaysText"></span>
-                                            </div>
-                                            <div id="addaDfRows">
-                                            </div>
-                                            <div class="adda-df-footer">
-                                                <span id="addaDfSummary" class="adda-df-summary">Total ADDA DF: ₱0.00</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="adda_df" value="">
-                                    <input type="hidden" name="adda_df_date" value="">
-                                    <input type="hidden" name="adda_df_entries" value="[]">
-                                </div>
-                            </div>
-
                             <!-- Payment Details Section (Full Width) -->
                             <div class="payroll-sections-grid">
                                 <div class="payroll-section payroll-section-full">
@@ -2185,6 +2145,53 @@
                                 </div>
                             </div>
 
+                            <!-- Two Column Grid for Salary Components and ADDA DF -->
+                            <div class="payroll-sections-grid">
+                                <!-- Salary Components Section -->
+                                <div class="payroll-section">
+                                    <div class="payroll-section-title">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                        Salary Components
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="form-label">Base Salary:</label>
+                                        <input type="number" name="base_salary" class="form-input form-input-readonly-highlight" step="0.01"  readonly>
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="form-label">Incentives:</label>
+                                        <input type="number" name="incentives" class="form-input" step="0.01" placeholder="Enter incentives">
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="form-label">26 Days Renumeration:</label>
+                                        <input type="number" name="renumeration_26_days" class="form-input" step="0.01" placeholder="Enter 26 days renumeration">
+                                    </div>
+                                </div>
+
+                                <!-- ADDA DF Section -->
+                                <div class="payroll-section">
+                                    <div class="payroll-section-title">
+                                        <i class="fas fa-calendar-plus"></i>
+                                        ADDA DF
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="form-label">ADDA DF:</label>
+                                        <div class="adda-df-container">
+                                            <div id="addaDfAllowedDaysNotice" style="display:none; margin-bottom:8px; padding:6px 10px; background:#fff3cd; border-left:3px solid #ffc107; font-size:12px; color:#856404; border-radius:4px;">
+                                                <i class="fas fa-info-circle"></i> <span id="addaDfAllowedDaysText"></span>
+                                            </div>
+                                            <div id="addaDfRows">
+                                            </div>
+                                            <div class="adda-df-footer">
+                                                <span id="addaDfSummary" class="adda-df-summary">Total ADDA DF: ₱0.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="adda_df" value="">
+                                    <input type="hidden" name="adda_df_date" value="">
+                                    <input type="hidden" name="adda_df_entries" value="[]">
+                                </div>
+                            </div>
+
                             <!-- Net Salary Section -->
                             <div class="net-salary-section">
                                 <div class="net-salary-row">
@@ -2192,7 +2199,7 @@
                                         <i class="fas fa-calculator"></i>
                                         Net Salary:
                                     </label>
-                                    <input type="number" name="net_salary" class="net-salary-input" step="0.01" placeholder="Enter net salary">
+                                    <input type="number" name="net_salary" class="net-salary-input" step="0.01"  readonly>
                                 </div>
                                 <button type="button" id="payrollSubmitBtn" onclick="openPayrollDeductionsModal()" class="confirm-payroll-btn">
                                     <i class="fas fa-briefcase"></i> Confirm Payroll
@@ -2314,6 +2321,138 @@
                     const riderTipsMap = @json($riderTipsMap ?? []);
                     const riderTotalCollectionMap = @json($riderTotalCollectionMap ?? []);
                     const riderRemittedTotalsMap = @json($remittedTotalsByRider ?? []);
+                    const payrollRiderRemittancesCache = {};
+
+                    function normalizeDateOnly(rawDate) {
+                        if (!rawDate) return null;
+                        const dateObj = new Date(rawDate);
+                        if (Number.isNaN(dateObj.getTime())) return null;
+                        return dateObj.toISOString().slice(0, 10);
+                    }
+
+                    function isDateInRange(dateYmd, fromYmd, toYmd) {
+                        if (!dateYmd || !fromYmd || !toYmd) return false;
+                        return dateYmd >= fromYmd && dateYmd <= toYmd;
+                    }
+
+                    function sumDeliveryFeeBySchedule(remittances, schedule) {
+                        if (!schedule || !Array.isArray(remittances) || remittances.length === 0) return 0;
+
+                        const range = getPayrollDateRange(schedule);
+                        if (!Array.isArray(range) || range.length !== 2) return 0;
+
+                        const [fromDate, toDate] = range;
+
+                        return remittances.reduce((sum, remittance) => {
+                            const rawDate = remittance.remittance_date || remittance.created_at;
+                            const remittanceDate = normalizeDateOnly(rawDate);
+                            if (!isDateInRange(remittanceDate, fromDate, toDate)) {
+                                return sum;
+                            }
+
+                            return sum + (parseFloat(remittance.total_delivery_fee) || 0);
+                        }, 0);
+                    }
+
+                    async function getPayrollRemittancesByRider(riderId) {
+                        const riderKey = String(riderId || '').trim();
+                        if (!riderKey) return [];
+
+                        if (Array.isArray(payrollRiderRemittancesCache[riderKey])) {
+                            return payrollRiderRemittancesCache[riderKey];
+                        }
+
+                        const response = await fetch(`/riders/${riderKey}/remittances`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const data = await response.json();
+                        if (!response.ok || !data.success) {
+                            throw new Error(data.message || 'Failed to load rider remittances');
+                        }
+
+                        payrollRiderRemittancesCache[riderKey] = Array.isArray(data.remittances) ? data.remittances : [];
+                        return payrollRiderRemittancesCache[riderKey];
+                    }
+
+                    // Automatic Base Salary Calculation Function
+                    function calculateAndPopulateBaseSalary(riderId) {
+                        const payrollForm = document.getElementById('payrollForm');
+                        if (!payrollForm) return;
+
+                        // Get selected salary schedule
+                        const salaryScheduleSelect = payrollForm.querySelector('[name="salary_schedule"]');
+                        const selectedSchedule = salaryScheduleSelect ? salaryScheduleSelect.value : '';
+
+                        const baseSalaryInput = payrollForm.querySelector('[name="base_salary"]');
+                        if (!baseSalaryInput) return 0;
+
+                        if (!selectedSchedule) {
+                            baseSalaryInput.value = '';
+                            baseSalaryInput.placeholder = 'Select salary schedule first';
+                            return 0;
+                        }
+
+                        const riderKey = String(riderId || '').trim();
+
+                        const applyBaseSalary = (amount) => {
+                            const baseSalary = Number.isFinite(amount) ? amount : 0;
+                            baseSalaryInput.value = baseSalary.toFixed(2);
+                            baseSalaryInput.placeholder = `₱${baseSalary.toFixed(2)} (${selectedSchedule})`;
+                            return baseSalary;
+                        };
+
+                        // Fast fallback while async weekly/schedule remittances are loading
+                        const fallbackAmount = parseFloat(riderDeliveryChargesMap[riderKey] || 0);
+                        applyBaseSalary(fallbackAmount);
+
+                        getPayrollRemittancesByRider(riderKey)
+                            .then(remittances => {
+                                const latestSelectedRider = payrollForm.querySelector('[name="rider_id"]').value.trim();
+                                const latestSelectedSchedule = salaryScheduleSelect ? salaryScheduleSelect.value : '';
+                                if (latestSelectedRider !== riderKey || latestSelectedSchedule !== selectedSchedule) {
+                                    return;
+                                }
+
+                                const scheduleAmount = sumDeliveryFeeBySchedule(remittances, selectedSchedule);
+                                applyBaseSalary(scheduleAmount);
+                                calculateAndPopulateNetSalary();
+                            })
+                            .catch(() => {
+                                // Keep fallback amount if fetch fails.
+                            });
+
+                        calculateAndPopulateNetSalary();
+                        return fallbackAmount;
+                    }
+
+                    function calculateAndPopulateNetSalary() {
+                        const payrollForm = document.getElementById('payrollForm');
+                        if (!payrollForm) return 0;
+
+                        const baseSalary = parseFloat(payrollForm.querySelector('[name="base_salary"]')?.value) || 0;
+                        const incentives = parseFloat(payrollForm.querySelector('[name="incentives"]')?.value) || 0;
+                        const renumeration = parseFloat(payrollForm.querySelector('[name="renumeration_26_days"]')?.value) || 0;
+
+                        const addaDfHidden = payrollForm.querySelector('[name="adda_df"]');
+                        const addaDfCurrent = addaDfHidden && addaDfHidden.value !== ''
+                            ? parseFloat(addaDfHidden.value) || 0
+                            : 0;
+
+                        const netSalary = baseSalary + incentives + renumeration + addaDfCurrent;
+                        const netSalaryInput = payrollForm.querySelector('[name="net_salary"]');
+                        if (netSalaryInput) {
+                            netSalaryInput.value = netSalary > 0 ? netSalary.toFixed(2) : '';
+                            netSalaryInput.placeholder = netSalary > 0
+                                ? `₱${netSalary.toFixed(2)}`
+                                : 'Auto-calculated net salary';
+                        }
+
+                        return netSalary;
+                    }
 
                     // Toast Notification Function
                     function showToast(message, type = 'success', duration = 3000) {
@@ -2460,6 +2599,9 @@
                                 
                                 // Show dropdown with available dates
                                 showAddaDfDateSelector(availableDates);
+                                
+                                // Recalculate base salary with the new schedule
+                                calculateAndPopulateBaseSalary(riderId);
                             } else if (scheduleSelect.value && allowedDaysNotice && allowedDaysText) {
                                 const noticeText = getAllowedDaysNoticeText(scheduleSelect.value);
                                 if (noticeText) {
@@ -2604,12 +2746,22 @@
                             return isAddaDfDateAllowedBySchedule(dateStr, schedule);
                         });
                     }
+
+                    function getScheduleRangeLabel(schedule) {
+                        if (!schedule || schedule === 'Select Date') return '';
+
+                        const range = getPayrollDateRange(schedule);
+                        if (!Array.isArray(range) || range.length !== 2) return '';
+
+                        return `${range[0]} to ${range[1]}`;
+                    }
                     
                     function updateAddaDfDateNotice(availableDates, schedule, noticeElement, textElement) {
                         if (!noticeElement || !textElement) return;
+                        const rangeLabel = getScheduleRangeLabel(schedule);
                         
                         if (availableDates.length === 0) {
-                            textElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> No remittance data available for this rider matching the selected schedule';
+                            textElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> No remittance data available for this rider matching the selected schedule${rangeLabel ? ` (${rangeLabel})` : ''}`;
                             noticeElement.style.background = '#fff3cd';
                             noticeElement.style.borderLeftColor = '#ffc107';
                             noticeElement.style.color = '#856404';
@@ -2617,7 +2769,7 @@
                         } else {
                             const scheduleRule = getAllowedDaysNoticeText(schedule);
                             const dateCount = availableDates.length;
-                            textElement.innerHTML = `<i class="fas fa-check-circle"></i> ${scheduleRule} — <span style="font-weight:700;color:#155724;">${dateCount} date${dateCount !== 1 ? 's' : ''} available</span> for ADDA DF`;
+                            textElement.innerHTML = `<i class="fas fa-check-circle"></i> ${scheduleRule}${rangeLabel ? ` (${rangeLabel})` : ''} — <span style="font-weight:700;color:#155724;">${dateCount} date${dateCount !== 1 ? 's' : ''} available</span> for ADDA DF`;
                             noticeElement.style.background = '#d1f2eb';
                             noticeElement.style.borderLeftColor = '#28a745';
                             noticeElement.style.color = '#155724';
@@ -2627,32 +2779,32 @@
                     
                     function getAllowedDaysNoticeText(schedule) {
                         if (schedule === 'Mon-Thur/Friday payout') {
-                            return 'You can only select Monday through Thursday';
+                            return 'You can only select Monday through Thursday within the schedule period';
                         }
                         if (schedule === 'Fri-Sun/Monday payout') {
-                            return 'You can only select Friday, Saturday, or Sunday';
+                            return 'You can only select Friday, Saturday, or Sunday within the schedule period';
                         }
                         if (schedule === 'Mon-Sun/Monday payout') {
-                            return 'You can select any day except Monday';
+                            return 'You can select any day except Monday within the schedule period';
                         }
                         if (schedule === 'Cut off payout') {
-                            return 'You can select any day except the 15th and last day of the month';
+                            return 'You can select any day except the 15th and last day within the cutoff period';
                         }
                         return '';
                     }
 
                     function getScheduleDateRuleText(schedule) {
                         if (schedule === 'Mon-Thur/Friday payout') {
-                            return 'Only Monday through Thursday are allowed';
+                            return 'Only Monday through Thursday within the selected payroll week are allowed';
                         }
                         if (schedule === 'Fri-Sun/Monday payout') {
-                            return 'Only Friday, Saturday, and Sunday are allowed';
+                            return 'Only Friday, Saturday, and Sunday within the selected payroll week are allowed';
                         }
                         if (schedule === 'Mon-Sun/Monday payout') {
-                            return 'Any day except Monday is allowed';
+                            return 'Any day except Monday within the selected payroll week is allowed';
                         }
                         if (schedule === 'Cut off payout') {
-                            return 'Cannot select the 15th or last day of the month';
+                            return 'Date must be inside the current cutoff period and cannot be the 15th or last day';
                         }
                         if (schedule === 'Select Date') {
                             return 'Date must be within the selected date range';
@@ -2678,6 +2830,18 @@
                             const fromDate = new Date(fromDateInput.value + 'T00:00:00');
                             const toDate = new Date(toDateInput.value + 'T00:00:00');
                             return selectedDate >= fromDate && selectedDate <= toDate;
+                        }
+
+                        // Weekly/cutoff schedules must also be inside the computed payroll date range.
+                        const normalizedDate = normalizeDateOnly(dateRaw);
+                        const scheduleRange = getPayrollDateRange(schedule);
+                        if (!normalizedDate || !Array.isArray(scheduleRange) || scheduleRange.length !== 2) {
+                            return false;
+                        }
+
+                        const [fromDate, toDate] = scheduleRange;
+                        if (!isDateInRange(normalizedDate, fromDate, toDate)) {
+                            return false;
                         }
 
                         // Mon-Thur/Friday payout: Work period is Mon-Thu, payout is Fri
@@ -2800,6 +2964,8 @@
                             });
                         }
 
+                        calculateAndPopulateNetSalary();
+
                         return true;
                     }
 
@@ -2825,6 +2991,7 @@
                     
                     function autoCalculateAddaDf() {
                         consolidateAddaDfEntries(false);
+                        calculateAndPopulateNetSalary();
                     }
 
                     const payrollFormEl = document.getElementById('payrollForm');
@@ -2890,8 +3057,18 @@
                                     'Some ADDA DF dates were cleared because they do not match the selected salary schedule.',
                                     'info');
                             }
+
+                            calculateAndPopulateNetSalary();
                         });
                     }
+
+                    const netSalaryLiveInputs = payrollFormEl
+                        ? payrollFormEl.querySelectorAll('[name="base_salary"], [name="incentives"], [name="renumeration_26_days"]')
+                        : [];
+                    netSalaryLiveInputs.forEach(input => {
+                        input.addEventListener('input', calculateAndPopulateNetSalary);
+                        input.addEventListener('change', calculateAndPopulateNetSalary);
+                    });
 
                     enforceAddaDfDateInputRules();
 
@@ -2918,6 +3095,12 @@
                                     'Some ADDA DF dates were cleared because they are outside the selected date range.',
                                     'info');
                             }
+
+                            const riderIdEl = payrollFormEl ? payrollFormEl.querySelector('[name="rider_id"]') : null;
+                            const riderId = riderIdEl ? riderIdEl.value.trim() : '';
+                            if (riderId) {
+                                calculateAndPopulateBaseSalary(riderId);
+                            }
                         };
                         
                         customFromDateInput.addEventListener('change', validateCustomDates);
@@ -2928,6 +3111,8 @@
                         const form = document.getElementById('payrollForm');
 
                         if (!consolidateAddaDfEntries(true)) return;
+
+                        calculateAndPopulateNetSalary();
 
                         const riderId = form.querySelector('[name="rider_id"]').value.trim();
                         const riderName = form.querySelector('[name="rider_name"]').value.trim();
@@ -2947,10 +3132,6 @@
                         }
                         if (!baseSalary) {
                             showToast('Please enter Base Salary', 'warning');
-                            return;
-                        }
-                        if (!renumeration26Days) {
-                            showToast('Please enter 26 days renumeration', 'warning');
                             return;
                         }
                         if (!salarySchedule) {
@@ -3216,7 +3397,10 @@
                      * relative to today.  Used to filter the remittances shown on the payslip.
                      */
                     function getPayrollDateRange(schedule) {
-                        const now = new Date();
+                        const statsDateInput = document.getElementById('statsDateInput');
+                        const now = statsDateInput && statsDateInput.value
+                            ? new Date(statsDateInput.value + 'T00:00:00')
+                            : new Date();
                         const pad = n => String(n).padStart(2, '0');
                         const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
@@ -4606,8 +4790,8 @@
     </div>
 
     <script>
-        // Merchant list for Mangan App search
-        const manganMerchants = @json($merchants->pluck('name')->values());
+        // Merchant list for Mangan App search (from mt_merchant restaurant_name)
+        const manganMerchants = @json($merchants->values());
 
         let manganDropdownIndex = -1;
 
@@ -4616,26 +4800,45 @@
             const q = query.trim().toLowerCase();
             updateManganBadge();
             if (!q) {
-                hideManganDropdown();
+                const defaultMatches = manganMerchants.slice(0, 20);
+                manganDropdownIndex = -1;
+                dropdown.innerHTML = defaultMatches.map((merchant, i) => {
+                    const merchantName = String(merchant.name ?? merchant.restaurant_name ?? '');
+                    const safeName = merchantName.replace(/'/g, "\\'");
+
+                    return `<div data-index="${i}" onclick="selectManganMerchant('${safeName}')"
+                        style="padding:9px 14px; font-size:14px; cursor:pointer; color:#2d4016; border-bottom:1px solid #f0f7ed;"
+                        onmouseover="this.style.background='#f0f7ed'" onmouseout="this.style.background=''">` +
+                        `<i class="fas fa-store" style="margin-right:8px; color:#86b562; font-size:12px;"></i>${merchantName}</div>`;
+                }).join('');
+                dropdown.style.display = defaultMatches.length ? 'block' : 'none';
                 return;
             }
-            const matches = manganMerchants.filter(n => n.toLowerCase().includes(q));
+
+            const matches = manganMerchants.filter(merchant => {
+                const merchantName = String(merchant.name ?? merchant.restaurant_name ?? '').toLowerCase();
+                return merchantName.includes(q);
+            }).slice(0, 20);
+
             if (matches.length === 0) {
                 hideManganDropdown();
                 return;
             }
             manganDropdownIndex = -1;
-            dropdown.innerHTML = matches.map((name, i) =>
-                `<div data-index="${i}" onclick="selectManganMerchant('${name.replace(/'/g, "\\'")}')"
+            dropdown.innerHTML = matches.map((merchant, i) => {
+                const merchantName = String(merchant.name ?? merchant.restaurant_name ?? '');
+                const safeName = merchantName.replace(/'/g, "\\'");
+
+                return `<div data-index="${i}" onclick="selectManganMerchant('${safeName}')"
                     style="padding:9px 14px; font-size:14px; cursor:pointer; color:#2d4016; border-bottom:1px solid #f0f7ed;"
                     onmouseover="this.style.background='#f0f7ed'" onmouseout="this.style.background=''">` +
-                `<i class="fas fa-store" style="margin-right:8px; color:#86b562; font-size:12px;"></i>${name}</div>`
-            ).join('');
+                `<i class="fas fa-store" style="margin-right:8px; color:#86b562; font-size:12px;"></i>${merchantName}</div>`;
+            }).join('');
             dropdown.style.display = 'block';
         }
 
-        function selectManganMerchant(name) {
-            document.getElementById('manganMerchantInput').value = name;
+        function selectManganMerchant(merchantName) {
+            document.getElementById('manganMerchantInput').value = merchantName;
             document.getElementById('manganMerchantInput').style.borderColor = '#436026';
             hideManganDropdown();
             updateManganBadge();
@@ -4722,6 +4925,18 @@
             const tips = parseFloat(document.getElementById('manganTips').value) || 0;
             const receipt = parseFloat(document.getElementById('manganReceiptNonPartners').value) || 0;
             const totalRemit = parseFloat(document.getElementById('manganTotalRemit').value) || 0;
+
+            if (merchant) {
+                const matchedMerchant = manganMerchants.find((item) => {
+                    const itemName = String(item.name ?? item.restaurant_name ?? '').trim();
+                    return itemName.toLowerCase() === merchant.toLowerCase();
+                });
+
+                if (!matchedMerchant) {
+                    showToast('Please select a valid merchant from the mt_merchant list.', 'warning');
+                    return;
+                }
+            }
 
             if (!merchant && amount === 0) {
                 showToast('Please fill in at least the Merchant Name or Total Amount before adding.', 'warning');
@@ -5944,6 +6159,10 @@
                     const input = payrollForm.querySelector(`[name="${name}"]`);
                     if (input) input.value = '';
                 });
+
+                // Automatically populate base salary from total delivery fee
+                calculateAndPopulateBaseSalary(riderId);
+                calculateAndPopulateNetSalary();
                 
                 // Clear mode of payment
                 const modeOfPayment = payrollForm.querySelector('[name="mode_of_payment"]');

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('remittances', function (Blueprint $table) {
+        Schema::table('fm_remittances', function (Blueprint $table) {
             try {
                 $table->dropForeign(['rider_id']);
             } catch (\Throwable $e) {
@@ -19,7 +19,7 @@ return new class extends Migration
             }
         });
 
-        Schema::table('bank_deposit_confirmations', function (Blueprint $table) {
+        Schema::table('fm_bank_deposit_confirmations', function (Blueprint $table) {
             try {
                 $table->dropForeign(['rider_id']);
             } catch (\Throwable $e) {
@@ -33,17 +33,17 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('remittances', function (Blueprint $table) {
+        Schema::table('fm_remittances', function (Blueprint $table) {
             try {
-                $table->foreign('rider_id')->references('id')->on('riders')->onDelete('cascade');
+                $table->foreign('rider_id')->references('id')->on('fm_riders')->onDelete('cascade');
             } catch (\Throwable $e) {
                 // Ignore if the riders table does not exist.
             }
         });
 
-        Schema::table('bank_deposit_confirmations', function (Blueprint $table) {
+        Schema::table('fm_bank_deposit_confirmations', function (Blueprint $table) {
             try {
-                $table->foreign('rider_id')->references('id')->on('riders')->onDelete('cascade');
+                $table->foreign('rider_id')->references('id')->on('fm_riders')->onDelete('cascade');
             } catch (\Throwable $e) {
                 // Ignore if the riders table does not exist.
             }

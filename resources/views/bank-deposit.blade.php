@@ -1823,89 +1823,6 @@
                         @endif
                     </div>
 
-                    <!-- Denomination Breakdown Widget -->
-                    <div class="denomination-widget">
-                        <div class="denomination-header">
-                            Denomination Breakdown
-                            <button onclick="resetDenominations()" style="margin-left: auto; padding: 3px 8px; background: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 10px; cursor: pointer; transition: all 0.2s;">
-                                <i class="fas fa-redo" style="margin-right: 3px;"></i>Reset
-                            </button>
-                        </div>
-                        <table class="denomination-table" id="denominationTable">
-                            <thead>
-                                <tr>
-                                    <th>Denomination</th>
-                                    <th>No. of Pieces</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr data-denom="1000">
-                                    <td>1000</td>
-                                    <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>?0</td>
-                                </tr>
-                                <tr data-denom="500">
-                                    <td>500</td>
-                                    <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>?0</td>
-                                </tr>
-                                <tr data-denom="200">
-                                    <td>200</td>
-                                    <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>?0</td>
-                                </tr>
-                                <tr data-denom="100">
-                                    <td>100</td>
-                                    <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>?0</td>
-                                </tr>
-                                <tr data-denom="50">
-                                    <td>50</td>
-                                    <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>?0</td>
-                                </tr>
-                                <tr data-denom="20">
-                                    <td>20</td>
-                                    <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>?0</td>
-                                </tr>
-                                <tr data-denom="20b">
-                                    <td>20</td>
-                                    <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>?0</td>
-                                </tr>
-                                <tr data-denom="10">
-                                    <td>10</td>
-                                    <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>?0</td>
-                                </tr>
-                                <tr data-denom="5">
-                                    <td>5</td>
-                                    <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>?0</td>
-                                </tr>
-                                <tr data-denom="1">
-                                    <td>1</td>
-                                    <td><input type="number" min="0" placeholder="0"></td>
-                                    <td>?0</td>
-                                </tr>
-                                <tr class="total-row">
-                                    <td colspan="2">Total</td>
-                                    <td id="denominationTotal">?0</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Bank Field (outside denomination breakdown) -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; margin-top: 10px;">
-                        <span id="bankLabel" style="font-size: 13px; font-weight: 700; color: #374151;">Bank</span>
-                        <input type="text" id="bankInput" placeholder="₱0.00" readonly style="border: 2px solid #e5e7eb; border-radius: 6px; padding: 4px 8px; font-size: 13px; font-weight: 700; color: #374151; text-align: right; background: white; flex: 1; min-width: 0; margin-left: 12px; outline: none;">
-                    </div>
-                    <!-- Confirm Button (outside denomination breakdown) -->
-                    <button onclick="confirmDenomination()" id="confirmDenomBtn" style="width: 100%; margin-top: 10px; padding: 8px 0; background: #436026; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;">
-                        <i class="fas fa-check" style="margin-right: 6px;"></i>Confirm
-                    </button>
                 </div>
             </div>
         </div>
@@ -2231,20 +2148,20 @@
                 rows.forEach(row => {
                     const amountCell = row.querySelector('td:last-child');
                     if (amountCell && !amountCell.querySelector('input')) {
-                        amountCell.textContent = '?0';
+                        amountCell.textContent = '0';
                     }
                 });
                 
                 const totalRows = denominationTable.querySelectorAll('.total-row');
                 const totalCell = totalRows[0].querySelector('td:last-child');
                 if (totalCell && !totalCell.querySelector('input')) {
-                    totalCell.textContent = '?0';
+                    totalCell.textContent = '0';
                 }
             }
 
             // Reset Total and Remaining displays
             const denomTotalCell = document.getElementById('denominationTotal');
-            if (denomTotalCell) denomTotalCell.textContent = '?0';
+            if (denomTotalCell) denomTotalCell.textContent = '0';
 
             // Reset bank field to original remit amount
             const bankInput = document.getElementById('bankInput');
@@ -2343,7 +2260,7 @@
 
             // Get total denomination amount
             const totalCell = document.getElementById('denominationTotal');
-            const totalText = totalCell ? totalCell.textContent.replace('?', '').replace(/,/g, '') : '0';
+            const totalText = totalCell ? totalCell.textContent.replace(/,/g, '') : '0';
             const totalAmount = parseFloat(totalText) || 0;
 
             if (totalAmount <= 0) {
@@ -2693,7 +2610,7 @@
                 const amount = pieces * denomination;
                 const row = input.closest('tr');
                 const amountCell = row.querySelector('td:last-child');
-                amountCell.textContent = '?' + amount.toLocaleString();
+                amountCell.textContent = amount.toLocaleString();
                 _denomsEntered = true;
                 calculateTotal();
             }
@@ -2706,7 +2623,7 @@
                 rows.forEach(row => {
                     const amountCell = row.querySelector('td:last-child');
                     if (amountCell && !amountCell.querySelector('input')) {
-                        const amountText = amountCell.textContent.replace('?', '').replace(/,/g, '');
+                        const amountText = amountCell.textContent.replace(/,/g, '');
                         const amount = parseInt(amountText) || 0;
                         total += amount;
                     }
@@ -2715,7 +2632,7 @@
                 // Update Total row
                 const totalCell = document.getElementById('denominationTotal');
                 if (totalCell) {
-                    totalCell.textContent = '?' + total.toLocaleString();
+                    totalCell.textContent = total.toLocaleString();
                     totalCell.style.cursor = 'pointer';
                     totalCell.title = 'Click to copy total amount';
                     totalCell.onclick = function() {
@@ -3068,10 +2985,14 @@
             
             // Auto-populate bank input
             loadRiderRemit(riderId, riderName, remitAmount);
+
+            // Open denomination modal once a rider is selected
+            openDenominationModal();
         }
 
         function loadRiderRemit(riderId, riderName, remitAmount) {
             const bankInput = document.getElementById('bankInput');
+            const riderLabel = document.getElementById('denomSelectedRider');
             
             if (!riderId || !remitAmount) {
                 // Clear bank input if no valid data
@@ -3099,6 +3020,10 @@
             // Re-enable readonly
             bankInput.setAttribute('readonly', true);
 
+            if (riderLabel) {
+                riderLabel.textContent = riderName || '';
+            }
+
             // Reset denomination flag � user hasn't typed anything for this rider yet
             _denomsEntered = false;
 
@@ -3110,6 +3035,20 @@
             
             // Trigger denomination recalculation 
             calculateTotal();
+        }
+
+        function openDenominationModal() {
+            const modal = document.getElementById('denominationBreakdownModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        function closeDenominationModal() {
+            const modal = document.getElementById('denominationBreakdownModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
 
         // Search and Filter Functionality
@@ -3196,6 +3135,104 @@
 
     <!-- Toast Notification Container -->
     <div id="toastContainer"></div>
+<!-- Denomination Breakdown Modal -->
+<div id="denominationBreakdownModal" onclick="if(event.target===this)closeDenominationModal()" style="display:none; position:fixed; inset:0; z-index:9998; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px);">
+    <div style="background:#fff; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.3); padding:22px 22px 18px; max-width:560px; width:94%; font-family:'Segoe UI',sans-serif; animation:modalIn .2s ease; max-height:92vh; overflow-y:auto;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+            <div>
+                <div style="font-size:16px; font-weight:700; color:#111827;">Denomination Breakdown</div>
+                <div style="font-size:12px; color:#6b7280; margin-top:2px;">Rider: <span id="denomSelectedRider" style="font-weight:700; color:#374151;"></span></div>
+            </div>
+            <button onclick="closeDenominationModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:#f3f4f6;color:#6b7280;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="denomination-widget" style="padding:8px; box-shadow:none; border:1px solid #e5e7eb;">
+            <div class="denomination-header">
+                Denomination Breakdown
+                <button onclick="resetDenominations()" style="margin-left: auto; padding: 3px 8px; background: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 10px; cursor: pointer; transition: all 0.2s;">
+                    <i class="fas fa-redo" style="margin-right: 3px;"></i>Reset
+                </button>
+            </div>
+            <table class="denomination-table" id="denominationTable">
+                <thead>
+                    <tr>
+                        <th>Denomination</th>
+                        <th>No. of Pieces</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-denom="1000">
+                        <td>1000</td>
+                        <td><input type="number" min="0" placeholder="0"></td>
+                        <td>0</td>
+                    </tr>
+                    <tr data-denom="500">
+                        <td>500</td>
+                        <td><input type="number" min="0" placeholder="0"></td>
+                        <td>0</td>
+                    </tr>
+                    <tr data-denom="200">
+                        <td>200</td>
+                        <td><input type="number" min="0" placeholder="0"></td>
+                        <td>0</td>
+                    </tr>
+                    <tr data-denom="100">
+                        <td>100</td>
+                        <td><input type="number" min="0" placeholder="0"></td>
+                        <td>0</td>
+                    </tr>
+                    <tr data-denom="50">
+                        <td>50</td>
+                        <td><input type="number" min="0" placeholder="0"></td>
+                        <td>0</td>
+                    </tr>
+                    <tr data-denom="20">
+                        <td>20</td>
+                        <td><input type="number" min="0" placeholder="0"></td>
+                        <td>0</td>
+                    </tr>
+                    <tr data-denom="20b">
+                        <td>20</td>
+                        <td><input type="number" min="0" placeholder="0"></td>
+                        <td>0</td>
+                    </tr>
+                    <tr data-denom="10">
+                        <td>10</td>
+                        <td><input type="number" min="0" placeholder="0"></td>
+                        <td>0</td>
+                    </tr>
+                    <tr data-denom="5">
+                        <td>5</td>
+                        <td><input type="number" min="0" placeholder="0"></td>
+                        <td>0</td>
+                    </tr>
+                    <tr data-denom="1">
+                        <td>1</td>
+                        <td><input type="number" min="0" placeholder="0"></td>
+                        <td>0</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="2">Total</td>
+                        <td id="denominationTotal">0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; margin-top: 10px;">
+            <span id="bankLabel" style="font-size: 13px; font-weight: 700; color: #374151;">Bank</span>
+            <input type="text" id="bankInput" placeholder="₱0.00" readonly style="border: 2px solid #e5e7eb; border-radius: 6px; padding: 4px 8px; font-size: 13px; font-weight: 700; color: #374151; text-align: right; background: white; flex: 1; min-width: 0; margin-left: 12px; outline: none;">
+        </div>
+
+        <button onclick="confirmDenomination()" id="confirmDenomBtn" style="width: 100%; margin-top: 10px; padding: 8px 0; background: #436026; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;">
+            <i class="fas fa-check" style="margin-right: 6px;"></i>Confirm
+        </button>
+    </div>
+</div>
+
 <!-- Confirmation Modal -->
 <div id="confirmDenomModal" onclick="if(event.target===this)closeConfirmModal()" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px);">
     <div style="background:#fff; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.3); padding:32px 30px 26px; max-width:420px; width:90%; font-family:'Segoe UI',sans-serif; animation:modalIn .2s ease;">

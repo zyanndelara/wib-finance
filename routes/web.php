@@ -51,24 +51,25 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         $totalCollections = \App\Models\Remittance::sum('total_collection');
         $totalDiscrepancies = \App\Models\BankDepositConfirmation::sum('discrepancy');
 
-        // Build monthly overall orders per year from merchant totals
+        // Build monthly order counts per year from mt_order.order_id
         $currentYear = (int) date('Y');
         $chartYears  = [$currentYear, $currentYear - 1, $currentYear - 2];
-        $merchantModel = new \App\Models\Merchant();
-        $merchantDateColumn = $merchantModel->getCreatedAtColumn();
-        $merchantTable = $merchantModel->getTable();
-        $hasTotalOrders = \Illuminate\Support\Facades\Schema::hasColumn($merchantTable, 'total_orders');
+        $orderColumns = collect(\Illuminate\Support\Facades\Schema::connection('wibfinance')->getColumnListing('mt_order'))
+            ->map(fn ($column) => strtolower((string) $column));
+
+        $orderDateColumn = collect(['order_date', 'date_created', 'created_at', 'date_added', 'delivery_date', 'date_modified'])
+            ->first(fn ($column) => $orderColumns->contains(strtolower($column)));
 
         $rawMonthly = collect();
-        if ($hasTotalOrders) {
-            $rawMonthly = \App\Models\Merchant::select(
-                \Illuminate\Support\Facades\DB::raw("YEAR({$merchantDateColumn}) as yr"),
-                \Illuminate\Support\Facades\DB::raw("MONTH({$merchantDateColumn}) as mo"),
-                \Illuminate\Support\Facades\DB::raw('SUM(total_orders) as total')
-            )
-            ->whereIn(\Illuminate\Support\Facades\DB::raw("YEAR({$merchantDateColumn})"), $chartYears)
-            ->groupBy('yr', 'mo')
-            ->get();
+        if ($orderDateColumn && $orderColumns->contains('order_id')) {
+            $rawMonthly = collect($chartYears)->flatMap(function ($year) use ($orderDateColumn) {
+                return \Illuminate\Support\Facades\DB::connection('wibfinance')->table('mt_order')
+                    ->selectRaw("YEAR({$orderDateColumn}) as yr, MONTH({$orderDateColumn}) as mo, COUNT(DISTINCT order_id) as total")
+                    ->whereYear($orderDateColumn, $year)
+                    ->whereNotNull('order_id')
+                    ->groupByRaw("YEAR({$orderDateColumn}), MONTH({$orderDateColumn})")
+                    ->get();
+            });
         }
 
         $monthlyOrders = [];
@@ -239,7 +240,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         if ($request->filled('sort')) {
             switch ($request->sort) {
                 case 'name':
-                    $riderSummaryQuery->join('mt_driver as riders', 'remittances.rider_id', '=', 'riders.driver_id')
+                    $riderSummaryQuery->join(DB::raw('mt_driver as riders'), 'remittances.rider_id', '=', 'riders.driver_id')
                         ->orderByRaw("CONCAT_WS(' ', riders.first_name, riders.last_name) asc");
                     break;
                 case 'total_remit':
@@ -353,7 +354,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
 
     Route::post('/bank-deposit/confirm', function (\Illuminate\Http\Request $request) {
         $request->validate([
-            'rider_id'    => 'required|exists:mt_driver,driver_id',
+            'rider_id'    => 'required|exists:wibfinance.mt_driver,driver_id',
             'bank_amount' => 'required|numeric|min:0',
             'total_amount'=> 'required|numeric|min:0.01',
             'deposit_date'=> 'required|date',

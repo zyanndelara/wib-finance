@@ -7,7 +7,6 @@ use App\Models\Rider;
 use App\Models\RiderPayroll;
 use App\Models\RiderDeduction;
 use App\Models\Remittance;
-use App\Models\Merchant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -16,7 +15,10 @@ class RiderController extends Controller
 {
     public function index(Request $request)
     {
-        $riders = DB::table('mt_driver')
+        $legacyDb = DB::connection('wibfinance');
+        $legacySchema = Schema::connection('wibfinance');
+
+        $riders = $legacyDb->table('mt_driver')
             ->select('driver_id', 'first_name', 'last_name', 'date_created')
             ->whereIn('status', ['active', 'cleared'])
             ->orderByDesc('date_created')
@@ -58,8 +60,8 @@ class RiderController extends Controller
             ->toArray();
 
         $riderTaskDeliveriesMap = [];
-        if (Schema::hasTable('mt_driver_task')) {
-            $driverTaskColumns = Schema::getColumnListing('mt_driver_task');
+        if ($legacySchema->hasTable('mt_driver_task')) {
+            $driverTaskColumns = $legacySchema->getColumnListing('mt_driver_task');
             $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($driverTaskColumns) {
                 return in_array($column, $driverTaskColumns, true);
             });
@@ -67,7 +69,7 @@ class RiderController extends Controller
             $taskStatsDateParsed = \Carbon\Carbon::parse($request->get('stats_date', today()->toDateString()))->toDateString();
 
             if ($riderKeyColumn && $taskKeyColumn) {
-                $taskQuery = DB::table('mt_driver_task')
+                $taskQuery = $legacyDb->table('mt_driver_task')
                     ->selectRaw("{$riderKeyColumn} as rider_key, COUNT({$taskKeyColumn}) as total_deliveries")
                     ->whereNotNull($taskKeyColumn)
                     ->groupBy($riderKeyColumn);
@@ -98,15 +100,15 @@ class RiderController extends Controller
         $taskStatsDateParsed = \Carbon\Carbon::parse($request->get('stats_date', today()->toDateString()))->toDateString();
         
         try {
-            $driverTaskColumns = Schema::getColumnListing('mt_driver_task');
+            $driverTaskColumns = $legacySchema->getColumnListing('mt_driver_task');
             $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($driverTaskColumns) {
                 return in_array($column, $driverTaskColumns, true);
             });
             
-            if ($riderKeyColumn && Schema::hasTable('mt_driver_task')) {
+            if ($riderKeyColumn && $legacySchema->hasTable('mt_driver_task')) {
                 // Get delivery charges from mt_order (in wibfinance) joined with mt_driver_task by order_id
                 // Use raw join for cross-database queries
-                $chargeQuery = DB::table('mt_driver_task')
+                $chargeQuery = $legacyDb->table('mt_driver_task')
                     ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wibfinance.mt_order.delivery_charge), 0) as total_delivery_charge")
                     ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
                     ->groupBy('mt_driver_task.' . $riderKeyColumn);
@@ -129,7 +131,7 @@ class RiderController extends Controller
                     ->toArray();
 
                 // Get tips from mt_order.cart_tip_value using the same rider/date scope.
-                $tipsQuery = DB::table('mt_driver_task')
+                $tipsQuery = $legacyDb->table('mt_driver_task')
                     ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wibfinance.mt_order.cart_tip_value), 0) as total_tips")
                     ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
                     ->groupBy('mt_driver_task.' . $riderKeyColumn);
@@ -147,7 +149,7 @@ class RiderController extends Controller
 
                 // Get total order amount from mt_order.total_w_tax using the same rider/date scope.
                 try {
-                    $totalCollectionQuery = DB::table('mt_driver_task')
+                    $totalCollectionQuery = $legacyDb->table('mt_driver_task')
                         ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wibfinance.mt_order.total_w_tax), 0) as total_collection")
                         ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
                         ->groupBy('mt_driver_task.' . $riderKeyColumn);
@@ -187,7 +189,7 @@ class RiderController extends Controller
         } else {
             $remittedOnDate = Remittance::whereDate('remittance_date', $statsDateParsed)
                 ->pluck('rider_id')->unique()->toArray();
-            $nonRemittingRiderCount = DB::table('mt_driver')
+            $nonRemittingRiderCount = $legacyDb->table('mt_driver')
                 ->whereIn('status', ['active', 'cleared'])
                 ->whereDate('date_created', '<=', $statsDateParsed)
                 ->whereNotIn('driver_id', $remittedOnDate)
@@ -216,8 +218,8 @@ class RiderController extends Controller
                 ->toArray();
 
             $ridersWithDeliveriesYesterday = [];
-            if (Schema::hasTable('mt_driver_task')) {
-                $driverTaskColumns = Schema::getColumnListing('mt_driver_task');
+            if ($legacySchema->hasTable('mt_driver_task')) {
+                $driverTaskColumns = $legacySchema->getColumnListing('mt_driver_task');
                 $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($driverTaskColumns) {
                     return in_array($column, $driverTaskColumns, true);
                 });
@@ -228,7 +230,7 @@ class RiderController extends Controller
                     });
 
                 if ($riderKeyColumn && $taskKeyColumn && $taskDateColumn) {
-                    $ridersWithDeliveriesYesterday = DB::table('mt_driver_task')
+                    $ridersWithDeliveriesYesterday = $legacyDb->table('mt_driver_task')
                         ->selectRaw("{$riderKeyColumn} as rider_key, COUNT({$taskKeyColumn}) as total_deliveries")
                         ->whereNotNull($taskKeyColumn)
                         ->whereDate($taskDateColumn, $yesterday)
@@ -242,7 +244,7 @@ class RiderController extends Controller
                 }
             }
 
-            $blockedRiderIds = DB::table('mt_driver')
+            $blockedRiderIds = $legacyDb->table('mt_driver')
                 ->whereIn('status', ['active', 'cleared'])
                 ->whereDate('date_created', '<', \Carbon\Carbon::today())
                 ->when(!empty($ridersWithDeliveriesYesterday), function ($query) use ($ridersWithDeliveriesYesterday) {
@@ -407,9 +409,12 @@ class RiderController extends Controller
             ]);
         }
 
-        $merchants = Merchant::where('status', 'active')
+        $merchants = $legacyDb->table('mt_merchant')
+            ->selectRaw('restaurant_name as name')
+            ->whereNotNull('restaurant_name')
+            ->whereRaw("TRIM(restaurant_name) <> ''")
             ->orderBy('restaurant_name')
-            ->get(['merchant_id as id', 'restaurant_name as name']);
+            ->get();
 
         return view('remittance', compact('riders', 'payrolls', 'deductions', 'deductionsByRider', 'allDeductionsFlat', 'remittances', 'nonRemittingRiderCount', 'clearedCount', 'cashCollection', 'digitalCollection', 'statsDate', 'statsDateParsed', 'blockedRiderIds', 'clearedRiderIds', 'remittedRiderIds', 'shortRiderIds', 'remittedTotalsByRider', 'riderRemittanceDateMap', 'riderTaskDeliveriesMap', 'riderDeliveryChargesMap', 'riderTipsMap', 'riderTotalCollectionMap', 'merchants'));
     }
