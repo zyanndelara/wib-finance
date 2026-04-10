@@ -369,8 +369,8 @@
         .charts-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin-bottom: 14px;
             align-items: stretch;
         }
 
@@ -379,11 +379,11 @@
             display: flex;
             flex-direction: column;
             background: rgba(255, 255, 255, 0.98);
-            border-radius: 16px;
-            padding: 12px 12px 10px;
-            box-shadow: 0 3px 10px rgba(25, 42, 20, 0.05);
+            border-radius: 14px;
+            padding: 10px 10px 8px;
+            box-shadow: 0 8px 22px rgba(25, 42, 20, 0.08);
             transition: all 0.3s ease;
-            border: 1px solid rgba(67, 96, 38, 0.07);
+            border: 1px solid rgba(67, 96, 38, 0.1);
             animation: riseIn 0.5s ease both;
             overflow: hidden;
             min-height: 100%;
@@ -399,22 +399,22 @@
         }
 
         .chart-box:hover {
-            box-shadow: 0 8px 18px rgba(35, 54, 22, 0.08);
-            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(35, 54, 22, 0.12);
+            transform: translateY(-2px);
         }
 
         .chart-box h3 {
-            font-size: 12px;
-            font-weight: bold;
+            font-size: 13px;
+            font-weight: 700;
             font-family: 'Sora', sans-serif;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             color: var(--brand-900);
-            padding: 0 0 6px;
-            border-bottom: 1px solid rgba(67, 96, 38, 0.08);
+            padding: 0 2px 8px;
+            border-bottom: 1px solid rgba(67, 96, 38, 0.12);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
@@ -425,12 +425,12 @@
         }
 
         .chart-filter {
-            min-width: 82px;
-            padding: 5px 9px;
-            border-radius: 9px;
+            min-width: 84px;
+            padding: 5px 10px;
+            border-radius: 8px;
             font-size: 12px;
-            background: #fcfdf9;
-            border: 1px solid rgba(63, 99, 60, 0.14);
+            background: linear-gradient(180deg, #ffffff 0%, #f5f8ef 100%);
+            border: 1px solid rgba(63, 99, 60, 0.18);
             cursor: pointer;
             transition: all 0.3s ease;
             color: var(--brand-800);
@@ -440,7 +440,7 @@
 
         .chart-filter:hover {
             border-color: #436026;
-            box-shadow: 0 2px 5px rgba(67, 96, 38, 0.08);
+            box-shadow: 0 3px 8px rgba(67, 96, 38, 0.12);
         }
 
         .chart-filter:focus {
@@ -451,13 +451,13 @@
         .chart-placeholder {
             width: 100%;
             flex: 1;
-            min-height: 110px;
-            padding: 2px 0 0;
+            min-height: 180px;
+            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(160deg, rgba(250, 251, 245, 0.82) 0%, rgba(255, 255, 255, 0.95) 100%);
-            border-radius: 10px;
+            border-radius: 9px;
             color: #666;
             border: 1px solid rgba(67, 96, 38, 0.05);
         }
@@ -467,12 +467,25 @@
             height: 100% !important;
         }
 
+        #grossSalesTrendCard .chart-placeholder {
+            min-height: 145px;
+        }
+
         .chart-box--wide {
             grid-column: 1 / -1;
         }
 
         .chart-box--wide .chart-placeholder {
-            min-height: 110px;
+            min-height: 220px;
+        }
+
+        .orders-trend-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 10px;
+            flex: 1;
+            min-height: 0;
         }
 
         /* Orders Trend Chart Enhancement */
@@ -480,39 +493,511 @@
             background: linear-gradient(135deg, #ffffff 0%, #fafdf9 100%) !important;
             border: 1px solid rgba(67, 96, 38, 0.1) !important;
             box-shadow: 0 4px 20px rgba(25, 42, 20, 0.08) !important;
-        padding: 8px 10px 8px !important;
+            padding: 8px 10px 10px !important;
+            max-width: 100%;
+            width: 100%;
+            min-height: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .orders-trend-card .chart-placeholder {
+            flex: 1;
+            min-height: 0;
+        }
+
+        #ordersTrendCard {
+            padding: 12px 6px 6px;
+            border: 1px solid rgba(50, 82, 49, 0.14);
+            background: linear-gradient(145deg, #ffffff 0%, #f8fbf4 100%);
+            box-shadow: 0 9px 22px rgba(20, 38, 18, 0.08);
+        }
+
+        #ordersTrendCard .orders-trend-body {
+            gap: 4px;
+            padding-top: 4px;
+        }
+
+        #ordersTrendCard .chart-placeholder {
+            min-height: 90px;
+        }
+
+        #ordersTrendCard .orders-trend-stats {
+            gap: 6px;
+        }
+
+        #ordersTrendCard .stat-box {
+            padding: 8px 9px 7px;
+            border-color: rgba(68, 101, 54, 0.11);
+            background: linear-gradient(145deg, rgba(68, 101, 54, 0.09) 0%, rgba(68, 101, 54, 0.03) 100%);
+        }
+
+        .orders-pro-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 0 0 8px;
+            border-bottom: 1px solid rgba(58, 93, 52, 0.12);
+        }
+
+        .orders-pro-title-wrap {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            min-width: 0;
+        }
+
+        .orders-pro-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            color: #ffffff;
+            background: linear-gradient(145deg, #345633 0%, #6d944a 100%);
+            box-shadow: 0 6px 12px rgba(52, 86, 51, 0.23);
+            flex-shrink: 0;
+        }
+
+        .orders-pro-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .orders-pro-title {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 14px;
+            line-height: 1.2;
+            font-weight: 800;
+            color: #1f3624;
+            font-family: 'Sora', sans-serif;
+            letter-spacing: 0.2px;
+            display: block;
+        }
+
+        .orders-pro-subtitle {
+            margin: 0;
+            font-size: 10px;
+            font-weight: 600;
+            color: #647460;
+        }
+
+        .orders-pro-badge {
+            margin-top: 1px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            width: fit-content;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.35px;
+            color: #2f5233;
+            background: rgba(64, 103, 60, 0.11);
+            border: 1px solid rgba(64, 103, 60, 0.2);
+            border-radius: 999px;
+            padding: 3px 8px;
+            text-transform: uppercase;
+        }
+
+        .orders-pro-controls {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid rgba(61, 97, 55, 0.16);
+            box-shadow: 0 3px 8px rgba(46, 72, 32, 0.08);
+            flex-shrink: 0;
+        }
+
+        #fundsOutflowsCard {
+            border: 1px solid rgba(74, 90, 42, 0.14);
+            background: linear-gradient(145deg, #ffffff 0%, #fcfbf1 100%);
+            box-shadow: 0 9px 22px rgba(35, 40, 14, 0.08);
+            padding: 12px 9px 9px;
+        }
+
+        .funds-pro-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 11px;
+            padding: 0 0 8px;
+            border-bottom: 1px solid rgba(114, 124, 44, 0.15);
+        }
+
+        .funds-pro-title-wrap {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            min-width: 0;
+        }
+
+        .funds-pro-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            color: #1f3624;
+            background: linear-gradient(145deg, #ffe173 0%, #f5b700 100%);
+            box-shadow: 0 6px 12px rgba(157, 116, 3, 0.26);
+            flex-shrink: 0;
+        }
+
+        .funds-pro-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .funds-pro-title {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.2;
+            font-weight: 800;
+            color: #2c3f20;
+            font-family: 'Sora', sans-serif;
+            letter-spacing: 0.2px;
+        }
+
+        .funds-pro-subtitle {
+            margin: 0;
+            font-size: 10px;
+            font-weight: 600;
+            color: #74743f;
+        }
+
+        .funds-pro-badge {
+            margin-top: 1px;
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            border-radius: 999px;
+            padding: 3px 8px;
+            border: 1px solid rgba(143, 132, 46, 0.28);
+            background: rgba(245, 183, 0, 0.13);
+            color: #665d17;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.35px;
+            text-transform: uppercase;
+        }
+
+        .funds-pro-controls {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid rgba(143, 132, 46, 0.2);
+            box-shadow: 0 3px 8px rgba(123, 100, 11, 0.09);
+            flex-shrink: 0;
+        }
+
+        .funds-pro-body {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            padding-top: 6px;
+            min-height: 0;
+            flex: 1;
+        }
+
+        .funds-pro-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        .funds-pro-metric {
+            border: 1px solid rgba(143, 132, 46, 0.16);
+            border-radius: 9px;
+            padding: 7px 8px;
+            background: linear-gradient(145deg, rgba(245, 183, 0, 0.11) 0%, rgba(245, 183, 0, 0.04) 100%);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .funds-pro-metric-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.38px;
+            color: #7a7030;
+            text-transform: uppercase;
+        }
+
+        .funds-pro-metric-value {
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Sora', sans-serif;
+            color: #2c3f20;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .funds-pro-metric.net {
+            border-color: rgba(67, 96, 38, 0.22);
+            background: linear-gradient(145deg, rgba(67, 96, 38, 0.14) 0%, rgba(67, 96, 38, 0.05) 100%);
+        }
+
+        .funds-pro-metric.net .funds-pro-metric-value {
+            color: #1f3624;
+        }
+
+        #fundsOutflowsCard .chart-placeholder {
+            min-height: 104px;
+            border-color: rgba(130, 118, 40, 0.13);
+            background: linear-gradient(165deg, rgba(255, 250, 230, 0.82) 0%, rgba(255, 255, 255, 0.96) 100%);
+        }
+
+        #grossSalesTrendCard {
+            width: 100%;
+            max-width: none;
+            margin-left: 0;
+            margin-right: 0;
+            padding: 10px 12px 12px !important;
+            border: 1px solid rgba(50, 82, 49, 0.15) !important;
+            background: linear-gradient(140deg, #ffffff 0%, #f8fbf4 100%) !important;
+            box-shadow: 0 10px 24px rgba(20, 38, 18, 0.09) !important;
+        }
+
+        #grossSalesTrendCard .orders-trend-body {
+            gap: 8px;
+            padding-top: 8px;
+        }
+
+        #grossSalesTrendCard .chart-placeholder {
+            min-height: 130px;
+            border-color: rgba(53, 84, 43, 0.1);
+            background: linear-gradient(165deg, rgba(246, 250, 239, 0.85) 0%, rgba(255, 255, 255, 0.96) 100%);
+        }
+
+        .gross-sales-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 0 0 10px;
+            border-bottom: 1px solid rgba(57, 94, 53, 0.12);
+        }
+
+        .gross-sales-title-wrap {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .gross-sales-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            color: #ffffff;
+            background: linear-gradient(145deg, #2d4a30 0%, #5f8544 100%);
+            box-shadow: 0 7px 14px rgba(45, 74, 48, 0.24);
+            flex-shrink: 0;
+        }
+
+        .gross-sales-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .gross-sales-title {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.2;
+            font-weight: 800;
+            color: #1f3624;
+            font-family: 'Sora', sans-serif;
+            letter-spacing: 0.2px;
+        }
+
+        .gross-sales-subtitle {
+            margin: 0;
+            font-size: 11px;
+            color: #61715d;
+            font-weight: 600;
+        }
+
+        .gross-sales-period {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            width: fit-content;
+            margin-top: 1px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #305034;
+            background: rgba(66, 106, 62, 0.1);
+            border: 1px solid rgba(66, 106, 62, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .gross-sales-controls {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid rgba(61, 97, 55, 0.16);
+            box-shadow: 0 3px 9px rgba(46, 72, 32, 0.08);
+            flex-shrink: 0;
+        }
+
+        .gross-sales-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .gross-sales-metric {
+            background: linear-gradient(145deg, rgba(69, 105, 51, 0.08) 0%, rgba(69, 105, 51, 0.03) 100%);
+            border: 1px solid rgba(69, 105, 51, 0.11);
+            border-radius: 10px;
+            padding: 8px 9px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .gross-sales-metric-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.45px;
+            color: #6d7c68;
+            font-weight: 700;
+        }
+
+        .gross-sales-metric-value {
+            font-size: 12px;
+            color: #1f3624;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .gross-sales-metric.total {
+            background: linear-gradient(145deg, rgba(31, 54, 36, 0.12) 0%, rgba(47, 80, 44, 0.06) 100%);
+            border-color: rgba(31, 54, 36, 0.22);
+        }
+
+        .gross-sales-metric.total .gross-sales-metric-value {
+            color: #18301f;
         }
 
         .orders-trend-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 10px;
+            padding: 10px 12px;
             border-bottom: 1px solid rgba(67, 96, 38, 0.08);
-            margin: -8px -10px 8px -10px;
-            background: linear-gradient(90deg, rgba(67, 96, 38, 0.02) 0%, rgba(67, 96, 38, 0.01) 100%);
+            margin: -8px -10px 10px -10px;
+            background: linear-gradient(90deg, rgba(67, 96, 38, 0.04) 0%, rgba(67, 96, 38, 0.015) 100%);
         }
 
         .orders-trend-title {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .orders-trend-header .orders-trend-heading {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            color: #1f3624;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.1px;
+            justify-content: flex-start;
+            width: auto;
+            border: 0;
+            padding: 0;
+            text-align: left;
+            align-self: flex-start;
+        }
+
+        .orders-trend-heading i {
+            color: #436026;
+            font-size: 16px;
+        }
+
+        .orders-trend-subtitle {
+            margin: 0;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6c7568;
+            letter-spacing: 0.2px;
+        }
+
+        .orders-trend-actions {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(67, 96, 38, 0.14);
+        }
+
+        .orders-trend-year-filter {
+            font-size: 12px;
+            padding: 6px 10px;
+            min-width: 78px;
         }
 
         .orders-trend-stats {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            padding: 0 0 8px 0;
-            margin-bottom: 4px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            padding: 0;
+            margin-bottom: 0;
+            align-content: start;
         }
 
         .stat-box {
+            position: relative;
             display: flex;
             flex-direction: column;
-            padding: 8px 10px;
+            padding: 11px 12px 10px;
             background: linear-gradient(135deg, rgba(67, 96, 38, 0.04) 0%, rgba(67, 96, 38, 0.02) 100%);
             border: 1px solid rgba(67, 96, 38, 0.08);
             border-radius: 8px;
             transition: all 0.3s ease;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            overflow: hidden;
+        }
+
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(67, 96, 38, 0.5), rgba(67, 96, 38, 0.08));
         }
 
         .stat-box:hover {
@@ -525,26 +1010,161 @@
             font-weight: 600;
             color: #6c7568;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.45px;
             margin-bottom: 4px;
         }
 
         .stat-value {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #436026;
             font-family: 'Sora', sans-serif;
+            letter-spacing: 0.2px;
+            line-height: 1.1;
         }
 
         @media (max-width: 768px) {
+            #ordersTrendCard {
+                padding: 10px 6px 5px;
+            }
+
+            .orders-pro-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 9px;
+            }
+
+            .orders-pro-controls {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .funds-pro-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 9px;
+            }
+
+            .funds-pro-controls {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .funds-pro-metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            #fundsOutflowsCard .chart-placeholder {
+                min-height: 95px;
+            }
+
+            #fundsOutflowsCard {
+                padding: 10px 9px 9px;
+            }
+
+            #ordersTrendCard .chart-placeholder {
+                min-height: 80px;
+            }
+
+            #grossSalesTrendCard {
+                width: 100%;
+                padding: 8px 9px 9px !important;
+            }
+
+            #grossSalesTrendCard .chart-placeholder {
+                min-height: 115px;
+            }
+
+            .gross-sales-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .gross-sales-controls {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .gross-sales-metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .orders-trend-body {
+                gap: 8px;
+            }
+
             .orders-trend-header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 12px;
+                gap: 10px;
+            }
+
+            .orders-trend-actions {
+                width: 100%;
+                justify-content: flex-end;
             }
 
             .orders-trend-stats {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .orders-trend-card {
+                max-width: 100%;
+            }
+
+            .orders-trend-card {
+                height: auto !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #fundsOutflowsCard {
+                padding: 8px 8px 8px;
+            }
+
+            #ordersTrendCard {
+                padding: 8px 5px 4px;
+            }
+
+            .orders-pro-title {
+                font-size: 13px;
+            }
+
+            .funds-pro-title {
+                font-size: 13px;
+            }
+
+            .funds-pro-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            #fundsOutflowsCard .chart-placeholder {
+                min-height: 84px;
+            }
+
+            #ordersTrendCard .chart-placeholder {
+                min-height: 70px;
+            }
+
+            #grossSalesTrendCard .chart-placeholder {
+                min-height: 102px;
+            }
+
+            .gross-sales-title {
+                font-size: 14px;
+            }
+
+            .gross-sales-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .orders-trend-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .orders-trend-card {
+                height: auto !important;
             }
         }
 
@@ -720,11 +1340,19 @@
             }
 
             .chart-placeholder {
-                min-height: 110px;
+                min-height: 160px;
             }
 
             .chart-box--wide .chart-placeholder {
-                min-height: 110px;
+                min-height: 190px;
+            }
+
+            .orders-trend-body {
+                padding-top: 8px;
+            }
+
+            .stat-box {
+                padding: 9px 10px;
             }
 
             .transaction-history {
@@ -790,73 +1418,138 @@
         </div>
 
         <!-- Charts -->
-        <div class="charts-grid">
-            <!-- Gross Sales Trend Chart -->
-            <div class="chart-box">
-                <h3>
-                    <span>Gross Sales Trend</span>
-                    <select class="chart-filter" id="salesTrendFilter" onchange="changeSalesTrendView(this.value)">
-                        <option value="daily" selected>Daily</option>
+        <!-- Gross Sales Trend -->
+        <div class="chart-box orders-trend-card" id="grossSalesTrendCard" style="margin-bottom:22px;">
+            <div class="gross-sales-header">
+                <div class="gross-sales-title-wrap">
+                    <div class="gross-sales-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="gross-sales-copy">
+                        <h3 class="gross-sales-title">Gross Sales Trend</h3>
+                        <p class="gross-sales-subtitle">Live merchant sales performance by partner segment</p>
+                        <span class="gross-sales-period" id="grossSalesPeriodLabel">Monthly View</span>
+                    </div>
+                </div>
+                <div class="gross-sales-controls">
+                    <select class="chart-filter orders-trend-year-filter" id="salesTrendFilter" onchange="changeSalesTrendView(this.value)">
+                        <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
+                        <option value="monthly" selected>Monthly</option>
                         <option value="annually">Annually</option>
                     </select>
-                </h3>
+                </div>
+            </div>
+
+            <div class="orders-trend-body">
+                <div class="gross-sales-metrics">
+                    <div class="gross-sales-metric">
+                        <span class="gross-sales-metric-label">Partners</span>
+                        <span class="gross-sales-metric-value" id="grossSalesPartnersTotal">PHP 0.00</span>
+                    </div>
+                    <div class="gross-sales-metric">
+                        <span class="gross-sales-metric-label">Non-Partners</span>
+                        <span class="gross-sales-metric-value" id="grossSalesNonPartnersTotal">PHP 0.00</span>
+                    </div>
+                    <div class="gross-sales-metric">
+                        <span class="gross-sales-metric-label">Good Taste</span>
+                        <span class="gross-sales-metric-value" id="grossSalesGoodTasteTotal">PHP 0.00</span>
+                    </div>
+                    <div class="gross-sales-metric total">
+                        <span class="gross-sales-metric-label">Total</span>
+                        <span class="gross-sales-metric-value" id="grossSalesOverallTotal">PHP 0.00</span>
+                    </div>
+                </div>
+
                 <div class="chart-placeholder">
                     <canvas id="salesTrendChart"></canvas>
                 </div>
             </div>
-
-            <!-- Daily/Weekly/Monthly Chart -->
-            <div class="chart-box">
-                <h3>
-                    <span>Funds and Outflows</span>
-                    <select class="chart-filter" id="fundsFlowFilter" onchange="changeChartView(this.value)">
-                        <option value="daily" selected>Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                    </select>
-                </h3>
-                <div class="chart-placeholder">
-                    <canvas id="expenseBalanceChart"></canvas>
-                </div>
-            </div>
         </div>
 
-        <!-- Orders by Month Trend -->
-        <div class="chart-box chart-box--wide orders-trend-card" style="margin-bottom:22px;">
-            <div class="orders-trend-header">
-                <div class="orders-trend-title">
-                    <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #1f3624; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-chart-bar" style="color: #436026; font-size: 16px;"></i>
-                        Orders by Month Trend
-                    </h3>
+        <div class="charts-grid">
+            <!-- Orders by Month Trend Chart -->
+            <div class="chart-box" id="ordersTrendCard">
+                <div class="orders-pro-header">
+                    <div class="orders-pro-title-wrap">
+                        <div class="orders-pro-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="orders-pro-copy">
+                            <h3 class="orders-pro-title">Orders by Month Trend</h3>
+                            <p class="orders-pro-subtitle">Monthly order performance overview</p>
+                            <span class="orders-pro-badge" id="ordersTrendYearBadge">Year {{ $chartYears[0] }}</span>
+                        </div>
+                    </div>
+                    <div class="orders-pro-controls">
+                        <select class="chart-filter orders-trend-year-filter" id="ordersByMonthYear" onchange="updateOrdersByMonth(this.value)">
+                            @foreach ($chartYears as $yr)
+                                <option value="{{ $yr }}" {{ $loop->first ? 'selected' : '' }}>{{ $yr }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-                <select class="chart-filter" id="ordersByMonthYear" onchange="updateOrdersByMonth(this.value)" style="font-size: 12px; padding: 6px 10px;">
-                    @foreach ($chartYears as $yr)
-                        <option value="{{ $yr }}" {{ $loop->first ? 'selected' : '' }}>{{ $yr }}
-                        </option>
-                    @endforeach
-                </select>
+                <div class="orders-trend-body">
+                    <div class="orders-trend-stats">
+                        <div class="stat-box">
+                            <span class="stat-label">Total Orders</span>
+                            <span class="stat-value" id="totalOrdersStat">0</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Peak Month</span>
+                            <span class="stat-value" id="peakMonthStat">-</span>
+                        </div>
+                    </div>
+
+                    <div class="chart-placeholder">
+                        <canvas id="ordersByMonthChart"></canvas>
+                    </div>
+                </div>
             </div>
-            
-            <div class="orders-trend-stats">
-                <div class="stat-box">
-                    <span class="stat-label">Total Orders</span>
-                    <span class="stat-value" id="totalOrdersStat">0</span>
+
+            <!-- Daily/Weekly/Monthly Chart -->
+            <div class="chart-box" id="fundsOutflowsCard">
+                <div class="funds-pro-header">
+                    <div class="funds-pro-title-wrap">
+                        <div class="funds-pro-icon">
+                            <i class="fas fa-arrows-left-right"></i>
+                        </div>
+                        <div class="funds-pro-copy">
+                            <h3 class="funds-pro-title">Funds and Outflows</h3>
+                            <p class="funds-pro-subtitle">Balance movement overview by reporting period</p>
+                            <span class="funds-pro-badge" id="fundsFlowPeriodLabel">Daily Snapshot</span>
+                        </div>
+                    </div>
+                    <div class="funds-pro-controls">
+                        <select class="chart-filter" id="fundsFlowFilter" onchange="changeChartView(this.value)">
+                            <option value="daily" selected>Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="stat-box">
-                    <span class="stat-label">Peak Month</span>
-                    <span class="stat-value" id="peakMonthStat">-</span>
+
+                <div class="funds-pro-body">
+                    <div class="funds-pro-metrics">
+                        <div class="funds-pro-metric">
+                            <span class="funds-pro-metric-label">Total Inflow</span>
+                            <span class="funds-pro-metric-value" id="fundsTotalInflow">PHP 0.00</span>
+                        </div>
+                        <div class="funds-pro-metric">
+                            <span class="funds-pro-metric-label">Total Outflow</span>
+                            <span class="funds-pro-metric-value" id="fundsTotalOutflow">PHP 0.00</span>
+                        </div>
+                        <div class="funds-pro-metric net">
+                            <span class="funds-pro-metric-label">Net Flow</span>
+                            <span class="funds-pro-metric-value" id="fundsNetFlow">PHP 0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="chart-placeholder">
+                        <canvas id="expenseBalanceChart"></canvas>
+                    </div>
                 </div>
-                <div class="stat-box">
-                    <span class="stat-label">Avg. Orders</span>
-                    <span class="stat-value" id="avgOrdersStat">0</span>
-                </div>
-            </div>
-            
-            <div class="chart-placeholder" style="min-height: 50px; padding: 6px;">
-                <canvas id="ordersByMonthChart"></canvas>
             </div>
         </div>
 
@@ -873,45 +1566,219 @@
     <!-- Chart.js Library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Gross Sales Trend Chart
+        // Gross Sales Trend Chart (live merchant sales from mt_order + mt_merchant)
+        const salesTrendSeries = @json($salesTrendSeries ?? []);
+        const merchantsBaseUrl = @json(route('merchants'));
+
+        function getSalesSeries(period) {
+            const fallback = {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                partners: Array(6).fill(0),
+                nonPartners: Array(6).fill(0),
+                goodTaste: Array(6).fill(0)
+            };
+
+            const candidate = salesTrendSeries[period] || salesTrendSeries.monthly || fallback;
+            const labels = Array.isArray(candidate.labels) ? candidate.labels : fallback.labels;
+            const partners = Array.isArray(candidate.partners) ? candidate.partners : Array(labels.length).fill(0);
+            const nonPartners = Array.isArray(candidate.nonPartners) ? candidate.nonPartners : Array(labels.length).fill(0);
+            const goodTaste = Array.isArray(candidate.goodTaste) ? candidate.goodTaste : Array(labels.length).fill(0);
+
+            return {
+                labels,
+                partners,
+                nonPartners,
+                goodTaste
+            };
+        }
+
+        function toCurrency(value) {
+            return 'PHP ' + Number(value || 0).toLocaleString('en-PH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function sumNumericSeries(values) {
+            if (!Array.isArray(values)) {
+                return 0;
+            }
+
+            return values.reduce((sum, value) => sum + Number(value || 0), 0);
+        }
+
+        function updateGrossSalesSummary(period) {
+            const activePeriod = period || document.getElementById('salesTrendFilter')?.value || 'monthly';
+            const periodLabels = {
+                daily: 'Daily View',
+                weekly: 'Weekly View',
+                monthly: 'Monthly View',
+                annually: 'Annual View'
+            };
+
+            const series = getSalesSeries(activePeriod);
+            const partnersTotal = sumNumericSeries(series.partners);
+            const nonPartnersTotal = sumNumericSeries(series.nonPartners);
+            const goodTasteTotal = sumNumericSeries(series.goodTaste);
+            const overallTotal = partnersTotal + nonPartnersTotal + goodTasteTotal;
+
+            const partnersEl = document.getElementById('grossSalesPartnersTotal');
+            const nonPartnersEl = document.getElementById('grossSalesNonPartnersTotal');
+            const goodTasteEl = document.getElementById('grossSalesGoodTasteTotal');
+            const overallEl = document.getElementById('grossSalesOverallTotal');
+            const periodEl = document.getElementById('grossSalesPeriodLabel');
+
+            if (partnersEl) partnersEl.textContent = toCurrency(partnersTotal);
+            if (nonPartnersEl) nonPartnersEl.textContent = toCurrency(nonPartnersTotal);
+            if (goodTasteEl) goodTasteEl.textContent = toCurrency(goodTasteTotal);
+            if (overallEl) overallEl.textContent = toCurrency(overallTotal);
+            if (periodEl) periodEl.textContent = periodLabels[activePeriod] || 'Monthly View';
+        }
+
+        function mapSalesTrendToMerchantPeriod(period) {
+            if (period === 'daily') return 'daily';
+            if (period === 'weekly') return 'weekly';
+            return 'monthly';
+        }
+
+        function openMerchantsFromSalesTrend(datasetLabel) {
+            const merchantType = String(datasetLabel || '').toLowerCase().includes('non') ? 'non-partner' : 'partner';
+            const selectedPeriod = document.getElementById('salesTrendFilter')?.value || 'monthly';
+            const merchantPeriod = mapSalesTrendToMerchantPeriod(selectedPeriod);
+            const nowDate = new Date().toISOString().slice(0, 10);
+
+            const url = new URL(merchantsBaseUrl, window.location.origin);
+            url.searchParams.set('merchant_type', merchantType);
+            url.searchParams.set('period', merchantPeriod);
+            url.searchParams.set('stats_date', nowDate);
+            window.location.href = url.toString();
+        }
+
+        const initialSalesSeries = getSalesSeries('monthly');
+
         const salesCtx = document.getElementById('salesTrendChart').getContext('2d');
         const salesTrendChart = new Chart(salesCtx, {
-            type: 'line',
+            type: 'bar',
             data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                labels: initialSalesSeries.labels,
                 datasets: [{
+                    type: 'bar',
                     label: 'Partners',
-                    data: [300, 450, 350, 500, 400, 300, 350],
-                    borderColor: '#3f633c',
-                    backgroundColor: 'transparent',
-                    tension: 0.4
+                    data: initialSalesSeries.partners,
+                    yAxisID: 'yUnits',
+                    backgroundColor: '#2d4a30',
+                    borderColor: '#2d4a30',
+                    borderWidth: 0,
+                    categoryPercentage: 0.58,
+                    barPercentage: 0.7,
+                    order: 2
                 }, {
+                    type: 'line',
                     label: 'Non-Partners',
-                    data: [250, 300, 400, 350, 450, 380, 420],
-                    borderColor: '#b84040',
-                    backgroundColor: 'transparent',
-                    tension: 0.4
+                    data: initialSalesSeries.nonPartners,
+                    yAxisID: 'yUnits',
+                    borderColor: '#7fa34d',
+                    backgroundColor: '#7fa34d',
+                    borderWidth: 3,
+                    pointRadius: 3,
+                    pointHoverRadius: 4,
+                    tension: 0,
+                    fill: false,
+                    order: 1
                 }, {
+                    type: 'line',
                     label: 'Good Taste',
-                    data: [400, 380, 420, 400, 350, 300, 250],
-                    borderColor: '#447667',
-                    backgroundColor: 'transparent',
-                    tension: 0.4
+                    data: initialSalesSeries.goodTaste,
+                    yAxisID: 'yUnits',
+                    borderColor: '#3d746d',
+                    backgroundColor: '#3d746d',
+                    borderWidth: 3,
+                    pointRadius: 3,
+                    pointHoverRadius: 4,
+                    tension: 0,
+                    fill: false,
+                    order: 1
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                onClick: function(event, elements, chart) {
+                    if (!elements || !elements.length) {
+                        return;
+                    }
+
+                    const firstPoint = elements[0];
+                    const dataset = chart?.data?.datasets?.[firstPoint.datasetIndex];
+                    if (!dataset || !dataset.label) {
+                        return;
+                    }
+
+                    openMerchantsFromSalesTrend(dataset.label);
+                },
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            color: '#4f5e4a',
+                            padding: 14,
+                            font: {
+                                family: 'Manrope',
+                                size: 11,
+                                weight: '600'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(24, 34, 22, 0.94)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#eef4ea',
+                        padding: 12,
+                        cornerRadius: 10,
+                        callbacks: {
+                            label: function(context) {
+                                return ' ' + context.dataset.label + ': ' + toCurrency(context.parsed.y);
+                            }
+                        }
                     }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true,
+                    x: {
+                        grid: {
+                            display: false
+                        },
                         ticks: {
-                            stepSize: 100
+                            color: '#6c7568',
+                            font: {
+                                family: 'Manrope',
+                                size: 11,
+                                weight: '600'
+                            }
+                        }
+                    },
+                    yUnits: {
+                        position: 'left',
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(67, 96, 38, 0.12)'
+                        },
+                        ticks: {
+                            color: '#6c7568',
+                            font: {
+                                family: 'Manrope',
+                                size: 11
+                            },
+                            callback: function(value) {
+                                const numeric = Number(value || 0);
+                                if (Math.abs(numeric) >= 1000000) {
+                                    return 'PHP ' + (numeric / 1000000).toFixed(1) + 'M';
+                                }
+                                if (Math.abs(numeric) >= 1000) {
+                                    return 'PHP ' + (numeric / 1000).toFixed(0) + 'k';
+                                }
+
+                                return 'PHP ' + numeric.toLocaleString('en-PH');
+                            }
                         }
                     }
                 }
@@ -1011,6 +1878,31 @@
             }
         });
 
+        function updateFundsSummary(view) {
+            const activeView = view || document.getElementById('fundsFlowFilter')?.value || 'daily';
+            const periodLabels = {
+                daily: 'Daily Snapshot',
+                weekly: 'Weekly Snapshot',
+                monthly: 'Monthly Snapshot'
+            };
+
+            const inflowSeries = expenseBalanceChart?.data?.datasets?.[0]?.data || [];
+            const outflowSeries = expenseBalanceChart?.data?.datasets?.[1]?.data || [];
+            const totalInflow = sumNumericSeries(inflowSeries);
+            const totalOutflow = Math.abs(sumNumericSeries(outflowSeries));
+            const netFlow = totalInflow - totalOutflow;
+
+            const inflowEl = document.getElementById('fundsTotalInflow');
+            const outflowEl = document.getElementById('fundsTotalOutflow');
+            const netEl = document.getElementById('fundsNetFlow');
+            const periodEl = document.getElementById('fundsFlowPeriodLabel');
+
+            if (inflowEl) inflowEl.textContent = toCurrency(totalInflow);
+            if (outflowEl) outflowEl.textContent = toCurrency(totalOutflow);
+            if (netEl) netEl.textContent = toCurrency(netFlow);
+            if (periodEl) periodEl.textContent = periodLabels[activeView] || 'Daily Snapshot';
+        }
+
         function changeChartView(view) {
             // Update chart data based on view (daily/weekly/monthly)
             // This is a placeholder - implement actual data fetching logic
@@ -1033,6 +1925,7 @@
             // Update chart with new labels
             expenseBalanceChart.data.labels = labels;
             expenseBalanceChart.update();
+            updateFundsSummary(view);
         }
 
         // Orders by Month Chart connected to mt_order order_id counts
@@ -1075,10 +1968,10 @@
                 maintainAspectRatio: false,
                 layout: {
                     padding: {
-                        top: 20,
-                        bottom: 10,
-                        left: 10,
-                        right: 10
+                        top: 10,
+                        bottom: 6,
+                        left: 8,
+                        right: 8
                     }
                 },
                 plugins: {
@@ -1206,7 +2099,6 @@
         function updateOrdersStatistics(yearData) {
             const filteredData = yearData.filter(v => v > 0);
             const total = filteredData.reduce((a, b) => a + b, 0);
-            const avg = filteredData.length > 0 ? Math.round(total / filteredData.length) : 0;
             
             let maxValue = 0;
             let peakMonth = '-';
@@ -1221,48 +2113,64 @@
             
             document.getElementById('totalOrdersStat').textContent = total.toLocaleString('en-PH');
             document.getElementById('peakMonthStat').textContent = peakMonth !== '-' ? peakMonth + ' (' + maxValue.toLocaleString('en-PH') + ')' : '-';
-            document.getElementById('avgOrdersStat').textContent = avg.toLocaleString('en-PH');
+        }
+
+        function updateOrdersTrendYearBadge(year) {
+            const badge = document.getElementById('ordersTrendYearBadge');
+            if (!badge) {
+                return;
+            }
+
+            badge.textContent = 'Year ' + year;
         }
 
         function updateOrdersByMonth(year) {
             const yearData = ordersData[year] || Array(12).fill(0);
             ordersByMonthChart.data.datasets[0].data = yearData;
             updateOrdersStatistics(yearData);
+            updateOrdersTrendYearBadge(year);
             ordersByMonthChart.update('active');
+        }
+
+        function syncOrdersTrendCardHeight() {
+            const ordersCard = document.getElementById('ordersTrendCard');
+            const grossCard = document.getElementById('grossSalesTrendCard');
+
+            if (!ordersCard || !grossCard || typeof salesTrendChart === 'undefined' || typeof ordersByMonthChart === 'undefined') {
+                return;
+            }
+
+            if (window.innerWidth <= 768) {
+                grossCard.style.height = 'auto';
+                salesTrendChart.resize();
+                ordersByMonthChart.resize();
+                return;
+            }
+
+            grossCard.style.height = ordersCard.offsetHeight + 'px';
+            salesTrendChart.resize();
+            ordersByMonthChart.resize();
         }
         
         // Initialize chart with data on page load
         const initialData = ordersData[defaultYear] || Array(12).fill(0);
         ordersByMonthChart.data.datasets[0].data = initialData;
         updateOrdersStatistics(initialData);
+        updateOrdersTrendYearBadge(defaultYear);
         ordersByMonthChart.update();
+        updateFundsSummary('daily');
+        updateGrossSalesSummary('monthly');
+        syncOrdersTrendCardHeight();
 
         // Change Sales Trend View
         function changeSalesTrendView(period) {
-            // This is a placeholder - implement actual data fetching logic
-            // You can update the chart data based on the selected period
-            console.log('Sales trend period changed to:', period);
-
-            // Example: Update chart labels based on period
-            let labels;
-            switch (period) {
-                case 'daily':
-                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                    break;
-                case 'weekly':
-                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-                    break;
-                case 'monthly':
-                    labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    break;
-                case 'annually':
-                    labels = ['2020', '2021', '2022', '2023', '2024', '2025', '2026'];
-                    break;
-            }
-
-            // Update chart with new labels
-            salesTrendChart.data.labels = labels;
+            const series = getSalesSeries(period);
+            salesTrendChart.data.labels = series.labels;
+            salesTrendChart.data.datasets[0].data = series.partners;
+            salesTrendChart.data.datasets[1].data = series.nonPartners;
+            salesTrendChart.data.datasets[2].data = series.goodTaste;
             salesTrendChart.update();
+            updateGrossSalesSummary(period);
         }
 
         // Toggle sidebar for mobile
@@ -1303,6 +2211,8 @@
         }
         document.addEventListener('DOMContentLoaded', fitStatCardNumbers);
         window.addEventListener('resize', fitStatCardNumbers);
+        window.addEventListener('resize', syncOrdersTrendCardHeight);
+        window.addEventListener('load', syncOrdersTrendCardHeight);
     </script>
 
     @include('partials.floating-widgets')

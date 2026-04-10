@@ -107,8 +107,8 @@
     <div class="email-wrapper">
         <!-- Header -->
         <div class="email-header">
-            <h1>?? Password Reset Request</h1>
-            <p>When in Baguio — Account Security</p>
+            <h1>Password Reset Request</h1>
+            <p>When in Baguio - Account Security</p>
         </div>
 
         <!-- Body -->
@@ -120,14 +120,14 @@
             <div class="pin-container">
                 <span class="pin-label">Your Verification PIN</span>
                 <div class="pin-code">{{ $pin }}</div>
-                <span class="pin-expiry">? This PIN expires in <strong>15 minutes</strong></span>
+                <span class="pin-expiry">This PIN expires in <strong>15 minutes</strong></span>
             </div>
 
             <p>Enter this PIN on the verification page to reset your password. The PIN is valid for <strong>15 minutes</strong> from the time this email was sent.</p>
 
             <!-- Security Warning -->
             <div class="warning-box">
-                <strong>? Security Notice:</strong> If you did not request a password reset, please ignore this email. Your account remains secure and no changes have been made.
+                <strong>Security Notice:</strong> If you did not request a password reset, please ignore this email. Your account remains secure and no changes have been made.
             </div>
 
             <p>For your security, never share this PIN with anyone. <span class="brand-name">When in Baguio Inc.</span> staff will never ask you for your PIN or password.</p>
@@ -135,7 +135,7 @@
 
         <!-- Footer -->
         <div class="email-footer">
-            <p>&copy; {{ date('Y') }} <span class="brand-name">When in Baguio Inc. — When in Baguio</span>. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} <span class="brand-name">When in Baguio Inc. - When in Baguio</span>. All rights reserved.</p>
             <p>This is an automated message, please do not reply to this email.</p>
         </div>
     </div>

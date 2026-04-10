@@ -7,8 +7,21 @@
     <link rel="icon" type="image/png" href="{{ asset('images/logowhite.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Merchants - When in Baguio Inc.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --surface: #ffffff;
+            --surface-soft: #f8faf8;
+            --ink: #0f172a;
+            --ink-soft: #64748b;
+            --line: #e2e8f0;
+            --brand: #2f6f3f;
+            --brand-strong: #245732;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -16,11 +29,12 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Manrope', 'Segoe UI', sans-serif;
             display: flex;
             height: 100vh;
             overflow: hidden;
-            background: #e8e8e8;
+            background: radial-gradient(circle at 25% -20%, #eef9f1 0%, #e8edf4 42%, #e4e8ef 100%);
+            color: var(--ink);
         }
 
                 @include('partials.app-sidebar-styles')
@@ -34,7 +48,7 @@
             flex: 1;
             padding: 40px;
             overflow-y: auto;
-            background: #f5f5f5;
+            background: linear-gradient(180deg, rgba(248, 252, 250, .92) 0%, rgba(241, 245, 249, .96) 100%);
         }
 
         .content-header {
@@ -45,9 +59,10 @@
         }
 
         .content-header h1 {
-            font-size: 32px;
-            font-weight: bold;
-            color: #1a1a1a;
+            font-size: 34px;
+            font-weight: 800;
+            color: #111827;
+            letter-spacing: -.4px;
             margin: 0;
         }
 
@@ -355,8 +370,8 @@
         }
 
         .stat-card.purple {
-            background: linear-gradient(135deg, #4a2a96 0%, #7c4fd1 100%);
-            box-shadow: 0 6px 18px rgba(74, 42, 150, .35);
+            background: linear-gradient(135deg, #334155 0%, #475569 100%);
+            box-shadow: 0 6px 18px rgba(51, 65, 85, .32);
         }
 
         .stat-card .sc-icon {
@@ -430,6 +445,207 @@
             box-shadow: 0 0 0 3px rgba(53, 122, 58, .08);
         }
 
+        .stats-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .panel-surface {
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid rgba(226, 232, 240, .75);
+            box-shadow: 0 8px 30px rgba(15, 23, 42, .06);
+        }
+
+        .toolbar-surface {
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+
+        .toolbar-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .control-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: .35px;
+        }
+
+        .control-separator {
+            width: 1px;
+            height: 24px;
+            background: var(--line);
+        }
+
+        .filter-date-input {
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 12px;
+            color: #334155;
+            background: #fff;
+            outline: none;
+            min-width: 140px;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .filter-date-input:focus,
+        .filter-date-input:hover {
+            border-color: #357a3a;
+            box-shadow: 0 0 0 3px rgba(53, 122, 58, .08);
+        }
+
+        .btn-add-merchant {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-weight: 800;
+            white-space: nowrap;
+            box-shadow: 0 8px 18px rgba(36, 87, 50, .28);
+            transition: transform .18s, box-shadow .18s;
+        }
+
+        .btn-add-merchant:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(36, 87, 50, .38);
+        }
+
+        .table-surface {
+            overflow: hidden;
+        }
+
+        .table-head {
+            padding: 18px 20px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-head-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #2f6f3f, #4f9360);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .15);
+        }
+
+        .table-head-title {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 800;
+            color: #111827;
+            letter-spacing: -.2px;
+        }
+
+        .table-head-subtitle {
+            margin: 0;
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .info-badge {
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .2px;
+        }
+
+        .badge-partner {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .badge-nonpartner {
+            background: #fef9c3;
+            color: #854d0e;
+            border: 1px solid #fde68a;
+        }
+
+        .badge-merchant {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        .merchant-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1100px;
+        }
+
+        .merchant-table thead tr {
+            background: #f8fafc;
+            border-bottom: 1.5px solid #e9ecef;
+        }
+
+        .merchant-table th {
+            padding: 13px 16px;
+            text-align: left;
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+        }
+
+        .merchant-table th.th-right {
+            text-align: right;
+        }
+
+        .merchant-table th.th-center {
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .table-head {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .toolbar-surface {
+                padding: 14px;
+            }
+        }
+
         @include('partials.user-indicator-styles')
     </style>
 </head>
@@ -445,7 +661,7 @@
         </div>
 
         <!-- ── Stat Cards ── -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:22px;">
+        <div class="stats-strip">
 
             @php $activeCount = $merchants->where('status','active')->count(); @endphp
 
@@ -488,28 +704,25 @@
 
         </div>
         <!-- ── Search & Filters ── -->
-        <div
-            style="background:#fff;border-radius:14px;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);margin-bottom:16px;">
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                <div class="merchant-search-wrap" style="flex:1;min-width:220px;">
+        <div class="panel-surface toolbar-surface">
+            <div class="toolbar-row">
+                <div class="merchant-search-wrap" style="flex:1;min-width:260px;">
                     <i class="fas fa-search"></i>
                     <input type="text" id="merchantSearch" placeholder="Search by name, category, address…"
                         class="merchant-search-input" oninput="filterMerchants()" autocomplete="off">
                 </div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-                    <div style="display:flex;align-items:center;gap:5px;">
-                        <span style="font-size:11px;font-weight:600;color:#9ca3af;white-space:nowrap;"><i
-                                class="fas fa-tag" style="font-size:10px;"></i> Type</span>
+                <div class="toolbar-controls">
+                    <div class="control-group">
+                        <span class="control-label"><i class="fas fa-tag" style="font-size:10px;"></i> Type</span>
                         <select id="merchantTypeFilter" onchange="filterMerchants()" class="filter-select">
                             <option value="all">All Types</option>
                             <option value="partner">Partner</option>
                             <option value="non-partner">Non-Partner</option>
                         </select>
                     </div>
-                    <div style="width:1px;height:24px;background:#e5e7eb;"></div>
-                    <div style="display:flex;align-items:center;gap:5px;">
-                        <span style="font-size:11px;font-weight:600;color:#9ca3af;white-space:nowrap;"><i
-                                class="fas fa-calendar" style="font-size:10px;"></i> Period</span>
+                    <div class="control-separator"></div>
+                    <div class="control-group">
+                        <span class="control-label"><i class="fas fa-calendar" style="font-size:10px;"></i> Period</span>
                         <select id="merchantPeriodFilter" onchange="applyPeriodFilter()" class="filter-select">
                             <option value="daily" {{ ($selectedPeriod ?? 'daily') === 'daily' ? 'selected' : '' }}>Daily</option>
                             <option value="weekly" {{ ($selectedPeriod ?? 'daily') === 'weekly' ? 'selected' : '' }}>Weekly</option>
@@ -518,19 +731,21 @@
                             <option value="trimonth" {{ ($selectedPeriod ?? 'daily') === 'trimonth' ? 'selected' : '' }}>Tri Month</option>
                         </select>
                     </div>
-                    <div style="width:1px;height:24px;background:#e5e7eb;"></div>
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        <span style="font-size:11px;font-weight:600;color:#9ca3af;white-space:nowrap;"><i
-                                class="fas fa-calendar-day" style="font-size:10px;"></i> Date</span>
+                    <div class="control-separator"></div>
+                    <div class="control-group">
+                        <span class="control-label"><i class="fas fa-calendar-day" style="font-size:10px;"></i> Date</span>
                         <input type="date" id="merchantDateFilter" value="{{ ($selectedDate ?? now())->toDateString() }}"
                             onchange="applyPeriodFilter()"
-                            style="border:1.5px solid #e5e7eb;border-radius:8px;padding:8px 10px;font-size:12px;color:#374151;background:#fff;outline:none;min-width:140px;">
+                            class="filter-date-input">
                     </div>
-                    <div style="width:1px;height:24px;background:#e5e7eb;"></div>
-                    <button type="button" onclick="openAddModal()"
-                        style="padding:9px 20px;border-radius:9px;border:none;background:linear-gradient(135deg,#357a3a,#2a6030);color:#fff;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-weight:700;white-space:nowrap;box-shadow:0 3px 10px rgba(53,122,58,.4);transition:transform .15s,box-shadow .15s;"
-                        onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 5px 15px rgba(53,122,58,.5)'"
-                        onmouseout="this.style.transform='';this.style.boxShadow='0 3px 10px rgba(53,122,58,.4)'">
+                    <div class="control-separator"></div>
+                    <a href="{{ route('merchants.archived') }}" class="btn-add-merchant"
+                        title="Archived Merchants" aria-label="Archived Merchants"
+                        style="text-decoration:none;background:linear-gradient(135deg,#475569,#334155);box-shadow:0 8px 18px rgba(51,65,85,.25);width:40px;height:40px;padding:0;justify-content:center;">
+                        <i class="fas fa-box-archive"></i>
+                    </a>
+                    <div class="control-separator"></div>
+                    <button type="button" onclick="openAddModal()" class="btn-add-merchant">
                         <i class="fas fa-plus"></i> Add Merchant
                     </button>
                 </div>
@@ -538,30 +753,24 @@
         </div>
 
         <!-- ── Merchant Table ── -->
-        <div
-            style="background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);overflow:hidden;">
-            <div
-                style="padding:18px 20px 14px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;">
+        <div class="panel-surface table-surface">
+            <div class="table-head">
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <div
-                        style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#357a3a,#56a35b);display:flex;align-items:center;justify-content:center;">
+                    <div class="table-head-icon">
                         <i class="fas fa-store" style="font-size:15px;color:#fff;"></i>
                     </div>
                     <div>
-                        <h3 style="margin:0;font-size:15px;font-weight:700;color:#111827;">Merchant Directory</h3>
-                        <p style="margin:0;font-size:11px;color:#9ca3af;">All registered merchants &amp; partners</p>
+                        <h3 class="table-head-title">Merchant Directory</h3>
+                        <p class="table-head-subtitle">All registered merchants &amp; partners</p>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
 
-                    <span id="partnerBadge"
-                        style="background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;border-radius:16px;padding:3px 8px;font-size:10px;font-weight:600;">{{ $partnerCount }}
+                    <span id="partnerBadge" class="info-badge badge-partner">{{ $partnerCount }}
                         partner</span>
-                    <span id="nonPartnerBadge"
-                        style="background:#fef9c3;color:#854d0e;border:1px solid #fde68a;border-radius:16px;padding:3px 8px;font-size:10px;font-weight:600;">{{ $nonPartnerCount }}
+                    <span id="nonPartnerBadge" class="info-badge badge-nonpartner">{{ $nonPartnerCount }}
                         non-partner</span>
-                    <span id="merchantCount"
-                        style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:16px;padding:3px 8px;font-size:10px;font-weight:600;">{{ $merchants->count() }}
+                    <span id="merchantCount" class="info-badge badge-merchant">{{ $merchants->count() }}
                         merchants</span>
                     <button id="bulkActionBtn" onclick="openBulkEditModal()"
                         style="display:none;background:#f59e0b;color:#fff;border:1px solid #f59e0b;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;margin-left:8px;"
@@ -573,39 +782,20 @@
 
                 </div>
             </div>
-            <div style="overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;min-width:1100px;">
+            <div class="table-scroll">
+                <table class="merchant-table">
                     <thead>
-                        <tr style="background:#f8fafc;border-bottom:1.5px solid #e9ecef;">
-                            <th
-                                style="padding:13px 16px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
-                                Merchant</th>
-                            <th
-                                style="padding:13px 16px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
-                                Partner Type</th>
-                            <th
-                                style="padding:13px 16px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
-                                Commission Type</th>
-                            <th
-                                style="padding:13px 16px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;display:none;">
-                                Commission Details</th>
-                            <th
-                                style="padding:13px 16px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
-                                Status</th>
-                            <th
-                                style="padding:13px 16px;text-align:right;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;display:none;">
-                                Orders</th>
-                            <th
-                                style="padding:13px 16px;text-align:right;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;display:none;">
-                                Sales</th>
-                            <th
-                                style="padding:13px 16px;text-align:right;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
-                                WIB Commission</th>
-                            <th
-                                style="padding:13px 16px;text-align:center;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
-                                Actions</th>
-                            <th
-                                style="padding:13px 8px;text-align:center;width:40px;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">
+                        <tr>
+                            <th>Merchant</th>
+                            <th>Partner Type</th>
+                            <th>Commission Type</th>
+                            <th style="display:none;">Commission Details</th>
+                            <th>Status</th>
+                            <th class="th-right" style="display:none;">Orders</th>
+                            <th class="th-right" style="display:none;">Sales</th>
+                            <th class="th-right">WIB Commission</th>
+                            <th class="th-center">Actions</th>
+                            <th class="th-center" style="width:40px;padding:13px 8px;">
                                 <input type="checkbox" id="bulkSelectAll" onclick="toggleBulkSelect(this)"
                                     style="accent-color:#357a3a;width:16px;height:16px;">
                             </th>
@@ -817,6 +1007,12 @@
                                             class="merchant-action-btn"
                                             style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;border-radius:8px;padding:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;box-shadow:0 1px 3px rgba(217,119,6,.1);">
                                             <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="archiveMerchant({{ $merchant->id }})"
+                                            class="merchant-action-btn"
+                                            title="Archive merchant"
+                                            style="background:#f8fafc;color:#475569;border:1px solid #cbd5e1;border-radius:8px;padding:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;box-shadow:0 1px 3px rgba(71,85,105,.1);">
+                                            <i class="fas fa-box-archive"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -2101,6 +2297,42 @@
             }
         }
 
+        async function archiveMerchant(id) {
+            const merchantName = merchantsData[id]?.name || 'this merchant';
+            const confirmed = confirm(`Archive ${merchantName}? This will set its status to inactive.`);
+            if (!confirmed) return;
+
+            try {
+                const resp = await fetch(`/merchants/${id}/archive`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams({
+                        _method: 'PATCH'
+                    }),
+                });
+
+                const data = await resp.json();
+
+                if (data.success) {
+                    const tr = document.getElementById('merchant-row-' + id);
+                    if (tr) tr.remove();
+                    delete merchantsData[id];
+                    updateStatCards();
+                    populateMerchantTypeFilter();
+                    applyFilter();
+                    showToast(data.message || 'Merchant archived successfully.', 'success');
+                } else {
+                    showToast(data.message || 'Failed to archive merchant.', 'error');
+                }
+            } catch {
+                showToast('Network error. Please try again.', 'error');
+            }
+        }
+
         // ── Sidebar ──
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
@@ -2286,7 +2518,7 @@
                 <td style="text-align:right;font-size:13px;font-weight:700;color:#374151;display:none;">${Number(m.total_orders||0).toLocaleString()}</td>
                 <td style="text-align:right;font-size:13px;font-weight:700;color:#374151;display:none;">₱${_numFmt(m.total_sales||0)}</td>
                 <td style="text-align:right;font-size:13px;font-weight:700;color:#357a3a;">₱${_numFmt(m.total_commission||0)}</td>
-                <td style="text-align:center;"><div style="display:flex;gap:6px;justify-content:center;"><button onclick="openViewModal(${m.id})" class="merchant-action-btn" style="background:#eff6ff;color:#1a7ed1;border:1px solid #bfdbfe;border-radius:8px;padding:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;box-shadow:0 1px 3px rgba(26,126,209,.1);"><i class="fas fa-eye"></i></button><button onclick="openEditModal(${m.id})" class="merchant-action-btn" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;border-radius:8px;padding:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;box-shadow:0 1px 3px rgba(217,119,6,.1);"><i class="fas fa-edit"></i></button></div></td>
+                <td style="text-align:center;"><div style="display:flex;gap:6px;justify-content:center;"><button onclick="openViewModal(${m.id})" class="merchant-action-btn" style="background:#eff6ff;color:#1a7ed1;border:1px solid #bfdbfe;border-radius:8px;padding:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;box-shadow:0 1px 3px rgba(26,126,209,.1);"><i class="fas fa-eye"></i></button><button onclick="openEditModal(${m.id})" class="merchant-action-btn" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;border-radius:8px;padding:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;box-shadow:0 1px 3px rgba(217,119,6,.1);"><i class="fas fa-edit"></i></button><button onclick="archiveMerchant(${m.id})" class="merchant-action-btn" title="Archive merchant" style="background:#f8fafc;color:#475569;border:1px solid #cbd5e1;border-radius:8px;padding:8px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;box-shadow:0 1px 3px rgba(71,85,105,.1);"><i class="fas fa-box-archive"></i></button></div></td>
                 <td style="text-align:center;width:40px;"><input type="checkbox" class="bulkSelectRow" value="${m.id}" style="accent-color:#357a3a;width:16px;height:16px;"></td>
             `;
             const firstExistingRow = tbody.querySelector('.merchant-row');
@@ -2387,6 +2619,21 @@
             }
 
             window.location.href = url.toString();
+        }
+
+        function applyMerchantTypeFromQuery() {
+            const url = new URL(window.location.href);
+            const merchantTypeFromQuery = normalizeMerchantType(url.searchParams.get('merchant_type') || 'all');
+            const typeSelect = document.getElementById('merchantTypeFilter');
+
+            if (!typeSelect) {
+                return;
+            }
+
+            const availableValues = Array.from(typeSelect.options).map(option => option.value);
+            if (availableValues.includes(merchantTypeFromQuery)) {
+                typeSelect.value = merchantTypeFromQuery;
+            }
         }
 
         function applyFilter() {
@@ -2531,6 +2778,7 @@
         // Init pagination on page load
         document.addEventListener('DOMContentLoaded', () => {
             populateMerchantTypeFilter();
+            applyMerchantTypeFromQuery();
             filterMerchants();
             setupBulkSelection();
         });

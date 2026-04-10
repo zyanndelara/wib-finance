@@ -130,7 +130,7 @@ class RiderPayrollController extends Controller
                 'rider_name' => 'required|string',
                 'base_salary' => 'required|numeric',
                 'incentives' => 'nullable|numeric',
-                'renumeration_26_days' => 'required|numeric',
+                'renumeration_26_days' => 'nullable|numeric',
                 'adda_df' => 'nullable|numeric',
                 'adda_df_date' => 'nullable|date',
                 'adda_df_entries' => 'nullable|string',
@@ -139,17 +139,26 @@ class RiderPayrollController extends Controller
                 'net_salary' => 'required|numeric',
             ]);
 
+            // Ensure optional monetary fields are set to 0 when left blank.
+            if (!isset($validated['incentives']) || $validated['incentives'] === null || $validated['incentives'] === '') {
+                $validated['incentives'] = 0;
+            }
+
+            if (!isset($validated['renumeration_26_days']) || $validated['renumeration_26_days'] === null || $validated['renumeration_26_days'] === '') {
+                $validated['renumeration_26_days'] = 0;
+            }
+
             // Ensure adda_df is set to 0 if missing or empty
             if (!isset($validated['adda_df']) || $validated['adda_df'] === null || $validated['adda_df'] === '' ) {
                 $validated['adda_df'] = 0;
             }
 
-            // Handle payment mode - support both single and multiple modes
+            // Handle payment mode while keeping a single stored value.
             if ($request->filled('payment_modes_json')) {
                 try {
                     $modes = json_decode($request->payment_modes_json, true);
                     if (is_array($modes) && count($modes) > 0) {
-                        $validated['mode_of_payment'] = json_encode($modes);
+                        $validated['mode_of_payment'] = (string) $modes[0];
                     }
                 } catch (\Exception $e) {
                     // Fallback to original mode if JSON decode fails

@@ -35,11 +35,12 @@ class MerchantController extends Controller
         ];
     }
 
-    private function getMerchantColumnsLookup(): array
+    private function getMerchantColumnsLookup(Merchant $merchantModel): array
     {
-        $table = (new Merchant())->getTable();
+        $table = $merchantModel->getTable();
+        $connection = $merchantModel->getConnectionName();
 
-        return collect(Schema::getColumnListing($table))
+        return collect(Schema::connection($connection)->getColumnListing($table))
             ->map(fn ($column) => strtolower((string) $column))
             ->flip()
             ->map(fn () => true)
@@ -80,9 +81,9 @@ class MerchantController extends Controller
         return $filtered;
     }
 
-    private function nextMerchantId(string $table, string $keyColumn): int
+    private function nextMerchantId(string $connection, string $table, string $keyColumn): int
     {
-        $maxId = DB::table($table)->max($keyColumn);
+        $maxId = DB::connection($connection)->table($table)->max($keyColumn);
 
         return ((int) $maxId) + 1;
     }
@@ -150,39 +151,51 @@ class MerchantController extends Controller
                     return $orderColumns->contains($column);
                 });
 
+                $commissionColumn = $orderColumns->contains('total_commission') ? 'total_commission' : null;
+
                 if ($orderColumns->contains('merchant_id') && $earningsColumn) {
+                    $selectRaw = "merchant_id, COALESCE(SUM({$earningsColumn}), 0) as merchant_earning_total, COUNT(DISTINCT order_id) as total_orders";
+            
+                    if ($commissionColumn) {
+                        $selectRaw .= ", COALESCE(SUM({$commissionColumn}), 0) as total_commission";
+                    }
+
                     $ordersQuery = DB::connection('wibfinance')->table('mt_order')
-                        ->selectRaw("merchant_id, COALESCE(SUM({$earningsColumn}), 0) as merchant_earning_total, COUNT(DISTINCT order_id) as total_orders")
+                        ->selectRaw($selectRaw)
                         ->whereIn('merchant_id', $merchantIds)
                         ->whereNotNull('merchant_id')
                         ->whereNotNull('order_id')
                         ->groupBy('merchant_id');
 
                     if ($orderDateColumn) {
-                        if ($selectedPeriod === 'daily') {
-                            $ordersQuery->whereDate($orderDateColumn, $selectedDate->toDateString());
-                        } elseif ($periodStartDate) {
-                            $ordersQuery
-                                ->whereDate($orderDateColumn, '>=', $periodStartDate->toDateString())
-                                ->whereDate($orderDateColumn, '<=', $selectedDate->toDateString());
-                        }
-                    }
+            if ($selectedPeriod === 'daily') {
+                $ordersQuery->whereDate($orderDateColumn, $selectedDate->toDateString());
+            } elseif ($periodStartDate) {
+                $ordersQuery
+                    ->whereDate($orderDateColumn, '>=', $periodStartDate->toDateString())
+                    ->whereDate($orderDateColumn, '<=', $selectedDate->toDateString());
+            }
+        }
 
-                    $merchantStatsByMerchant = $ordersQuery
-                        ->get()
-                        ->mapWithKeys(function ($row) {
-                            $merchantId = (int) ($row->merchant_id ?? 0);
+        $merchantStatsByMerchant = $ordersQuery
+            ->get()
+            ->mapWithKeys(function ($row) use ($commissionColumn) {
+                $merchantId = (int) ($row->merchant_id ?? 0);
 
-                            return [
-                                $merchantId => [
-                                    'total_sales' => (float) ($row->merchant_earning_total ?? 0),
-                                    'total_orders' => (int) ($row->total_orders ?? 0),
-                                ],
-                            ];
-                        });
+                $data = [
+                    'total_sales' => (float) ($row->merchant_earning_total ?? 0),
+                    'total_orders' => (int) ($row->total_orders ?? 0),
+                ];
+
+                if ($commissionColumn) {
+                    $data['total_commission'] = (float) ($row->total_commission ?? 0);
+                }
+
+                return [$merchantId => $data];
+            });
                 }
             } catch (\Throwable $exception) {
-                $merchantStatsByMerchant = collect();
+            $merchantStatsByMerchant = collect();
             }
         }
 
@@ -201,9 +214,11 @@ class MerchantController extends Controller
 
             $merchant->total_sales = (float) ($merchantStats['total_sales'] ?? $storedSales);
             $merchant->total_orders = (int) ($merchantStats['total_orders'] ?? 0);
-        });
 
-        $hasTotalCommission = Schema::hasColumn($merchantTable, 'total_commission');
+                    if (isset($merchantStats['total_commission'])) {
+                        $merchant->total_commission = (float) $merchantStats['total_commission'];
+                    }
+        });
 
         $gtMerchantName = 'The Original Good Taste Restaurant';
 
@@ -230,7 +245,10 @@ class MerchantController extends Controller
                 ->first(fn (Merchant $merchant) => strtolower((string) $merchant->name) === strtolower($gtMerchantName))
                 ?->total_sales ?? 0;
         }
-        $totalWibCommission = $hasTotalCommission ? (clone $activeMerchantsQuery)->sum('total_commission') : 0;
+        // Keep summary in sync with the per-merchant WIB commission values shown in the table.
+        $totalWibCommission = (float) $merchants->sum(function (Merchant $merchant) {
+            return (float) ($merchant->total_commission ?? 0);
+        });
 
         return view('merchants', compact(
             'merchants', 'totalMerchants', 'partnerCount', 'nonPartnerCount',
@@ -241,13 +259,14 @@ class MerchantController extends Controller
     public function store(Request $request)
     {
         $merchantModel = new Merchant();
+        $merchantConnection = $merchantModel->getConnectionName();
         $merchantTable = $merchantModel->getTable();
         $merchantKeyColumn = $merchantModel->getKeyName();
         $merchantNameColumn = $merchantModel->getNameColumn();
-        $columnsLookup = $this->getMerchantColumnsLookup();
+        $columnsLookup = $this->getMerchantColumnsLookup($merchantModel);
 
         $validated = $request->validate([
-            'name'            => "required|string|max:255|unique:{$merchantTable},{$merchantNameColumn}",
+            'name'            => "required|string|max:255|unique:{$merchantConnection}.{$merchantTable},{$merchantNameColumn}",
             'type'            => 'required|in:partner,non-partner',
 
             'address'         => 'nullable|string|max:500',
@@ -289,7 +308,7 @@ class MerchantController extends Controller
 
         $assignedMerchantId = null;
         if (isset($columnsLookup[strtolower($merchantKeyColumn)])) {
-            $assignedMerchantId = $this->nextMerchantId($merchantTable, $merchantKeyColumn);
+            $assignedMerchantId = $this->nextMerchantId($merchantConnection, $merchantTable, $merchantKeyColumn);
             $createData[$merchantKeyColumn] = $assignedMerchantId;
         }
 
@@ -325,7 +344,7 @@ class MerchantController extends Controller
 
     public function update(Request $request, Merchant $merchant)
     {
-        $columnsLookup = $this->getMerchantColumnsLookup();
+        $columnsLookup = $this->getMerchantColumnsLookup($merchant);
 
         $validated = $request->validate([
             'name'            => 'required|string|max:255',
@@ -374,13 +393,14 @@ class MerchantController extends Controller
     public function bulkUpdate(Request $request)
     {
         $merchantModel = new Merchant();
+        $merchantConnection = $merchantModel->getConnectionName();
         $merchantTable = $merchantModel->getTable();
         $merchantKeyColumn = $merchantModel->getKeyName();
-        $columnsLookup = $this->getMerchantColumnsLookup();
+        $columnsLookup = $this->getMerchantColumnsLookup($merchantModel);
 
         $validated = $request->validate([
             'merchant_ids'                => 'required|array',
-            'merchant_ids.*'              => "exists:{$merchantTable},{$merchantKeyColumn}",
+            'merchant_ids.*'              => "exists:{$merchantConnection}.{$merchantTable},{$merchantKeyColumn}",
             'type'                        => 'nullable|in:partner,non-partner',
             'commission_type'             => 'nullable|in:fixed_per_item,category_based_fixed,fixed_per_order,percentage_based,mixed',
             'commission_rate'             => 'nullable|numeric|min:0|max:100000',
@@ -450,6 +470,31 @@ class MerchantController extends Controller
         return redirect()->route('merchants')->with('success', "Successfully updated {$updatedCount} merchants.");
     }
 
+    public function archivedIndex(Request $request)
+    {
+        $merchantModel = new Merchant();
+        $createdAtColumn = $merchantModel->getCreatedAtColumn();
+        $typeColumn = $merchantModel->getTypeColumn();
+
+        $archivedMerchants = Merchant::query()
+            ->whereRaw('LOWER(COALESCE(status, "")) = ?', ['inactive'])
+            ->orderByDesc($createdAtColumn)
+            ->get();
+
+        $totalArchived = $archivedMerchants->count();
+        $archivedPartners = $archivedMerchants
+            ->filter(fn (Merchant $merchant) => strtolower((string) $merchant->getAttribute($typeColumn)) === 'partner')
+            ->count();
+        $archivedNonPartners = $totalArchived - $archivedPartners;
+
+        return view('merchants-archived', compact(
+            'archivedMerchants',
+            'totalArchived',
+            'archivedPartners',
+            'archivedNonPartners'
+        ));
+    }
+
     public function destroy(Request $request, Merchant $merchant)
     {
         $name = $merchant->name;
@@ -467,6 +512,66 @@ class MerchantController extends Controller
         }
 
         return redirect()->route('merchants')->with('success', 'Merchant deleted successfully.');
+    }
+
+    public function archive(Request $request, Merchant $merchant)
+    {
+        $alreadyInactive = strtolower((string) ($merchant->status ?? '')) === 'inactive';
+
+        if (!$alreadyInactive) {
+            $merchant->update(['status' => 'inactive']);
+
+            AuditLog::log(
+                'Merchant Archived: ' . $merchant->name,
+                'Merchants',
+                'completed',
+                []
+            );
+        }
+
+        $message = $alreadyInactive
+            ? 'Merchant is already archived.'
+            : 'Merchant archived successfully.';
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'merchant' => $this->merchantResponsePayload($merchant->fresh() ?: $merchant),
+            ]);
+        }
+
+        return redirect()->route('merchants')->with('success', $message);
+    }
+
+    public function restore(Request $request, Merchant $merchant)
+    {
+        $alreadyActive = strtolower((string) ($merchant->status ?? '')) === 'active';
+
+        if (!$alreadyActive) {
+            $merchant->update(['status' => 'active']);
+
+            AuditLog::log(
+                'Merchant Restored: ' . $merchant->name,
+                'Merchants',
+                'completed',
+                []
+            );
+        }
+
+        $message = $alreadyActive
+            ? 'Merchant is already active.'
+            : 'Merchant restored successfully.';
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'merchant' => $this->merchantResponsePayload($merchant->fresh() ?: $merchant),
+            ]);
+        }
+
+        return redirect()->route('merchants.archived')->with('success', $message);
     }
 
     public function priceNotificationsFeed(Request $request)

@@ -2434,6 +2434,8 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
+                    closeDenominationModal();
+
                     btn.innerHTML = '<i class="fas fa-check-double" style="margin-right: 6px;"></i>Confirmed!';
                     btn.style.background = '#1a5c10';
 
@@ -2605,6 +2607,25 @@
         }
 
         // Denomination Calculator Functions
+        function getSelectedRiderSavedDiscrepancy() {
+            const selectedRow = document.querySelector('.rider-row.selected');
+            if (!selectedRow) return null;
+
+            if (selectedRow.dataset.hasDenomination !== 'true') return null;
+
+            const riderId = selectedRow.getAttribute('data-rider-id');
+            if (!riderId) return null;
+
+            const discCell = document.getElementById('discrepancy-cell-' + riderId);
+            if (!discCell) return null;
+
+            const raw = discCell.dataset.raw;
+            if (raw === undefined || raw === null || raw === '') return null;
+
+            const parsed = parseFloat(raw);
+            return Number.isNaN(parsed) ? null : parsed;
+        }
+
         function calculateDenomination(input, denomination) {
                 const pieces = parseInt(input.value) || 0;
                 const amount = pieces * denomination;
@@ -2648,22 +2669,48 @@
                 const bankInput = document.getElementById('bankInput');
                 if (bankInput) {
                     const originalAmount = parseFloat(bankInput.dataset.originalAmount) || 0;
-                    const remaining = originalAmount - total;
+                    const savedDiscrepancy = getSelectedRiderSavedDiscrepancy();
+                    const hasSavedShortage = savedDiscrepancy !== null && savedDiscrepancy < 0;
+                    const comparisonAmount = hasSavedShortage ? Math.abs(savedDiscrepancy) : originalAmount;
+                    const remaining = comparisonAmount - total;
 
                     bankInput.removeAttribute('readonly');
                     const bankLabel = document.getElementById('bankLabel');
                     if (originalAmount === 0 || total === 0) {
-                        // No rider selected or no denominations entered � show original amount, leave discrepancy alone
-                        if (originalAmount > 0) {
+                        // No rider selected or no denominations entered: show saved rider discrepancy when available
+                        if (originalAmount > 0 && savedDiscrepancy !== null) {
+                            if (savedDiscrepancy < 0) {
+                                bankInput.value = '-₱' + Math.abs(savedDiscrepancy).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                bankInput.style.borderColor = '#dc2626';
+                                bankInput.style.borderWidth = '2px';
+                                bankInput.style.borderStyle = 'solid';
+                                if (bankLabel) { bankLabel.textContent = 'Discrepancy'; bankLabel.style.color = '#dc2626'; }
+                            } else if (savedDiscrepancy > 0) {
+                                bankInput.value = '+₱' + savedDiscrepancy.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                bankInput.style.borderColor = '#d97706';
+                                bankInput.style.borderWidth = '2px';
+                                bankInput.style.borderStyle = 'solid';
+                                if (bankLabel) { bankLabel.textContent = 'Balance'; bankLabel.style.color = '#d97706'; }
+                            } else {
+                                bankInput.value = '₱0.00';
+                                bankInput.style.borderColor = '#059669';
+                                bankInput.style.borderWidth = '2px';
+                                bankInput.style.borderStyle = 'solid';
+                                if (bankLabel) { bankLabel.textContent = 'Balanced'; bankLabel.style.color = '#059669'; }
+                            }
+                        }
+                        // Fallback to original bank amount when there is no saved rider discrepancy
+                        else if (originalAmount > 0) {
                             bankInput.value = '₱' + originalAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                             bankInput.style.borderColor = '#436026';
                             bankInput.style.borderWidth = '2px';
                             bankInput.style.borderStyle = 'solid';
+                            if (bankLabel) { bankLabel.textContent = 'Bank'; bankLabel.style.color = '#374151'; }
                         } else {
                             bankInput.value = '';
                             bankInput.style.borderColor = '';
+                            if (bankLabel) { bankLabel.textContent = 'Bank'; bankLabel.style.color = '#374151'; }
                         }
-                        if (bankLabel) { bankLabel.textContent = 'Bank'; bankLabel.style.color = '#374151'; }
                     } else if (remaining === 0) {
                         bankInput.value = '₱0.00';
                         bankInput.style.borderColor = '#059669';

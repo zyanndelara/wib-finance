@@ -195,7 +195,7 @@ class ProfileController extends Controller
 
     private function sendBrevoVerification($user)
     {
-        $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', env('MAIL_PASSWORD'));
+        $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', env('BREVO_API_KEY'));
         $apiInstance = new TransactionalEmailsApi(new Client(), $config);
 
         $email = $user->email;

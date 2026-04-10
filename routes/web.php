@@ -4,6 +4,7 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RiderController;
 use App\Http\Controllers\RemittanceController;
@@ -80,7 +81,254 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
             $monthlyOrders[(int)$row->yr][(int)$row->mo - 1] = (int) $row->total;
         }
 
-        return view('dashboard', compact('totalCollections', 'totalDiscrepancies', 'monthlyOrders', 'chartYears'));
+        $salesTrendSeries = [
+            'daily' => [
+                'labels' => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                'partners' => array_fill(0, 7, 0),
+                'nonPartners' => array_fill(0, 7, 0),
+                'goodTaste' => array_fill(0, 7, 0),
+            ],
+            'weekly' => [
+                'labels' => [],
+                'partners' => [],
+                'nonPartners' => [],
+                'goodTaste' => [],
+            ],
+            'monthly' => [
+                'labels' => [],
+                'partners' => [],
+                'nonPartners' => [],
+                'goodTaste' => [],
+            ],
+            'annually' => [
+                'labels' => [],
+                'partners' => [],
+                'nonPartners' => [],
+                'goodTaste' => [],
+            ],
+        ];
+
+        try {
+            $db = DB::connection('wibfinance');
+            $orderTable = 'mt_order';
+            $merchantTable = 'mt_merchant';
+
+            $orderColumns = collect(Schema::connection('wibfinance')->getColumnListing($orderTable))
+                ->map(fn ($column) => strtolower((string) $column));
+            $merchantColumns = collect(Schema::connection('wibfinance')->getColumnListing($merchantTable))
+                ->map(fn ($column) => strtolower((string) $column));
+
+            $orderDateColumn = collect(['order_date', 'date_created', 'created_at', 'date_added', 'delivery_date', 'date_modified'])
+                ->first(fn ($column) => $orderColumns->contains(strtolower($column)));
+            $earningsColumn = collect(['merchant_earnings', 'merchant_earning'])
+                ->first(fn ($column) => $orderColumns->contains(strtolower($column)));
+            $merchantTypeColumn = collect(['partner_type', 'merchant_type', 'type'])
+                ->first(fn ($column) => $merchantColumns->contains(strtolower($column)));
+            $merchantNameColumn = collect(['restaurant_name', 'name'])
+                ->first(fn ($column) => $merchantColumns->contains(strtolower($column)));
+            $goodTasteMerchantName = 'the original good taste restaurant';
+
+            if ($orderDateColumn && $earningsColumn && $merchantTypeColumn && $merchantNameColumn && $orderColumns->contains('merchant_id') && $merchantColumns->contains('merchant_id')) {
+                $normalizeType = static function (?string $value): string {
+                    $normalized = strtolower(trim((string) $value));
+                    $normalized = str_replace(['_', ' '], '-', $normalized);
+
+                    if ($normalized === 'nonpartner') {
+                        return 'non-partner';
+                    }
+
+                    return $normalized === 'partner' ? 'partner' : 'non-partner';
+                };
+
+                $today = now()->startOfDay();
+
+                $dailyBuckets = collect(range(6, 0))->map(fn ($offset) => $today->copy()->subDays($offset));
+                $salesTrendSeries['daily']['labels'] = $dailyBuckets->map(fn ($d) => $d->format('D'))->values()->all();
+
+                $dailyRaw = $db->table("{$orderTable} as o")
+                    ->join("{$merchantTable} as m", 'm.merchant_id', '=', 'o.merchant_id')
+                    ->selectRaw("DATE(o.{$orderDateColumn}) as bucket_date, m.{$merchantTypeColumn} as merchant_type, m.{$merchantNameColumn} as merchant_name, COALESCE(SUM(o.{$earningsColumn}), 0) as total_sales")
+                    ->whereDate("o.{$orderDateColumn}", '>=', $dailyBuckets->first()->toDateString())
+                    ->whereDate("o.{$orderDateColumn}", '<=', $today->toDateString())
+                    ->whereNotNull('o.merchant_id')
+                    ->groupByRaw("DATE(o.{$orderDateColumn}), m.{$merchantTypeColumn}, m.{$merchantNameColumn}")
+                    ->get();
+
+                $dailyPartner = array_fill(0, 7, 0);
+                $dailyNonPartner = array_fill(0, 7, 0);
+                $dailyGoodTaste = array_fill(0, 7, 0);
+                $dailyIndex = $dailyBuckets->mapWithKeys(fn ($d, $i) => [$d->toDateString() => $i]);
+
+                foreach ($dailyRaw as $row) {
+                    $dateKey = (string) ($row->bucket_date ?? '');
+                    if (!isset($dailyIndex[$dateKey])) {
+                        continue;
+                    }
+
+                    $index = (int) $dailyIndex[$dateKey];
+                    $bucketType = $normalizeType($row->merchant_type ?? null);
+                    $amount = (float) ($row->total_sales ?? 0);
+                    $merchantName = strtolower(trim((string) ($row->merchant_name ?? '')));
+
+                    if ($bucketType === 'partner') {
+                        $dailyPartner[$index] += $amount;
+                    } else {
+                        $dailyNonPartner[$index] += $amount;
+                    }
+
+                    if ($merchantName === $goodTasteMerchantName) {
+                        $dailyGoodTaste[$index] += $amount;
+                    }
+                }
+
+                $salesTrendSeries['daily']['partners'] = $dailyPartner;
+                $salesTrendSeries['daily']['nonPartners'] = $dailyNonPartner;
+                $salesTrendSeries['daily']['goodTaste'] = $dailyGoodTaste;
+
+                $weeklyBuckets = collect(range(7, 0))->map(fn ($offset) => $today->copy()->startOfWeek()->subWeeks($offset));
+                $weeklyStart = $weeklyBuckets->first()->toDateString();
+
+                $salesTrendSeries['weekly']['labels'] = $weeklyBuckets
+                    ->map(fn ($d) => 'Wk ' . $d->format('W'))
+                    ->values()
+                    ->all();
+
+                $weeklyRaw = $db->table("{$orderTable} as o")
+                    ->join("{$merchantTable} as m", 'm.merchant_id', '=', 'o.merchant_id')
+                    ->selectRaw("YEARWEEK(o.{$orderDateColumn}, 1) as bucket_week, m.{$merchantTypeColumn} as merchant_type, m.{$merchantNameColumn} as merchant_name, COALESCE(SUM(o.{$earningsColumn}), 0) as total_sales")
+                    ->whereDate("o.{$orderDateColumn}", '>=', $weeklyStart)
+                    ->whereDate("o.{$orderDateColumn}", '<=', $today->toDateString())
+                    ->whereNotNull('o.merchant_id')
+                    ->groupByRaw("YEARWEEK(o.{$orderDateColumn}, 1), m.{$merchantTypeColumn}, m.{$merchantNameColumn}")
+                    ->get();
+
+                $weeklyPartner = array_fill(0, $weeklyBuckets->count(), 0);
+                $weeklyNonPartner = array_fill(0, $weeklyBuckets->count(), 0);
+                $weeklyGoodTaste = array_fill(0, $weeklyBuckets->count(), 0);
+                $weeklyIndex = $weeklyBuckets->mapWithKeys(fn ($d, $i) => [(int) $d->format('oW') => $i]);
+
+                foreach ($weeklyRaw as $row) {
+                    $bucketWeek = (int) ($row->bucket_week ?? 0);
+                    if (!isset($weeklyIndex[$bucketWeek])) {
+                        continue;
+                    }
+
+                    $index = (int) $weeklyIndex[$bucketWeek];
+                    $bucketType = $normalizeType($row->merchant_type ?? null);
+                    $amount = (float) ($row->total_sales ?? 0);
+                    $merchantName = strtolower(trim((string) ($row->merchant_name ?? '')));
+
+                    if ($bucketType === 'partner') {
+                        $weeklyPartner[$index] += $amount;
+                    } else {
+                        $weeklyNonPartner[$index] += $amount;
+                    }
+
+                    if ($merchantName === $goodTasteMerchantName) {
+                        $weeklyGoodTaste[$index] += $amount;
+                    }
+                }
+
+                $salesTrendSeries['weekly']['partners'] = $weeklyPartner;
+                $salesTrendSeries['weekly']['nonPartners'] = $weeklyNonPartner;
+                $salesTrendSeries['weekly']['goodTaste'] = $weeklyGoodTaste;
+
+                $monthlyBuckets = collect(range(11, 0))->map(fn ($offset) => $today->copy()->startOfMonth()->subMonths($offset));
+                $monthlyStart = $monthlyBuckets->first()->toDateString();
+
+                $salesTrendSeries['monthly']['labels'] = $monthlyBuckets
+                    ->map(fn ($d) => $d->format('M'))
+                    ->values()
+                    ->all();
+
+                $monthlyRaw = $db->table("{$orderTable} as o")
+                    ->join("{$merchantTable} as m", 'm.merchant_id', '=', 'o.merchant_id')
+                    ->selectRaw("DATE_FORMAT(o.{$orderDateColumn}, '%Y-%m') as bucket_month, m.{$merchantTypeColumn} as merchant_type, m.{$merchantNameColumn} as merchant_name, COALESCE(SUM(o.{$earningsColumn}), 0) as total_sales")
+                    ->whereDate("o.{$orderDateColumn}", '>=', $monthlyStart)
+                    ->whereDate("o.{$orderDateColumn}", '<=', $today->toDateString())
+                    ->whereNotNull('o.merchant_id')
+                    ->groupByRaw("DATE_FORMAT(o.{$orderDateColumn}, '%Y-%m'), m.{$merchantTypeColumn}, m.{$merchantNameColumn}")
+                    ->get();
+
+                $monthlyPartner = array_fill(0, $monthlyBuckets->count(), 0);
+                $monthlyNonPartner = array_fill(0, $monthlyBuckets->count(), 0);
+                $monthlyGoodTaste = array_fill(0, $monthlyBuckets->count(), 0);
+                $monthlyIndex = $monthlyBuckets->mapWithKeys(fn ($d, $i) => [$d->format('Y-m') => $i]);
+
+                foreach ($monthlyRaw as $row) {
+                    $bucketMonth = (string) ($row->bucket_month ?? '');
+                    if (!isset($monthlyIndex[$bucketMonth])) {
+                        continue;
+                    }
+
+                    $index = (int) $monthlyIndex[$bucketMonth];
+                    $bucketType = $normalizeType($row->merchant_type ?? null);
+                    $amount = (float) ($row->total_sales ?? 0);
+                    $merchantName = strtolower(trim((string) ($row->merchant_name ?? '')));
+
+                    if ($bucketType === 'partner') {
+                        $monthlyPartner[$index] += $amount;
+                    } else {
+                        $monthlyNonPartner[$index] += $amount;
+                    }
+
+                    if ($merchantName === $goodTasteMerchantName) {
+                        $monthlyGoodTaste[$index] += $amount;
+                    }
+                }
+
+                $salesTrendSeries['monthly']['partners'] = $monthlyPartner;
+                $salesTrendSeries['monthly']['nonPartners'] = $monthlyNonPartner;
+                $salesTrendSeries['monthly']['goodTaste'] = $monthlyGoodTaste;
+
+                $annualYears = range(((int) $today->format('Y')) - 5, (int) $today->format('Y'));
+                $salesTrendSeries['annually']['labels'] = array_map(static fn ($year) => (string) $year, $annualYears);
+
+                $annualRaw = $db->table("{$orderTable} as o")
+                    ->join("{$merchantTable} as m", 'm.merchant_id', '=', 'o.merchant_id')
+                    ->selectRaw("YEAR(o.{$orderDateColumn}) as bucket_year, m.{$merchantTypeColumn} as merchant_type, m.{$merchantNameColumn} as merchant_name, COALESCE(SUM(o.{$earningsColumn}), 0) as total_sales")
+                    ->whereYear("o.{$orderDateColumn}", '>=', $annualYears[0])
+                    ->whereYear("o.{$orderDateColumn}", '<=', $annualYears[count($annualYears) - 1])
+                    ->whereNotNull('o.merchant_id')
+                    ->groupByRaw("YEAR(o.{$orderDateColumn}), m.{$merchantTypeColumn}, m.{$merchantNameColumn}")
+                    ->get();
+
+                $annualPartner = array_fill(0, count($annualYears), 0);
+                $annualNonPartner = array_fill(0, count($annualYears), 0);
+                $annualGoodTaste = array_fill(0, count($annualYears), 0);
+                $annualIndex = collect($annualYears)->values()->mapWithKeys(fn ($year, $i) => [(int) $year => $i]);
+
+                foreach ($annualRaw as $row) {
+                    $bucketYear = (int) ($row->bucket_year ?? 0);
+                    if (!isset($annualIndex[$bucketYear])) {
+                        continue;
+                    }
+
+                    $index = (int) $annualIndex[$bucketYear];
+                    $bucketType = $normalizeType($row->merchant_type ?? null);
+                    $amount = (float) ($row->total_sales ?? 0);
+                    $merchantName = strtolower(trim((string) ($row->merchant_name ?? '')));
+
+                    if ($bucketType === 'partner') {
+                        $annualPartner[$index] += $amount;
+                    } else {
+                        $annualNonPartner[$index] += $amount;
+                    }
+
+                    if ($merchantName === $goodTasteMerchantName) {
+                        $annualGoodTaste[$index] += $amount;
+                    }
+                }
+
+                $salesTrendSeries['annually']['partners'] = $annualPartner;
+                $salesTrendSeries['annually']['nonPartners'] = $annualNonPartner;
+                $salesTrendSeries['annually']['goodTaste'] = $annualGoodTaste;
+            }
+        } catch (\Throwable $exception) {
+            // Keep zeroed fallbacks so dashboard remains available even if source table changes.
+        }
+
+        return view('dashboard', compact('totalCollections', 'totalDiscrepancies', 'monthlyOrders', 'chartYears', 'salesTrendSeries'));
     })->name('dashboard');
     });
 
@@ -515,8 +763,11 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
 
     Route::middleware('page.access:merchants')->group(function () {
         Route::get('/merchants', [MerchantController::class, 'index'])->name('merchants');
+        Route::get('/merchants/archived', [MerchantController::class, 'archivedIndex'])->name('merchants.archived');
         Route::post('/merchants', [MerchantController::class, 'store'])->name('merchants.store');
         Route::put('/merchants/{merchant}', [MerchantController::class, 'update'])->name('merchants.update');
+        Route::patch('/merchants/{merchant}/archive', [MerchantController::class, 'archive'])->name('merchants.archive');
+        Route::patch('/merchants/{merchant}/restore', [MerchantController::class, 'restore'])->name('merchants.restore');
         Route::post('/merchants/bulk-update', [MerchantController::class, 'bulkUpdate'])->name('merchants.bulk-update');
         Route::delete('/merchants/{merchant}', [MerchantController::class, 'destroy'])->name('merchants.destroy');
     });

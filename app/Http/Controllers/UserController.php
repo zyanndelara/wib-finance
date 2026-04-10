@@ -158,7 +158,7 @@ class UserController extends Controller
 
     private function sendBrevoPassword($user, $generatedPassword)
     {
-        $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', env('MAIL_PASSWORD'));
+        $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', env('BREVO_API_KEY'));
         $apiInstance = new TransactionalEmailsApi(new Client(), $config);
 
         $email = $user->email;
@@ -202,8 +202,8 @@ class UserController extends Controller
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:2',
             'last_name' => 'required|string|max:255',
-            'employee_id' => 'required|digits:4|unique:fm_users,employee_id,' . $user->id,
-            'email' => 'required|string|email|max:255|unique:fm_users,email,' . $user->id,
+            'employee_id' => 'required|digits:4|unique:users,employee_id,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone_number' => 'required|string|regex:/^\+63[0-9]{10}$/|max:20',
             'role' => 'required|in:finance_officer,admin',
             'rank' => 'nullable|in:I,II,III,IV,V',

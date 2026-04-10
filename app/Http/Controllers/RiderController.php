@@ -196,69 +196,104 @@ class RiderController extends Controller
                 ->count();
         }
 
-        $yesterday  = \Carbon\Carbon::yesterday()->toDateString();
         $today      = \Carbon\Carbon::today()->toDateString();
         $isViewingToday = ($statsDateParsed === $today);
 
-        // "No Remit Yesterday" block is only relevant when viewing today's queue.
-        // On past dates there is no concept of a live warning — hide it entirely.
-        if ($isViewingToday) {
-            // A rider shows "No Remit Yesterday" if they existed before today,
-            // had deliveries yesterday, did NOT submit a remittance yesterday,
-            // and have NOT yet settled today.
-            // This check is based purely on remittance records so it works
-            // regardless of whether the nightly scheduler has run.
-            $remittedYesterdayIds = Remittance::whereDate('remittance_date', $yesterday)
-                ->pluck('rider_id')
-                ->unique()
-                ->toArray();
-            $remittedTodayIds = Remittance::whereDate('remittance_date', $today)
-                ->pluck('rider_id')
-                ->unique()
-                ->toArray();
+        // "No Remit Yesterday" block applies to the selected queue date.
+        // Example: viewing Feb 05 checks unremitted deliveries from Feb 04.
+        $previousQueueDate = \Carbon\Carbon::parse($statsDateParsed)->subDay()->toDateString();
 
-            $ridersWithDeliveriesYesterday = [];
-            if ($legacySchema->hasTable('mt_driver_task')) {
-                $driverTaskColumns = $legacySchema->getColumnListing('mt_driver_task');
-                $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($driverTaskColumns) {
+        // A rider shows "No Remit Yesterday" if they existed before selected date,
+        // had deliveries on previous queue date, and did NOT submit remittance on that date.
+        // This check is based purely on remittance records so it works
+        // regardless of whether the nightly scheduler has run.
+        $remittedPreviousDateIds = Remittance::whereDate('remittance_date', $previousQueueDate)
+            ->pluck('rider_id')
+            ->unique()
+            ->toArray();
+
+        $ridersWithDeliveriesYesterday = [];
+        if ($legacySchema->hasTable('mt_driver_task')) {
+            $driverTaskColumns = $legacySchema->getColumnListing('mt_driver_task');
+            $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($driverTaskColumns) {
+                return in_array($column, $driverTaskColumns, true);
+            });
+            $taskKeyColumn = in_array('task_id', $driverTaskColumns, true) ? 'task_id' : null;
+            $taskDateColumn = collect(['delivery_date', 'date_created', 'created_at', 'date_added'])
+                ->first(function ($column) use ($driverTaskColumns) {
                     return in_array($column, $driverTaskColumns, true);
                 });
-                $taskKeyColumn = in_array('task_id', $driverTaskColumns, true) ? 'task_id' : null;
-                $taskDateColumn = collect(['delivery_date', 'date_created', 'created_at', 'date_added'])
-                    ->first(function ($column) use ($driverTaskColumns) {
-                        return in_array($column, $driverTaskColumns, true);
-                    });
 
-                if ($riderKeyColumn && $taskKeyColumn && $taskDateColumn) {
-                    $ridersWithDeliveriesYesterday = $legacyDb->table('mt_driver_task')
-                        ->selectRaw("{$riderKeyColumn} as rider_key, COUNT({$taskKeyColumn}) as total_deliveries")
-                        ->whereNotNull($taskKeyColumn)
-                        ->whereDate($taskDateColumn, $yesterday)
-                        ->groupBy($riderKeyColumn)
-                        ->havingRaw("COUNT({$taskKeyColumn}) > 0")
-                        ->pluck('rider_key')
-                        ->map(function ($riderId) {
-                            return (int) $riderId;
-                        })
-                        ->toArray();
-                }
+            if ($riderKeyColumn && $taskKeyColumn && $taskDateColumn) {
+                $ridersWithDeliveriesYesterday = $legacyDb->table('mt_driver_task')
+                    ->selectRaw("{$riderKeyColumn} as rider_key, COUNT({$taskKeyColumn}) as total_deliveries")
+                    ->whereNotNull($taskKeyColumn)
+                    ->whereDate($taskDateColumn, $previousQueueDate)
+                    ->groupBy($riderKeyColumn)
+                    ->havingRaw("COUNT({$taskKeyColumn}) > 0")
+                    ->pluck('rider_key')
+                    ->map(function ($riderId) {
+                        return (int) $riderId;
+                    })
+                    ->toArray();
             }
+        }
 
-            $blockedRiderIds = $legacyDb->table('mt_driver')
-                ->whereIn('status', ['active', 'cleared'])
-                ->whereDate('date_created', '<', \Carbon\Carbon::today())
-                ->when(!empty($ridersWithDeliveriesYesterday), function ($query) use ($ridersWithDeliveriesYesterday) {
-                    $query->whereIn('driver_id', $ridersWithDeliveriesYesterday);
-                }, function ($query) {
-                    // If there are no deliveries yesterday, nobody should be blocked.
-                    $query->whereRaw('1 = 0');
-                })
-                ->whereNotIn('driver_id', $remittedYesterdayIds)
-                ->whereNotIn('driver_id', $remittedTodayIds)
-                ->pluck('driver_id')
+        $blockedRiderIds = $legacyDb->table('mt_driver')
+            ->whereIn('status', ['active', 'cleared'])
+            ->whereDate('date_created', '<', $statsDateParsed)
+            ->when(!empty($ridersWithDeliveriesYesterday), function ($query) use ($ridersWithDeliveriesYesterday) {
+                $query->whereIn('driver_id', $ridersWithDeliveriesYesterday);
+            }, function ($query) {
+                // If there are no deliveries on previous queue date, nobody should be blocked.
+                $query->whereRaw('1 = 0');
+            })
+            ->whereNotIn('driver_id', $remittedPreviousDateIds)
+            ->pluck('driver_id')
+            ->toArray();
+
+        $blockedRiderOverdueMap = [];
+        $blockedOverdueAsOfDate = \Carbon\Carbon::parse($statsDateParsed)->format('M d, Y');
+        if (!empty($blockedRiderIds)) {
+            $previousQueueDateCarbon = \Carbon\Carbon::parse($previousQueueDate)->startOfDay();
+
+            $lastRemittanceDatesByRider = Remittance::query()
+                ->selectRaw('rider_id, MAX(remittance_date) as last_remittance_date')
+                ->whereIn('rider_id', $blockedRiderIds)
+                ->whereDate('remittance_date', '<=', $previousQueueDate)
+                ->groupBy('rider_id')
+                ->pluck('last_remittance_date', 'rider_id')
                 ->toArray();
-        } else {
-            $blockedRiderIds = [];
+
+            $blockedRiderCreatedDates = $legacyDb->table('mt_driver')
+                ->whereIn('driver_id', $blockedRiderIds)
+                ->pluck('date_created', 'driver_id')
+                ->toArray();
+
+            foreach ($blockedRiderIds as $blockedRiderId) {
+                $lastRemitRaw = $lastRemittanceDatesByRider[$blockedRiderId] ?? null;
+                if ($lastRemitRaw) {
+                    $overdueStart = \Carbon\Carbon::parse($lastRemitRaw)->startOfDay()->addDay();
+                } else {
+                    $createdRaw = $blockedRiderCreatedDates[$blockedRiderId] ?? null;
+                    $overdueStart = $createdRaw
+                        ? \Carbon\Carbon::parse($createdRaw)->startOfDay()
+                        : $previousQueueDateCarbon->copy();
+                }
+
+                if ($overdueStart->gt($previousQueueDateCarbon)) {
+                    $overdueStart = $previousQueueDateCarbon->copy();
+                }
+
+                $durationText = $overdueStart->diffForHumans(
+                    $previousQueueDateCarbon->copy()->addDay(),
+                    \Carbon\CarbonInterface::DIFF_ABSOLUTE,
+                    false,
+                    3
+                );
+
+                $blockedRiderOverdueMap[(int) $blockedRiderId] = $durationText;
+            }
         }
 
         // Cleared badge only shows on past dates — today's queue always stays
@@ -416,7 +451,7 @@ class RiderController extends Controller
             ->orderBy('restaurant_name')
             ->get();
 
-        return view('remittance', compact('riders', 'payrolls', 'deductions', 'deductionsByRider', 'allDeductionsFlat', 'remittances', 'nonRemittingRiderCount', 'clearedCount', 'cashCollection', 'digitalCollection', 'statsDate', 'statsDateParsed', 'blockedRiderIds', 'clearedRiderIds', 'remittedRiderIds', 'shortRiderIds', 'remittedTotalsByRider', 'riderRemittanceDateMap', 'riderTaskDeliveriesMap', 'riderDeliveryChargesMap', 'riderTipsMap', 'riderTotalCollectionMap', 'merchants'));
+        return view('remittance', compact('riders', 'payrolls', 'deductions', 'deductionsByRider', 'allDeductionsFlat', 'remittances', 'nonRemittingRiderCount', 'clearedCount', 'cashCollection', 'digitalCollection', 'statsDate', 'statsDateParsed', 'blockedRiderIds', 'blockedRiderOverdueMap', 'blockedOverdueAsOfDate', 'clearedRiderIds', 'remittedRiderIds', 'shortRiderIds', 'remittedTotalsByRider', 'riderRemittanceDateMap', 'riderTaskDeliveriesMap', 'riderDeliveryChargesMap', 'riderTipsMap', 'riderTotalCollectionMap', 'merchants'));
     }
 
     public function store(Request $request)

@@ -41,6 +41,47 @@ class RemittanceController extends Controller
             ? \Carbon\Carbon::parse($request->remittance_date)->toDateString()
             : today()->toDateString();
 
+        $targetDate = \Carbon\Carbon::parse($targetRemittanceDate);
+        $previousDate = $targetDate->copy()->subDay()->toDateString();
+
+        $hasRemittedPreviousDate = Remittance::query()
+            ->where('rider_id', $request->rider_id)
+            ->whereDate('remittance_date', $previousDate)
+            ->exists();
+
+        if (!$hasRemittedPreviousDate) {
+            $legacyDb = DB::connection('wibfinance');
+            $legacySchema = Schema::connection('wibfinance');
+            $hadDeliveriesPreviousDate = false;
+
+            if ($legacySchema->hasTable('mt_driver_task')) {
+                $driverTaskColumns = $legacySchema->getColumnListing('mt_driver_task');
+                $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($driverTaskColumns) {
+                    return in_array($column, $driverTaskColumns, true);
+                });
+                $taskDateColumn = collect(['delivery_date', 'date_created', 'created_at', 'date_added'])
+                    ->first(function ($column) use ($driverTaskColumns) {
+                        return in_array($column, $driverTaskColumns, true);
+                    });
+                $taskKeyColumn = in_array('task_id', $driverTaskColumns, true) ? 'task_id' : null;
+
+                if ($riderKeyColumn && $taskDateColumn && $taskKeyColumn) {
+                    $hadDeliveriesPreviousDate = $legacyDb->table('mt_driver_task')
+                        ->where("{$riderKeyColumn}", $request->rider_id)
+                        ->whereNotNull($taskKeyColumn)
+                        ->whereDate($taskDateColumn, $previousDate)
+                        ->exists();
+                }
+            }
+
+            if ($hadDeliveriesPreviousDate) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This rider has unremitted deliveries from the previous day. Please remit that day first before proceeding.'
+                ], 409);
+            }
+        }
+
         $alreadyRemittedAmount = (float) Remittance::query()
             ->where('rider_id', $request->rider_id)
             ->whereDate('remittance_date', $targetRemittanceDate)

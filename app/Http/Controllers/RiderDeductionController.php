@@ -12,6 +12,17 @@ class RiderDeductionController extends Controller
     {
         try {
             Log::info('Deduction submission attempt', $request->all());
+
+            $remarks = trim((string) $request->input('remarks', ''));
+            $amountRaw = trim((string) $request->input('amount', ''));
+
+            // Allow the deductions section to be skipped entirely without failing validation.
+            if ($remarks === '' && $amountRaw === '') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No deduction provided.'
+                ]);
+            }
             
             $validated = $request->validate([
                 'rider_id' => 'required|string',

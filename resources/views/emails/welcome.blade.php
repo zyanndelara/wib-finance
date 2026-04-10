@@ -133,10 +133,10 @@ fHAirTh/kdkKi2rYSy+jsQSeQpb8AUdwY4hzaBV+gJFG7lWFUDiSX1U/0r4OBQafE2ugM8LfpCk/AILZ
             </div>
             
             <div class="warning-box">
-                <p><strong>?? Important Security Notice:</strong></p>
-                <p>• Please change your password after your first login</p>
-                <p>• Do not share your password with anyone</p>
-                <p>• Keep this email secure or delete it after changing your password</p>
+                <p><strong>Important Security Notice:</strong></p>
+                <p>- Please change your password after your first login</p>
+                <p>- Do not share your password with anyone</p>
+                <p>- Keep this email secure or delete it after changing your password</p>
             </div>
             
             <div style="text-align: center;">
@@ -151,7 +151,7 @@ fHAirTh/kdkKi2rYSy+jsQSeQpb8AUdwY4hzaBV+gJFG7lWFUDiSX1U/0r4OBQafE2ugM8LfpCk/AILZ
         </div>
         
         <div class="email-footer">
-            <p>© {{ date('Y') }} When in Baguio Inc. All rights reserved.</p>
+            <p>ï¿½ {{ date('Y') }} When in Baguio Inc. All rights reserved.</p>
             <p>This is an automated message, please do not reply to this email.</p>
         </div>
     </div>

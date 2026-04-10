@@ -552,10 +552,6 @@
                     <span class="info-label">Document Number</span>
                     <span class="info-value">{{ $documentNumber }}</span>
                 </div>
-                <div class="info-row">
-                    <span class="info-label">Prepared By</span>
-                    <span class="info-value">{{ $generatedBy->name ?? 'WIB Finance Officer' }}</span>
-                </div>
             </div>
         </div>
 

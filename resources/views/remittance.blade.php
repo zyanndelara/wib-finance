@@ -1555,6 +1555,7 @@
                 <div class="rider-list">
                     @forelse($riders as $index => $rider)
                         @php $isBlocked = in_array($rider->id, $blockedRiderIds); @endphp
+                        @php $blockedOverdueDuration = $blockedRiderOverdueMap[$rider->id] ?? null; @endphp
                         @php $isAlreadyRemitted = in_array($rider->id, $remittedRiderIds ?? []); @endphp
                         @php $isShortRemit = in_array($rider->id, $shortRiderIds ?? []); @endphp
                         <div class="rider-row" data-rider-id="{{ $rider->id }}"
@@ -1618,6 +1619,11 @@
                                         <div class="rider-blocked-notice">
                                             <i class="fas fa-exclamation-triangle"></i>
                                             This rider did not remit yesterday. Please settle before proceeding.
+                                            @if ($blockedOverdueDuration)
+                                                <div style="margin-top: 4px; font-weight: 700;">
+                                                    Unremitted for: {{ $blockedOverdueDuration }} (as of {{ $blockedOverdueAsOfDate ?? $statsDateParsed }})
+                                                </div>
+                                            @endif
                                         </div>
                                     @elseif($isAlreadyRemitted)
                                         <div class="rider-blocked-notice" style="background: #e9f7ef; border-color: #b8e0c3; color: #1f6b3d;">
@@ -2122,11 +2128,11 @@
                                             <label class="form-label">Mode of Payment:</label>
                                             <div style="display: flex; gap: 16px; margin-top: 8px;">
                                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                                    <input type="checkbox" name="payroll_mode_of_payment_checkbox" value="cash" class="payroll-payment-mode-checkbox" style="cursor: pointer;">
+                                                    <input type="radio" name="payroll_mode_of_payment" value="cash" class="payroll-payment-mode-input" style="cursor: pointer;">
                                                     <span>Cash</span>
                                                 </label>
                                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                                    <input type="checkbox" name="payroll_mode_of_payment_checkbox" value="bank" class="payroll-payment-mode-checkbox" style="cursor: pointer;">
+                                                    <input type="radio" name="payroll_mode_of_payment" value="bank" class="payroll-payment-mode-input" style="cursor: pointer;">
                                                     <span>Bank Digital Wallet</span>
                                                 </label>
                                             </div>
@@ -2158,11 +2164,11 @@
                                         <input type="number" name="base_salary" class="form-input form-input-readonly-highlight" step="0.01"  readonly>
                                     </div>
                                     <div class="form-row">
-                                        <label class="form-label">Incentives:</label>
+                                        <label class="form-label">Incentives (Optional):</label>
                                         <input type="number" name="incentives" class="form-input" step="0.01" placeholder="Enter incentives">
                                     </div>
                                     <div class="form-row">
-                                        <label class="form-label">26 Days Renumeration:</label>
+                                        <label class="form-label">26 Days Renumeration (Optional):</label>
                                         <input type="number" name="renumeration_26_days" class="form-input" step="0.01" placeholder="Enter 26 days renumeration">
                                     </div>
                                 </div>
@@ -3120,9 +3126,7 @@
                         const renumeration26Days = form.querySelector('[name="renumeration_26_days"]').value;
                         const salarySchedule = form.querySelector('[name="salary_schedule"]').value;
                         
-                        // Get selected payroll payment modes
-                        const selectedPayrollModes = Array.from(document.querySelectorAll('.payroll-payment-mode-checkbox:checked'))
-                            .map(cb => cb.value);
+                        const selectedPayrollMode = form.querySelector('.payroll-payment-mode-input:checked')?.value || '';
                         
                         const netSalary = form.querySelector('[name="net_salary"]').value;
 
@@ -3150,34 +3154,14 @@
                                 return;
                             }
                         }
-                        if (selectedPayrollModes.length === 0) {
-                            showToast('Please select at least one Mode of Payment', 'warning');
+                        if (!selectedPayrollMode) {
+                            showToast('Please select one Mode of Payment', 'warning');
                             return;
                         }
                         if (!netSalary) {
                             showToast('Please enter Net Salary', 'warning');
                             return;
                         }
-
-                        // Store the selected modes in hidden fields for form submission
-                        let payrollModeInput = form.querySelector('[name="selected_payroll_modes"]');
-                        if (!payrollModeInput) {
-                            payrollModeInput = document.createElement('input');
-                            payrollModeInput.type = 'hidden';
-                            payrollModeInput.name = 'selected_payroll_modes';
-                            form.appendChild(payrollModeInput);
-                        }
-                        payrollModeInput.value = JSON.stringify(selectedPayrollModes);
-
-                        // Also set payment_modes_json for backend consistency
-                        let paymentModesJson = form.querySelector('[name="payment_modes_json"]');
-                        if (!paymentModesJson) {
-                            paymentModesJson = document.createElement('input');
-                            paymentModesJson.type = 'hidden';
-                            paymentModesJson.name = 'payment_modes_json';
-                            form.appendChild(paymentModesJson);
-                        }
-                        paymentModesJson.value = JSON.stringify(selectedPayrollModes);
 
                         // Set the mode_of_payment field
                         let modeOfPaymentInput = form.querySelector('[name="mode_of_payment"]');
@@ -3187,7 +3171,7 @@
                             modeOfPaymentInput.name = 'mode_of_payment';
                             form.appendChild(modeOfPaymentInput);
                         }
-                        modeOfPaymentInput.value = selectedPayrollModes.length === 1 ? selectedPayrollModes[0] : 'multiple';
+                        modeOfPaymentInput.value = selectedPayrollMode;
 
                         // Set rider name in modal header
                         document.getElementById('payrollDeductionRiderName').textContent = riderName;
@@ -3322,10 +3306,11 @@
                                 let errorMsg = 'Failed to save payroll.';
                                 try {
                                     const errorData = await res.json();
-                                    if (errorData && errorData.message) errorMsg = errorData.message;
-                                    else if (errorData && errorData.errors) {
+                                    if (errorData && errorData.errors) {
                                         errorMsg = Object.keys(errorData.errors).map(f => f + ': ' + errorData.errors[f].join(', '))
                                             .join(' | ');
+                                    } else if (errorData && errorData.message) {
+                                        errorMsg = errorData.message;
                                     }
                                 } catch {}
                                 showToast(errorMsg, 'error');
@@ -6167,6 +6152,9 @@
                 // Clear mode of payment
                 const modeOfPayment = payrollForm.querySelector('[name="mode_of_payment"]');
                 if (modeOfPayment) modeOfPayment.value = '';
+                payrollForm.querySelectorAll('.payroll-payment-mode-input').forEach(input => {
+                    input.checked = false;
+                });
                 
                 // Reset ADDA DF rows
                 const addaDfRows = document.getElementById('addaDfRows');
@@ -6480,7 +6468,7 @@
             if (alreadyRemitted > 0 && remainingBefore > 0) {
                 hintEl.style.display = 'block';
                 hintEl.style.color = '#b45309';
-                hintEl.textContent = `Already remitted: ₱${alreadyRemitted.toFixed(2)} | Remaining: ₱${remainingBefore.toFixed(2)} | After this entry: ₱${remainingAfter.toFixed(2)}`;
+                hintEl.textContent = `Balance: ₱${remainingBefore.toFixed(2)} | After this entry: ₱${remainingAfter.toFixed(2)}`;
                 return;
             }
 
@@ -6585,6 +6573,11 @@
 
         function openRemitModal(riderId, riderName) {
             const selectedRow = document.querySelector(`[data-rider-id="${riderId}"]`);
+            if (selectedRow && selectedRow.dataset.blocked === 'true') {
+                showToast('This rider has unremitted deliveries from yesterday. Please settle yesterday first.',
+                    'warning');
+                return;
+            }
             if (selectedRow && selectedRow.dataset.remitted === 'true') {
                 showToast('This rider is already fully remitted for the selected date.', 'warning');
                 return;
@@ -6684,7 +6677,7 @@
                 const totalCollection = document.getElementById('totalCollection').value;
                 const remitPhoto = document.getElementById('remitPhoto').files[0];
                 const remarks = remarksData.combinedRemarks;
-                const remarksAmount = '';
+                const remarksAmount = remarksData.totalAmount > 0 ? remarksData.totalAmount.toFixed(2) : '';
 
                 // Collect payment breakdown amounts
                 const paymentBreakdown = {};
@@ -6701,6 +6694,7 @@
                 formData.set('mode_of_payment', modeOfPayment);
                 formData.set('payment_modes_json', JSON.stringify(selectedModes));
                 formData.set('payment_breakdown_json', JSON.stringify(paymentBreakdown));
+                formData.set('remarks_amount', remarksAmount);
 
                 // Store form data for later submission
                 pendingRemittance = {
@@ -6758,7 +6752,8 @@
                     /\B(?=(\d{3})+(?!\d))/g, ',');
                 document.getElementById('digitalCollectionDisplay').textContent = '₱' + digitalAmount.toFixed(2).replace(
                     /\B(?=(\d{3})+(?!\d))/g, ',');
-                document.getElementById('netTurnoverDisplay').textContent = '₱' + parseFloat(totalRemit || 0).toFixed(2)
+                const netTurnover = Math.max((parseFloat(totalRemit || 0) || 0) - (remarksData.totalAmount || 0), 0);
+                document.getElementById('netTurnoverDisplay').textContent = '₱' + netTurnover.toFixed(2)
                     .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
                 // Update remarks in details panel
@@ -8971,6 +8966,26 @@
             const breakdownSection = document.getElementById('paymentBreakdownSection');
             const breakdownFields = document.getElementById('paymentBreakdownFields');
             const totalCollection = document.getElementById('totalCollection');
+            const totalRemitInput = document.getElementById('totalRemit');
+
+            function getBreakdownBaseAmount() {
+                const remitValue = parseFloat(totalRemitInput?.value || '0') || 0;
+                if (remitValue > 0) {
+                    return remitValue;
+                }
+
+                const riderId = document.getElementById('remitRiderId')?.value;
+                if (riderId) {
+                    const expectedTotal = getAutoTotalCollectionByRider(riderId);
+                    const alreadyRemitted = getAlreadyRemittedAmountByRider(riderId);
+                    const remainingBefore = Math.max(expectedTotal - alreadyRemitted, 0);
+                    if (remainingBefore > 0) {
+                        return remainingBefore;
+                    }
+                }
+
+                return parseFloat(totalCollection?.value || '0') || 0;
+            }
 
             function updatePaymentBreakdown() {
                 const selectedModes = Array.from(checkboxes)
@@ -8983,7 +8998,7 @@
                 }
 
                 breakdownSection.style.display = 'block';
-                const collectionAmount = parseFloat(totalCollection.value) || 0;
+                const breakdownBaseAmount = getBreakdownBaseAmount();
                 
                 // Build breakdown fields HTML
                 let fieldsHTML = '';
@@ -9003,7 +9018,7 @@
                                 step="0.01" 
                                 min="0"
                                 placeholder="0.00"
-                                value="${collectionAmount / selectedModes.length}"
+                                value="${breakdownBaseAmount / selectedModes.length}"
                                 style="background: #fff; border: 1.5px solid #d6eacc; padding: 8px 12px; border-radius: 6px; font-weight: 600,"
                                 onchange="updateTotalPaymentDisplay()">
                         </div>
@@ -9117,6 +9132,7 @@
         function consolidateRemitRemarks() {
             const rows = document.querySelectorAll('#remitRemarksRows .remit-remark-row');
             const entries = [];
+            let totalAmount = 0;
 
             for (const row of rows) {
                 const remarks = (row.querySelector('.remit-remarks-input')?.value || '').trim();
@@ -9145,6 +9161,8 @@
                     remarks,
                     amount
                 });
+
+                totalAmount += amount;
             }
 
             const combinedRemarks = entries.map((entry) => {
@@ -9155,13 +9173,13 @@
             const remarksHidden = document.getElementById('consolidatedRemarks');
             const remarksAmountHidden = document.getElementById('consolidatedRemarksAmount');
             if (remarksHidden) remarksHidden.value = combinedRemarks;
-            if (remarksAmountHidden) remarksAmountHidden.value = '';
+            if (remarksAmountHidden) remarksAmountHidden.value = totalAmount > 0 ? totalAmount.toFixed(2) : '';
 
             return {
                 valid: true,
                 entries,
                 combinedRemarks,
-                totalAmount: 0
+                totalAmount
             };
         }
 
