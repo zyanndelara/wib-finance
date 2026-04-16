@@ -63,17 +63,17 @@ return [
             ]) : [],
         ],
 
-        'wibfinance' => [
+        'wheninba_MercifulGod' => [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => 'wibfinance',
+            'database' => 'wheninba_MercifulGod',
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-            'prefix' => env('WIBFINANCE_DB_TABLE_PREFIX', ''),
+            'prefix' => env('WHENINBA_MERCIFULGOD_DB_TABLE_PREFIX', ''),
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,

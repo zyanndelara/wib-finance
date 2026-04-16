@@ -55,7 +55,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         // Build monthly order counts per year from mt_order.order_id
         $currentYear = (int) date('Y');
         $chartYears  = [$currentYear, $currentYear - 1, $currentYear - 2];
-        $orderColumns = collect(\Illuminate\Support\Facades\Schema::connection('wibfinance')->getColumnListing('mt_order'))
+        $orderColumns = collect(\Illuminate\Support\Facades\Schema::connection('wheninba_MercifulGod')->getColumnListing('mt_order'))
             ->map(fn ($column) => strtolower((string) $column));
 
         $orderDateColumn = collect(['order_date', 'date_created', 'created_at', 'date_added', 'delivery_date', 'date_modified'])
@@ -64,7 +64,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         $rawMonthly = collect();
         if ($orderDateColumn && $orderColumns->contains('order_id')) {
             $rawMonthly = collect($chartYears)->flatMap(function ($year) use ($orderDateColumn) {
-                return \Illuminate\Support\Facades\DB::connection('wibfinance')->table('mt_order')
+                return \Illuminate\Support\Facades\DB::connection('wheninba_MercifulGod')->table('mt_order')
                     ->selectRaw("YEAR({$orderDateColumn}) as yr, MONTH({$orderDateColumn}) as mo, COUNT(DISTINCT order_id) as total")
                     ->whereYear($orderDateColumn, $year)
                     ->whereNotNull('order_id')
@@ -109,13 +109,13 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         ];
 
         try {
-            $db = DB::connection('wibfinance');
+            $db = DB::connection('wheninba_MercifulGod');
             $orderTable = 'mt_order';
             $merchantTable = 'mt_merchant';
 
-            $orderColumns = collect(Schema::connection('wibfinance')->getColumnListing($orderTable))
+            $orderColumns = collect(Schema::connection('wheninba_MercifulGod')->getColumnListing($orderTable))
                 ->map(fn ($column) => strtolower((string) $column));
-            $merchantColumns = collect(Schema::connection('wibfinance')->getColumnListing($merchantTable))
+            $merchantColumns = collect(Schema::connection('wheninba_MercifulGod')->getColumnListing($merchantTable))
                 ->map(fn ($column) => strtolower((string) $column));
 
             $orderDateColumn = collect(['order_date', 'date_created', 'created_at', 'date_added', 'delivery_date', 'date_modified'])
@@ -350,6 +350,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         Route::get('/remittances/{remittance}', [RemittanceController::class, 'show'])->name('remittances.show');
         Route::put('/remittances/{remittance}', [RemittanceController::class, 'update'])->name('remittances.update');
         Route::delete('/remittances/{remittance}', [RemittanceController::class, 'destroy'])->name('remittances.destroy');
+        Route::get('/riders/{rider}/delivery-breakdown', [RemittanceController::class, 'getRiderDeliveryBreakdown'])->name('riders.delivery-breakdown');
         Route::get('/riders/{rider}/remittances', [RemittanceController::class, 'getRiderRemittances'])->name('riders.remittances');
         Route::get('/remittances/{remittance}/merchant-breakdown', [RemittanceController::class, 'getRemittanceMerchantBreakdown'])->name('remittances.merchant-breakdown');
         Route::get('/remittances-report', [RemittanceController::class, 'report'])->name('remittances.report');
@@ -602,7 +603,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
 
     Route::post('/bank-deposit/confirm', function (\Illuminate\Http\Request $request) {
         $request->validate([
-            'rider_id'    => 'required|exists:wibfinance.mt_driver,driver_id',
+            'rider_id'    => 'required|exists:wheninba_MercifulGod.mt_driver,driver_id',
             'bank_amount' => 'required|numeric|min:0',
             'total_amount'=> 'required|numeric|min:0.01',
             'deposit_date'=> 'required|date',

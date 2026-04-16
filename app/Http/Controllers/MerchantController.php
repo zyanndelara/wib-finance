@@ -139,7 +139,7 @@ class MerchantController extends Controller
 
         if ($merchantIds->isNotEmpty()) {
             try {
-                $orderColumns = collect(Schema::connection('wibfinance')->getColumnListing('mt_order'))
+                $orderColumns = collect(Schema::connection('wheninba_MercifulGod')->getColumnListing('mt_order'))
                     ->map(fn ($column) => strtolower((string) $column));
 
                 $dateCandidates = ['delivery_date', 'date_created', 'created_at', 'order_date', 'date_added', 'date_modified'];
@@ -160,7 +160,7 @@ class MerchantController extends Controller
                         $selectRaw .= ", COALESCE(SUM({$commissionColumn}), 0) as total_commission";
                     }
 
-                    $ordersQuery = DB::connection('wibfinance')->table('mt_order')
+                    $ordersQuery = DB::connection('wheninba_MercifulGod')->table('mt_order')
                         ->selectRaw($selectRaw)
                         ->whereIn('merchant_id', $merchantIds)
                         ->whereNotNull('merchant_id')

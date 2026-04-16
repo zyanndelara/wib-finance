@@ -12,11 +12,69 @@ use Illuminate\Support\Facades\Storage;
 
 class RemittanceController extends Controller
 {
+    private function resolveMerchantTypeColumn($legacySchema): ?string
+    {
+        if (!$legacySchema->hasTable('mt_merchant')) {
+            return null;
+        }
+
+        $merchantColumns = $legacySchema->getColumnListing('mt_merchant');
+
+        return collect(['partner_type', 'merchant_type', 'type'])->first(function ($column) use ($merchantColumns) {
+            return in_array($column, $merchantColumns, true);
+        });
+    }
+
+    private function resolveMerchantCommissionTypeColumn($legacySchema): ?string
+    {
+        if (!$legacySchema->hasTable('mt_merchant')) {
+            return null;
+        }
+
+        $merchantColumns = $legacySchema->getColumnListing('mt_merchant');
+
+        return collect(['commission_type', 'commision_type'])->first(function ($column) use ($merchantColumns) {
+            return in_array($column, $merchantColumns, true);
+        });
+    }
+
+    private function resolveMerchantCommissionRateColumn($legacySchema): ?string
+    {
+        if (!$legacySchema->hasTable('mt_merchant')) {
+            return null;
+        }
+
+        $merchantColumns = $legacySchema->getColumnListing('mt_merchant');
+
+        return collect(['commission_rate', 'percent_commision'])->first(function ($column) use ($merchantColumns) {
+            return in_array($column, $merchantColumns, true);
+        });
+    }
+
+    private function calculateMerchantRemitAmount(string $merchantName, string $merchantType, float $orderTotal, float $deliveryFee, float $tipAmount, string $paymentType = '', float $receiptNonPartners = 0): float
+    {
+        $normalizedMerchantName = strtolower(trim(preg_replace('/\s+/', ' ', $merchantName)));
+        $normalizedPaymentType = strtoupper(trim($paymentType));
+        $remitAmount = max(0, $orderTotal - $deliveryFee);
+
+        if ($normalizedMerchantName === 'victoria bakery - magsaysay branch' && $normalizedPaymentType === 'COD') {
+            return max(0, $orderTotal - $deliveryFee - $receiptNonPartners);
+        }
+        
+        // If payment type is PYR (Payment on Remittance), return negative amount
+        // This will be deducted from overall total remit
+        if ($normalizedPaymentType === 'PYR') {
+            return -$remitAmount;
+        }
+        
+        return $remitAmount;
+    }
+
     public function store(Request $request)
     {
         try {
             $request->validate([
-                'rider_id' => 'required|exists:wibfinance.mt_driver,driver_id',
+                'rider_id' => 'required|exists:wheninba_MercifulGod.mt_driver,driver_id',
                 'total_deliveries' => 'required|integer|min:0',
                 'total_delivery_fee' => 'required|numeric|min:0',
                 'total_remit' => 'required|numeric|min:0',
@@ -50,8 +108,8 @@ class RemittanceController extends Controller
             ->exists();
 
         if (!$hasRemittedPreviousDate) {
-            $legacyDb = DB::connection('wibfinance');
-            $legacySchema = Schema::connection('wibfinance');
+            $legacyDb = DB::connection('wheninba_MercifulGod');
+            $legacySchema = Schema::connection('wheninba_MercifulGod');
             $hadDeliveriesPreviousDate = false;
 
             if ($legacySchema->hasTable('mt_driver_task')) {
@@ -87,8 +145,11 @@ class RemittanceController extends Controller
             ->whereDate('remittance_date', $targetRemittanceDate)
             ->sum('total_remit');
 
-        $legacyDb = DB::connection('wibfinance');
-        $legacySchema = Schema::connection('wibfinance');
+        $legacyDb = DB::connection('wheninba_MercifulGod');
+        $legacySchema = Schema::connection('wheninba_MercifulGod');
+        $merchantTypeColumn = $this->resolveMerchantTypeColumn($legacySchema);
+        $commissionTypeColumn = $this->resolveMerchantCommissionTypeColumn($legacySchema);
+        $commissionRateColumn = $this->resolveMerchantCommissionRateColumn($legacySchema);
 
         $expectedTotalAmount = 0.0;
         if ($legacySchema->hasTable('mt_driver_task')) {
@@ -102,11 +163,37 @@ class RemittanceController extends Controller
                 });
 
             if ($riderKeyColumn && $taskDateColumn) {
-                $expectedTotalAmount = (float) $legacyDb->table('mt_driver_task')
-                    ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
+                $expectedRows = $legacyDb->table('mt_driver_task')
+                    ->leftJoin('wheninba_MercifulGod.mt_order', 'mt_driver_task.order_id', '=', 'wheninba_MercifulGod.mt_order.order_id')
+                    ->leftJoin('mt_merchant', 'wheninba_MercifulGod.mt_order.merchant_id', '=', 'mt_merchant.merchant_id')
                     ->where("mt_driver_task.{$riderKeyColumn}", $request->rider_id)
                     ->whereDate("mt_driver_task.{$taskDateColumn}", $targetRemittanceDate)
-                    ->sum(DB::raw('COALESCE(wibfinance.mt_order.total_w_tax, 0)'));
+                    ->whereNotNull('mt_driver_task.order_id')
+                    ->selectRaw("COALESCE(mt_merchant.restaurant_name, 'Unknown Merchant') as merchant_name")
+                    ->selectRaw($merchantTypeColumn ? "COALESCE(MAX(mt_merchant.{$merchantTypeColumn}), '') as merchant_type" : "'' as merchant_type")
+                    ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.total_w_tax), 0) as order_total')
+                    ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.delivery_charge), 0) as delivery_fee')
+                    ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.cart_tip_value), 0) as tip_amount')
+                    ->selectRaw("COALESCE(MAX(CAST(wheninba_MercifulGod.mt_order.payment_type AS CHAR)), '') as payment_type")
+                    ->groupBy('merchant_name', 'mt_driver_task.order_id');
+
+                if ($merchantTypeColumn) {
+                    $expectedRows->groupBy('merchant_type');
+                }
+
+                $expectedRows = $expectedRows->get();
+
+                $expectedTotalAmount = (float) $expectedRows->sum(function ($row) {
+                    return $this->calculateMerchantRemitAmount(
+                        (string) ($row->merchant_name ?? ''),
+                        (string) ($row->merchant_type ?? ''),
+                        (float) ($row->order_total ?? 0),
+                        (float) ($row->delivery_fee ?? 0),
+                        (float) ($row->tip_amount ?? 0),
+                        (string) ($row->payment_type ?? ''),
+                        0
+                    );
+                });
             }
         }
 
@@ -363,8 +450,11 @@ class RemittanceController extends Controller
             ? \Carbon\Carbon::parse($remittance->remittance_date)->toDateString()
             : \Carbon\Carbon::parse($remittance->created_at)->toDateString();
 
-        $legacyDb = DB::connection('wibfinance');
-        $legacySchema = Schema::connection('wibfinance');
+        $legacyDb = DB::connection('wheninba_MercifulGod');
+        $legacySchema = Schema::connection('wheninba_MercifulGod');
+        $merchantTypeColumn = $this->resolveMerchantTypeColumn($legacySchema);
+        $commissionTypeColumn = $this->resolveMerchantCommissionTypeColumn($legacySchema);
+        $commissionRateColumn = $this->resolveMerchantCommissionRateColumn($legacySchema);
 
         try {
             if (!$legacySchema->hasTable('mt_driver_task')) {
@@ -399,18 +489,21 @@ class RemittanceController extends Controller
             }
 
             $detailRows = $legacyDb->table('mt_driver_task')
-                ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
-                ->leftJoin('mt_merchant', 'wibfinance.mt_order.merchant_id', '=', 'mt_merchant.merchant_id')
+                ->leftJoin('wheninba_MercifulGod.mt_order', 'mt_driver_task.order_id', '=', 'wheninba_MercifulGod.mt_order.order_id')
+                ->leftJoin('mt_merchant', 'wheninba_MercifulGod.mt_order.merchant_id', '=', 'mt_merchant.merchant_id')
                 ->where("mt_driver_task.{$riderKeyColumn}", $remittance->rider_id)
                 ->whereDate("mt_driver_task.{$taskDateColumn}", $targetDate)
                 ->whereNotNull('mt_driver_task.order_id')
                 ->selectRaw("COALESCE(mt_merchant.restaurant_name, 'Unknown Merchant') as merchant_name")
+                ->selectRaw($merchantTypeColumn ? "COALESCE(MAX(mt_merchant.{$merchantTypeColumn}), '') as merchant_type" : "'' as merchant_type")
+                ->selectRaw($commissionTypeColumn ? "COALESCE(MAX(mt_merchant.{$commissionTypeColumn}), '') as commission_type" : "'' as commission_type")
+                ->selectRaw($commissionRateColumn ? "COALESCE(MAX(mt_merchant.{$commissionRateColumn}), 0) as commission_rate" : "0 as commission_rate")
                 ->selectRaw('mt_driver_task.order_id as order_id')
-                ->selectRaw('COALESCE(MAX(wibfinance.mt_order.total_w_tax), 0) as order_total')
-                ->selectRaw('COALESCE(MAX(wibfinance.mt_order.delivery_charge), 0) as delivery_fee')
-                ->selectRaw('COALESCE(MAX(wibfinance.mt_order.cart_tip_value), 0) as tip_amount')
-                ->selectRaw('COALESCE(MAX(wibfinance.mt_order.packaging), 0) as cf_amount')
-                ->selectRaw("COALESCE(MAX(CAST(wibfinance.mt_order.payment_type AS CHAR)), '') as payment_type")
+                ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.total_w_tax), 0) as order_total')
+                ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.delivery_charge), 0) as delivery_fee')
+                ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.cart_tip_value), 0) as tip_amount')
+                ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.packaging), 0) as cf_amount')
+                ->selectRaw("COALESCE(MAX(CAST(wheninba_MercifulGod.mt_order.payment_type AS CHAR)), '') as payment_type")
                 ->groupBy('merchant_name', 'mt_driver_task.order_id')
                 ->orderBy('merchant_name')
                 ->orderBy('mt_driver_task.order_id')
@@ -422,23 +515,26 @@ class RemittanceController extends Controller
                     $orders = collect($rows)
                         ->map(function ($row) {
                             $merchantName = (string) ($row->merchant_name ?? '');
+                            $merchantType = (string) ($row->merchant_type ?? '');
+                            $commissionType = (string) ($row->commission_type ?? '');
+                            $commissionRate = (float) ($row->commission_rate ?? 0);
                             $orderTotal = (float) ($row->order_total ?? 0);
                             $deliveryFee = (float) ($row->delivery_fee ?? 0);
                             $tipAmount = (float) ($row->tip_amount ?? 0);
                             $cfAmount = (float) ($row->cf_amount ?? 0);
+                            $paymentType = (string) ($row->payment_type ?? '');
                             $isGtOrGrumpy = str_contains(strtolower($merchantName), 'good taste') || str_contains(strtolower($merchantName), 'grumpy');
+                            $isPartnerOrNonPartner = in_array(strtolower(trim($merchantType)), ['partner', 'non-partner'], true);
 
-                            $totalRemit = $isGtOrGrumpy
-                                ? max(0, $orderTotal - $deliveryFee)
-                                : max(0, $deliveryFee + $tipAmount);
+                            $receiptNonPartners = ($isGtOrGrumpy || $isPartnerOrNonPartner)
+                                ? 0
+                                : max(0, $orderTotal - $deliveryFee - $tipAmount);
+
+                            $totalRemit = $this->calculateMerchantRemitAmount($merchantName, $merchantType, $orderTotal, $deliveryFee, $tipAmount, $paymentType, $receiptNonPartners);
 
                             $gtGrumpyReceipt = $isGtOrGrumpy
                                 ? max(0, $totalRemit - $cfAmount)
                                 : 0;
-
-                            $receiptNonPartners = $isGtOrGrumpy
-                                ? 0
-                                : max(0, $orderTotal - $deliveryFee - $tipAmount);
 
                             return [
                                 'order_id' => (string) ($row->order_id ?? ''),
@@ -446,6 +542,9 @@ class RemittanceController extends Controller
                                 'total_collection' => (float) ($row->order_total ?? 0),
                                 'delivery_fee' => $deliveryFee,
                                 'tip_amount' => $tipAmount,
+                                'merchant_type' => $merchantType,
+                                'commission_type' => $commissionType,
+                                'commission_rate' => $commissionRate,
                                 'gt_grumpy_receipt' => $gtGrumpyReceipt,
                                 'receipt_non_partners' => $receiptNonPartners,
                                 'total_remit' => $totalRemit,
@@ -553,6 +652,160 @@ class RemittanceController extends Controller
                 'breakdown' => [],
                 'summary' => $summary,
                 'message' => 'Unable to load merchant breakdown right now.',
+            ]);
+        }
+    }
+
+    public function getRiderDeliveryBreakdown(Request $request, $riderId)
+    {
+        $summary = [
+            'merchant_count' => 0,
+            'total_deliveries' => 0,
+            'total_collection' => 0,
+        ];
+
+        $targetDate = $request->filled('date')
+            ? \Carbon\Carbon::parse($request->date)->toDateString()
+            : today()->toDateString();
+
+        $legacyDb = DB::connection('wheninba_MercifulGod');
+        $legacySchema = Schema::connection('wheninba_MercifulGod');
+        $merchantTypeColumn = $this->resolveMerchantTypeColumn($legacySchema);
+        $commissionTypeColumn = $this->resolveMerchantCommissionTypeColumn($legacySchema);
+        $commissionRateColumn = $this->resolveMerchantCommissionRateColumn($legacySchema);
+
+        try {
+            if (!$legacySchema->hasTable('mt_driver_task')) {
+                return response()->json([
+                    'success' => true,
+                    'rider_id' => (int) $riderId,
+                    'remittance_date' => $targetDate,
+                    'breakdown' => [],
+                    'summary' => $summary,
+                    'message' => 'Delivery task table is unavailable.',
+                ]);
+            }
+
+            $taskColumns = $legacySchema->getColumnListing('mt_driver_task');
+            $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($taskColumns) {
+                return in_array($column, $taskColumns, true);
+            });
+            $taskDateColumn = collect(['delivery_date', 'date_created', 'created_at', 'date_added'])
+                ->first(function ($column) use ($taskColumns) {
+                    return in_array($column, $taskColumns, true);
+                });
+
+            if (!$riderKeyColumn || !$taskDateColumn || !in_array('order_id', $taskColumns, true)) {
+                return response()->json([
+                    'success' => true,
+                    'rider_id' => (int) $riderId,
+                    'remittance_date' => $targetDate,
+                    'breakdown' => [],
+                    'summary' => $summary,
+                    'message' => 'Required delivery columns are unavailable for breakdown.',
+                ]);
+            }
+
+            $detailRows = $legacyDb->table('mt_driver_task')
+                ->leftJoin('wheninba_MercifulGod.mt_order', 'mt_driver_task.order_id', '=', 'wheninba_MercifulGod.mt_order.order_id')
+                ->leftJoin('mt_merchant', 'wheninba_MercifulGod.mt_order.merchant_id', '=', 'mt_merchant.merchant_id')
+                ->where("mt_driver_task.{$riderKeyColumn}", $riderId)
+                ->whereDate("mt_driver_task.{$taskDateColumn}", $targetDate)
+                ->whereNotNull('mt_driver_task.order_id')
+                ->selectRaw("COALESCE(mt_merchant.restaurant_name, 'Unknown Merchant') as merchant_name")
+                ->selectRaw($merchantTypeColumn ? "COALESCE(MAX(mt_merchant.{$merchantTypeColumn}), '') as merchant_type" : "'' as merchant_type")
+                ->selectRaw($commissionTypeColumn ? "COALESCE(MAX(mt_merchant.{$commissionTypeColumn}), '') as commission_type" : "'' as commission_type")
+                ->selectRaw($commissionRateColumn ? "COALESCE(MAX(mt_merchant.{$commissionRateColumn}), 0) as commission_rate" : "0 as commission_rate")
+                ->selectRaw('mt_driver_task.order_id as order_id')
+                ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.total_w_tax), 0) as order_total')
+                ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.delivery_charge), 0) as delivery_fee')
+                ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.cart_tip_value), 0) as tip_amount')
+                ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.packaging), 0) as cf_amount')
+                ->selectRaw("COALESCE(MAX(CAST(wheninba_MercifulGod.mt_order.payment_type AS CHAR)), '') as payment_type")
+                ->groupBy('merchant_name', 'mt_driver_task.order_id')
+                ->orderBy('merchant_name')
+                ->orderBy('mt_driver_task.order_id')
+                ->get();
+
+            $breakdown = $detailRows
+                ->groupBy('merchant_name')
+                ->map(function ($rows, $merchantName) {
+                    $orders = collect($rows)
+                        ->map(function ($row) {
+                            $merchantName = (string) ($row->merchant_name ?? '');
+                            $merchantType = (string) ($row->merchant_type ?? '');
+                            $commissionType = (string) ($row->commission_type ?? '');
+                            $commissionRate = (float) ($row->commission_rate ?? 0);
+                            $orderTotal = (float) ($row->order_total ?? 0);
+                            $deliveryFee = (float) ($row->delivery_fee ?? 0);
+                            $tipAmount = (float) ($row->tip_amount ?? 0);
+                            $cfAmount = (float) ($row->cf_amount ?? 0);
+                            $paymentType = (string) ($row->payment_type ?? '');
+                            $isGtOrGrumpy = str_contains(strtolower($merchantName), 'good taste') || str_contains(strtolower($merchantName), 'grumpy');
+                            $isPartnerOrNonPartner = in_array(strtolower(trim($merchantType)), ['partner', 'non-partner'], true);
+
+                            $receiptNonPartners = ($isGtOrGrumpy || $isPartnerOrNonPartner)
+                                ? 0
+                                : max(0, $orderTotal - $deliveryFee - $tipAmount);
+
+                            $totalRemit = $this->calculateMerchantRemitAmount($merchantName, $merchantType, $orderTotal, $deliveryFee, $tipAmount, $paymentType, $receiptNonPartners);
+
+                            $gtGrumpyReceipt = $isGtOrGrumpy
+                                ? max(0, $totalRemit - $cfAmount)
+                                : 0;
+
+                            return [
+                                'order_id' => (string) ($row->order_id ?? ''),
+                                'payment_type' => (string) ($row->payment_type ?? ''),
+                                'total_collection' => (float) ($row->order_total ?? 0),
+                                'delivery_fee' => $deliveryFee,
+                                'tip_amount' => $tipAmount,
+                                'merchant_type' => $merchantType,
+                                'commission_type' => $commissionType,
+                                'commission_rate' => $commissionRate,
+                                'gt_grumpy_receipt' => $gtGrumpyReceipt,
+                                'receipt_non_partners' => $receiptNonPartners,
+                                'total_remit' => $totalRemit,
+                                'cf_amount' => $cfAmount,
+                            ];
+                        })
+                        ->filter(function ($order) {
+                            return $order['order_id'] !== '';
+                        })
+                        ->values();
+
+                    return [
+                        'merchant_name' => (string) ($merchantName ?: 'Unknown Merchant'),
+                        'deliveries' => $orders->count(),
+                        'total_collection' => (float) $orders->sum('total_collection'),
+                        'order_ids' => $orders->pluck('order_id')->values()->all(),
+                        'orders' => $orders->all(),
+                    ];
+                })
+                ->sortByDesc('deliveries')
+                ->values();
+
+            $summary = [
+                'merchant_count' => $breakdown->count(),
+                'total_deliveries' => (int) $breakdown->sum('deliveries'),
+                'total_collection' => (float) $breakdown->sum('total_collection'),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'rider_id' => (int) $riderId,
+                'remittance_date' => $targetDate,
+                'breakdown' => $breakdown,
+                'summary' => $summary,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => true,
+                'rider_id' => (int) $riderId,
+                'remittance_date' => $targetDate,
+                'breakdown' => [],
+                'summary' => $summary,
+                'message' => 'Unable to load rider delivery breakdown right now.',
             ]);
         }
     }

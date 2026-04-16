@@ -1158,6 +1158,43 @@
             border-bottom: none;
         }
 
+        .rider-records-responsive-wrap {
+            width: 100%;
+            overflow: auto;
+            max-height: 500px;
+        }
+
+        .rider-records-responsive-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .sheet-breakdown-responsive-wrap {
+            width: 100%;
+            overflow: auto;
+            max-height: 500px;
+        }
+
+        .sheet-breakdown-responsive-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 0 !important;
+            table-layout: auto !important;
+        }
+
+        .sheet-breakdown-responsive-table thead th,
+        .sheet-breakdown-responsive-table tbody td {
+            width: auto !important;
+            padding: 7px 8px !important;
+            font-size: 11px !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            line-height: 1.25;
+        }
+
         .table-empty-state {
             text-align: center;
             padding: 40px;
@@ -1280,6 +1317,72 @@
             .cleared-riders-table {
                 min-width: 600px;
             }
+
+            .sheet-breakdown-responsive-wrap {
+                overflow: auto !important;
+                max-height: 420px !important;
+                border: none !important;
+                border-radius: 0 !important;
+            }
+
+            .sheet-breakdown-responsive-table,
+            .sheet-breakdown-responsive-table thead,
+            .sheet-breakdown-responsive-table tbody,
+            .sheet-breakdown-responsive-table tr,
+            .sheet-breakdown-responsive-table th,
+            .sheet-breakdown-responsive-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .sheet-breakdown-responsive-table {
+                min-width: 0 !important;
+                table-layout: auto !important;
+            }
+
+            .sheet-breakdown-responsive-table thead {
+                display: none;
+            }
+
+            .sheet-breakdown-responsive-table tbody tr {
+                margin-bottom: 12px;
+                border: 1px solid #dce8d4;
+                border-radius: 10px;
+                overflow: hidden;
+                background: #fff;
+                box-shadow: 0 2px 8px rgba(67, 96, 38, 0.08);
+            }
+
+            .sheet-breakdown-responsive-table tbody td {
+                border: none !important;
+                border-bottom: 1px solid #edf2ea !important;
+                padding: 9px 11px;
+                text-align: left !important;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 10px;
+                font-size: 12px;
+                line-height: 1.35;
+                white-space: normal;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+
+            .sheet-breakdown-responsive-table tbody td::before {
+                content: attr(data-label);
+                flex: 0 0 42%;
+                max-width: 42%;
+                font-size: 10px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.45px;
+                color: #436026;
+            }
+
+            .sheet-breakdown-responsive-table tbody td:last-child {
+                border-bottom: none !important;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1344,6 +1447,82 @@
             .cleared-riders-table tbody td {
                 padding: 10px;
                 font-size: 12px;
+            }
+
+            .rider-records-responsive-wrap {
+                overflow: auto;
+                max-height: 420px;
+                border: none !important;
+                border-radius: 0 !important;
+            }
+
+            .rider-records-responsive-table,
+            .rider-records-responsive-table thead,
+            .rider-records-responsive-table tbody,
+            .rider-records-responsive-table tr,
+            .rider-records-responsive-table th,
+            .rider-records-responsive-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .rider-records-responsive-table thead {
+                display: none;
+            }
+
+            .rider-records-responsive-table tbody tr {
+                margin-bottom: 14px;
+                border: 1px solid #dce8d4;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(67, 96, 38, 0.08);
+                background: #fff;
+            }
+
+            .rider-records-responsive-table tbody td {
+                border: none !important;
+                border-bottom: 1px solid #edf2ea !important;
+                padding: 10px 12px;
+                text-align: left !important;
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 12px;
+                font-size: 12.5px;
+                line-height: 1.4;
+                white-space: normal;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+
+            .rider-records-responsive-table tbody td::before {
+                content: attr(data-label);
+                flex: 0 0 40%;
+                max-width: 40%;
+                font-size: 10.5px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: #436026;
+            }
+
+            .rider-records-responsive-table tbody td > * {
+                flex: 1 1 auto;
+                text-align: right;
+                min-width: 0;
+            }
+
+            .rider-records-responsive-table tbody td:last-child {
+                border-bottom: none !important;
+            }
+
+            .rider-records-responsive-table tbody td[data-label="Payment"] > *,
+            .rider-records-responsive-table tbody td[data-label="Status"] > * {
+                text-align: right;
+            }
+
+            .rider-records-responsive-table tbody td[data-label="Remarks"] {
+                align-items: flex-start;
             }
         }
 
@@ -2326,6 +2505,7 @@
                     const riderDeliveryChargesMap = @json($riderDeliveryChargesMap ?? []);
                     const riderTipsMap = @json($riderTipsMap ?? []);
                     const riderTotalCollectionMap = @json($riderTotalCollectionMap ?? []);
+                    const riderAutoRemitMap = @json($riderAutoRemitMap ?? []);
                     const riderRemittedTotalsMap = @json($remittedTotalsByRider ?? []);
                     const payrollRiderRemittancesCache = {};
 
@@ -4523,10 +4703,17 @@
                         <div class="form-group">
                             <label for="totalDeliveries"><i class="fas fa-box"></i> Total Deliveries</label>
                             <input type="number" id="totalDeliveries" name="total_deliveries" placeholder="0"
-                                min="0" readonly style="background: #f0f9f4; color: #2d4016; font-weight: 600; cursor: not-allowed; border-color: #9dc183;" required>
+                                min="0" readonly onclick="openTotalDeliveriesBreakdown()" title="Click to view detailed breakdown"
+                                style="background: #f0f9f4; color: #2d4016; font-weight: 600; cursor: pointer; border-color: #9dc183;" required>
                             <small id="totalDeliveriesHint" style="color: #6c757d; font-size: 12px; display: block; margin-top: 5px;">
-                                Based on tasks for selected date.
+                                Based on tasks for selected date. Click field to view breakdown.
                             </small>
+                            <button type="button" onclick="openTotalDeliveriesBreakdown()"
+                                style="margin-top:6px; display:inline-flex; align-items:center; gap:6px; border:1px solid #b9d59a; background:#f6fbf2; color:#2d5f0e; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:700; cursor:pointer;"
+                                title="Open detailed breakdown sheet">
+                                <i class="fas fa-table" style="font-size:10px;"></i>
+                                View Breakdown Sheet
+                            </button>
                         </div>
                         <div class="form-group">
                             <label for="totalDeliveryFee"><i class="fas fa-dollar-sign"></i> Total Delivery
@@ -4562,7 +4749,8 @@
                         <div class="form-group">
                             <label for="totalRemit"><i class="fas fa-money-check"></i> Total Remit</label>
                             <input type="number" id="totalRemit" name="total_remit" placeholder="0.00"
-                                step="0.01" min="0" required>
+                                step="0.01" min="0" readonly
+                                style="background: #f0f9f4; color: #2d4016; font-weight: 600; cursor: not-allowed; border-color: #9dc183;" required>
                             <small id="remainingRemitHint" style="display:none; margin-top: 5px; font-size: 12px; font-weight: 600;"></small>
                         </div>
                         <div class="form-group">
@@ -4658,7 +4846,7 @@
                             <div class="form-group" style="margin-bottom: 14px; position: relative;">
                                 <label style="font-size: 13px;"><i class="fas fa-store"></i> Merchant Name</label>
                                 <input type="text" id="manganMerchantInput" placeholder="Search merchant name..."
-                                    autocomplete="off" oninput="filterManganMerchants(this.value)"
+                                    autocomplete="off" oninput="filterManganMerchants(this.value); updateManganTotalRemitField()"
                                     onkeydown="manganMerchantKeydown(event)"
                                     style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
                                     onfocus="this.style.borderColor='#436026'; filterManganMerchants(this.value)"
@@ -4679,6 +4867,7 @@
                                     <input type="number" id="manganTotalAmount" placeholder="0.00" min="0"
                                         step="0.01"
                                         style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
+                                        oninput="updateManganTotalRemitField()"
                                         onfocus="this.style.borderColor='#436026'"
                                         onblur="this.style.borderColor='#e9ecef'">
                                 </div>
@@ -4688,6 +4877,7 @@
                                     <input type="number" id="manganDf" placeholder="0.00" min="0"
                                         step="0.01"
                                         style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
+                                        oninput="updateManganTotalRemitField()"
                                         onfocus="this.style.borderColor='#436026'"
                                         onblur="this.style.borderColor='#e9ecef'">
                                 </div>
@@ -4733,6 +4923,7 @@
                                 <input type="number" id="manganTotalRemit" placeholder="0.00"
                                     min="0" step="0.01"
                                     style="width: 100%; padding: 9px 14px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;"
+                                        oninput="updateManganTotalRemitField()"
                                     onfocus="this.style.borderColor='#436026'"
                                     onblur="this.style.borderColor='#e9ecef'">
                             </div>
@@ -4770,6 +4961,23 @@
                 <button class="modal-btn cancel" onclick="closeRemitModal()">Cancel</button>
                 <button class="modal-btn submit" onclick="submitRemit()"><i class="fas fa-paper-plane"></i>
                     Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="totalDeliveriesBreakdownModal" style="display: none;">
+        <div class="modal-content" style="max-width: 1200px; width: 95vw; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden;">
+            <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="margin: 0;"><i class="fas fa-table"></i> Delivery Breakdown (Sheet Format)</h3>
+                <button type="button" onclick="closeTotalDeliveriesBreakdown()" style="background: transparent; border: none; font-size: 18px; color: #6b7280; cursor: pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="totalDeliveriesBreakdownBody" class="modal-body" style="overflow: auto; flex: 1; padding: 14px 18px; background: #f9fcf7;">
+                <div style="text-align:center; color:#6b7280; font-size: 13px; padding: 30px 12px;">No breakdown loaded yet.</div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeTotalDeliveriesBreakdown()">Close</button>
             </div>
         </div>
     </div>
@@ -4827,6 +5035,7 @@
             document.getElementById('manganMerchantInput').style.borderColor = '#436026';
             hideManganDropdown();
             updateManganBadge();
+            updateManganTotalRemitField();
         }
 
         function hideManganDropdown() {
@@ -4874,8 +5083,15 @@
         function closeManganModal() {
             const form = document.getElementById('manganInlineForm');
             const chevron = document.getElementById('manganChevron');
+            const totalRemitInput = document.getElementById('manganTotalRemit');
             if (form) form.style.display = 'none';
             if (chevron) chevron.style.transform = '';
+            if (totalRemitInput) {
+                totalRemitInput.readOnly = false;
+                totalRemitInput.style.background = '#fff';
+                totalRemitInput.style.cursor = 'auto';
+                totalRemitInput.dataset.autofilled = 'false';
+            }
         }
 
         function updateCombinedDeliveries() {
@@ -4899,6 +5115,41 @@
             }
         }
 
+        function computeManganTotalRemitValue() {
+            const merchant = (document.getElementById('manganMerchantInput')?.value || '').trim();
+            const amount = parseFloat(document.getElementById('manganTotalAmount')?.value) || 0;
+            const df = parseFloat(document.getElementById('manganDf')?.value) || 0;
+            const manualTotalRemit = parseFloat(document.getElementById('manganTotalRemit')?.value) || 0;
+
+            if (isOriginalGoodTasteMerchant(merchant)) {
+                return Math.max(0, amount - df);
+            }
+
+            return Math.max(0, manualTotalRemit);
+        }
+
+        function updateManganTotalRemitField() {
+            const totalRemitInput = document.getElementById('manganTotalRemit');
+            if (!totalRemitInput) return;
+
+            const merchant = (document.getElementById('manganMerchantInput')?.value || '').trim();
+            if (isOriginalGoodTasteMerchant(merchant)) {
+                totalRemitInput.readOnly = true;
+                totalRemitInput.style.background = '#f0f9f4';
+                totalRemitInput.style.cursor = 'not-allowed';
+                totalRemitInput.value = computeManganTotalRemitValue().toFixed(2);
+                totalRemitInput.dataset.autofilled = 'true';
+            } else {
+                totalRemitInput.readOnly = false;
+                totalRemitInput.style.background = '#fff';
+                totalRemitInput.style.cursor = 'auto';
+                if (totalRemitInput.dataset.autofilled === 'true') {
+                    totalRemitInput.value = '';
+                }
+                totalRemitInput.dataset.autofilled = 'false';
+            }
+        }
+
         // Mangan entries list
         let manganEntries = [];
 
@@ -4909,7 +5160,7 @@
             const gt = parseFloat(document.getElementById('manganGt').value) || 0;
             const tips = parseFloat(document.getElementById('manganTips').value) || 0;
             const receipt = parseFloat(document.getElementById('manganReceiptNonPartners').value) || 0;
-            const totalRemit = parseFloat(document.getElementById('manganTotalRemit').value) || 0;
+            const totalRemit = computeManganTotalRemitValue();
 
             if (merchant) {
                 const matchedMerchant = manganMerchants.find((item) => {
@@ -4967,6 +5218,7 @@
             document.getElementById('manganTips').value = '';
             document.getElementById('manganReceiptNonPartners').value = '';
             document.getElementById('manganTotalRemit').value = '';
+            updateManganTotalRemitField();
             updateManganBadge();
             showToast('Mangan entry added.', 'success');
             closeManganModal();
@@ -5178,8 +5430,20 @@
             const modal = document.getElementById('riderRecordsModal');
             const title = document.getElementById('riderRecordsTitle');
             const content = document.getElementById('riderRecordsContent');
+            const dateFilter = document.getElementById('riderRecordsDateFilter');
+            const filterDateInput = document.getElementById('riderRecordsFilterDate');
 
             title.textContent = `${riderName}'s Remittance Records`;
+            currentRiderId = riderId;
+            currentRiderName = riderName;
+            isRiderTaskOrdersMode = false;
+
+            if (dateFilter) {
+                dateFilter.style.display = 'none';
+            }
+            if (filterDateInput) {
+                filterDateInput.value = '';
+            }
 
             // Show loading state
             content.innerHTML = `
@@ -5196,7 +5460,14 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        displayRiderRemittances(data.remittances, riderName);
+                        const remittances = Array.isArray(data.remittances) ? data.remittances : [];
+
+                        if (remittances.length > 0) {
+                            displayRiderRemittances(remittances, riderName);
+                            return;
+                        }
+
+                        loadRiderTaskOrderRecords(riderId, riderName, getRemitStatsDate());
                     } else {
                         content.innerHTML = `
                             <div style="text-align: center; padding: 40px;">
@@ -5221,6 +5492,8 @@
         let currentRiderRemittances = [];
         let filteredRiderRemittances = [];
         let currentRiderName = '';
+        let currentRiderId = null;
+        let isRiderTaskOrdersMode = false;
         let currentPage = 1;
         const itemsPerPage = 10;
         let selectedRemittanceId = null;
@@ -5236,6 +5509,7 @@
             currentRiderRemittances = remittances;
             filteredRiderRemittances = remittances;
             currentRiderName = riderName;
+            isRiderTaskOrdersMode = false;
             currentPage = 1;
             selectedRemittanceId = null;
             remittanceBreakdownCache = {};
@@ -5258,6 +5532,190 @@
             dateFilter.style.display = 'block';
 
             renderRiderRemittancesPage();
+        }
+
+        async function loadRiderTaskOrderRecords(riderId, riderName, targetDate) {
+            const content = document.getElementById('riderRecordsContent');
+            const title = document.getElementById('riderRecordsTitle');
+            const dateFilter = document.getElementById('riderRecordsDateFilter');
+            const filterDateInput = document.getElementById('riderRecordsFilterDate');
+            const safeDate = targetDate || getRemitStatsDate();
+
+            currentRiderId = riderId;
+            currentRiderName = riderName;
+            isRiderTaskOrdersMode = true;
+
+            if (title) {
+                title.textContent = `${riderName}'s Task Order Records`;
+            }
+
+            if (dateFilter) {
+                dateFilter.style.display = 'block';
+            }
+            if (filterDateInput) {
+                filterDateInput.value = safeDate;
+            }
+
+            content.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #436026;"></i>
+                    <p style="margin-top: 10px; color: #666;">Loading task order records...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/riders/${encodeURIComponent(riderId)}/delivery-breakdown?date=${encodeURIComponent(safeDate)}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to load task order records.');
+                }
+
+                renderRiderTaskOrderRecords(data, riderName, safeDate);
+            } catch (error) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #dc3545; opacity: 0.3;"></i>
+                        <p style="margin-top: 15px; color: #666;">${escapeHtml(error.message || 'Error loading task order records.')}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderRiderTaskOrderRecords(payload, riderName, targetDate) {
+            const content = document.getElementById('riderRecordsContent');
+            const breakdown = Array.isArray(payload?.breakdown) ? payload.breakdown : [];
+            const summary = payload?.summary || {
+                merchant_count: 0,
+                total_deliveries: 0,
+                total_collection: 0,
+            };
+
+            const detailRows = [];
+            breakdown.forEach(item => {
+                const merchantName = item?.merchant_name || 'Unknown Merchant';
+                const orders = Array.isArray(item?.orders) ? item.orders : [];
+
+                orders.forEach(order => {
+                    const totalAmount = Number(order?.total_collection || 0);
+                    const deliveryFee = Number(order?.delivery_fee || 0);
+                    const gtReceipt = Number(order?.gt_grumpy_receipt || 0);
+                    const merchantValues = computeDetailedMerchantValues(
+                        merchantName,
+                        totalAmount,
+                        deliveryFee,
+                        gtReceipt,
+                        Number(order?.receipt_non_partners || 0),
+                        order?.merchant_type || item?.merchant_type || '',
+                        order?.commission_type || item?.commission_type || '',
+                        Number(order?.commission_rate || item?.commission_rate || 0),
+                        order?.payment_type || payload?.mode_of_payment || '',
+                        Number(order?.total_remit || 0),
+                        Number(order?.cf_amount || 0)
+                    );
+
+                    detailRows.push({
+                        task_no: detailRows.length + 1,
+                        rider: riderName,
+                        mop: formatPaymentType(order?.payment_type, payload?.mode_of_payment || ''),
+                        ref_no: order?.order_id || '',
+                        merchant: merchantName,
+                        total_amount: totalAmount,
+                        df: deliveryFee,
+                        gt_grumpy_receipt: gtReceipt,
+                        tip: Number(order?.tip_amount || 0),
+                        receipt_non_partners: Number(order?.receipt_non_partners || 0),
+                        total_remit: merchantValues.totalRemit,
+                        cf: merchantValues.cf,
+                        estimate_sales_admin_fee: merchantValues.estimateSalesAdminFee,
+                        remarks: ''
+                    });
+                });
+            });
+
+            const totalDeliveryFee = detailRows.reduce((sum, row) => sum + Number(row.df || 0), 0);
+            const totalTips = detailRows.reduce((sum, row) => sum + Number(row.tip || 0), 0);
+            const totalRemit = detailRows.reduce((sum, row) => sum + Number(row.total_remit || 0), 0);
+
+            if (!detailRows.length) {
+                content.innerHTML = `
+                    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #436026;">
+                        <h4 style="margin: 0 0 10px 0; color: #436026;"><i class="fas fa-clipboard-list"></i> Task Order Summary (${escapeHtml(targetDate)})</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;">
+                            <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Merchants</div><div style="font-size: 20px; font-weight: bold; color: #436026;">${Number(summary.merchant_count || 0)}</div></div>
+                            <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total Deliveries</div><div style="font-size: 20px; font-weight: bold; color: #436026;">${Number(summary.total_deliveries || 0)}</div></div>
+                            <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total Collection</div><div style="font-size: 20px; font-weight: bold; color: #007bff;">₱${Number(summary.total_collection || 0).toFixed(2)}</div></div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-inbox" style="font-size: 48px; color: #6c757d; opacity: 0.3;"></i>
+                        <p style="margin-top: 15px; color: #666;">No task order records found for ${escapeHtml(riderName)} on ${escapeHtml(targetDate)}.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const rowsHtml = detailRows.map((row, index) => `
+                <tr style="${index % 2 === 0 ? 'background:#fff;' : 'background:#f7fbf4;'} border-bottom:1px solid #e5eee0; transition: background 0.2s ease;">
+                    <td data-label="# of Task" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; font-weight:600; color:#436026;">${row.task_no}</td>
+                    <td data-label="Rider" style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#374151;">${escapeHtml(row.rider)}</td>
+                    <td data-label="MOP" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.mop || '-')}</td>
+                    <td data-label="REF #" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#0d6efd; font-weight:600;">${escapeHtml(row.ref_no || '-')}</td>
+                    <td data-label="Merchant" style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.merchant)}</td>
+                    <td data-label="Total Amount" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.total_amount.toFixed(2)}</td>
+                    <td data-label="DF" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.df.toFixed(2)}</td>
+                    <td data-label="GT / Grumpy Receipt" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.gt_grumpy_receipt.toFixed(2)}</td>
+                    <td data-label="Tip" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.tip.toFixed(2)}</td>
+                    <td data-label="Receipt (Non Partners)" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${Number(row.receipt_non_partners || 0).toFixed(2)}</td>
+                    <td data-label="Total Remit" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
+                    <td data-label="CF" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
+                    <td data-label="ESTIMATE SALES+ADMIN FEE" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
+                    <td data-label="Remarks" style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#666; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.remarks || '-')}</td>
+                </tr>
+            `).join('');
+
+            content.innerHTML = `
+                <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #436026;">
+                    <h4 style="margin: 0 0 10px 0; color: #436026;"><i class="fas fa-clipboard-list"></i> Task Order Summary (${escapeHtml(targetDate)})</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;">
+                        <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Merchants</div><div style="font-size: 20px; font-weight: bold; color: #436026;">${Number(summary.merchant_count || 0)}</div></div>
+                        <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total Deliveries</div><div style="font-size: 20px; font-weight: bold; color: #436026;">${Number(summary.total_deliveries || 0)}</div></div>
+                        <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total Collection</div><div style="font-size: 20px; font-weight: bold; color: #007bff;">₱${Number(summary.total_collection || 0).toFixed(2)}</div></div>
+                        <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total DF</div><div style="font-size: 20px; font-weight: bold; color: #1f2937;">₱${totalDeliveryFee.toFixed(2)}</div></div>
+                        <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total Tips</div><div style="font-size: 20px; font-weight: bold; color: #1f2937;">₱${totalTips.toFixed(2)}</div></div>
+                        <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total Remit</div><div style="font-size: 20px; font-weight: bold; color: ${getRemitAmountColor(totalRemit)};">₱${totalRemit.toFixed(2)}</div></div>
+                    </div>
+                </div>
+
+                <div class="rider-records-responsive-wrap" style="overflow:auto; max-height:500px; border: 1px solid #dce8d4; border-radius: 8px;">
+                    <table class="rider-records-responsive-table" style="width: 100%; border-collapse: collapse; background: white;">
+                        <thead>
+                            <tr style="background:#436026; color:white;">
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:60px; background:#436026;"># of Task</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:110px; background:#436026;">Rider</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:120px; background:#436026;">MOP</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:80px; background:#436026;">REF #</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:170px; background:#436026;">Merchant</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#436026;">Total Amount</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#436026;">DF</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:100px; background:#436026;">GT / Grumpy Receipt</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#436026;">Tip</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:110px; background:#436026;">Receipt (Non Partners)</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#436026;">Total Remit</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#436026;">CF</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:120px; background:#436026;">ESTIMATE SALES+ADMIN FEE</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:140px; background:#436026;">Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>
+            `;
         }
 
         function renderRiderRemittancesPage() {
@@ -5342,8 +5800,8 @@
                     </div>
                 </div>
 
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;">
+                <div class="rider-records-responsive-wrap" style="overflow:auto; max-height:500px;">
+                    <table class="rider-records-responsive-table" style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;">
                         <thead>
                             <tr style="background: #436026; color: white;">
                                 <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 13px;">Date</th>
@@ -5405,24 +5863,24 @@
 
                 tableHTML += `
                     <tr class="remittance-record-row ${isSelected ? 'remittance-record-row-selected' : ''}" data-remittance-id="${remittance.id}" style="border-bottom: 1px solid #e9ecef; cursor: pointer; ${index % 2 === 0 ? 'background: #f8f9fa;' : ''} ${isSelected ? 'background: #e6f3dd; box-shadow: inset 3px 0 0 #436026;' : ''}">
-                        <td style="padding: 12px; font-size: 13px; color: #333;">${formattedDate}</td>
-                        <td style="padding: 12px; text-align: center; font-size: 13px; font-weight: 600; color: #436026;">${remittance.total_deliveries}</td>
-                        <td style="padding: 12px; text-align: right; font-size: 13px; color: #333;">₱${parseFloat(remittance.total_delivery_fee).toFixed(2)}</td>
-                        <td style="padding: 12px; text-align: right; font-size: 13px; font-weight: 600; color: #28a745;">₱${parseFloat(remittance.total_remit).toFixed(2)}</td>
-                        <td style="padding: 12px; text-align: right; font-size: 13px; color: #333;">₱${parseFloat(remittance.total_tips || 0).toFixed(2)}</td>
-                        <td style="padding: 12px; text-align: right; font-size: 13px; font-weight: 600; color: #007bff;">₱${parseFloat(remittance.total_collection).toFixed(2)}</td>
-                        <td style="padding: 12px; text-align: center;">
+                        <td data-label="Date" style="padding: 12px; font-size: 13px; color: #333;">${formattedDate}</td>
+                        <td data-label="Deliveries" style="padding: 12px; text-align: center; font-size: 13px; font-weight: 600; color: #436026;">${remittance.total_deliveries}</td>
+                        <td data-label="Delivery Fee" style="padding: 12px; text-align: right; font-size: 13px; color: #333;">₱${parseFloat(remittance.total_delivery_fee).toFixed(2)}</td>
+                        <td data-label="Remit" style="padding: 12px; text-align: right; font-size: 13px; font-weight: 600; color: ${getRemitAmountColor(remittance.total_remit)};">₱${parseFloat(remittance.total_remit).toFixed(2)}</td>
+                        <td data-label="Tips" style="padding: 12px; text-align: right; font-size: 13px; color: #333;">₱${parseFloat(remittance.total_tips || 0).toFixed(2)}</td>
+                        <td data-label="Collection" style="padding: 12px; text-align: right; font-size: 13px; font-weight: 600; color: #007bff;">₱${parseFloat(remittance.total_collection).toFixed(2)}</td>
+                        <td data-label="Payment" style="padding: 12px; text-align: center;">
                             <span style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${paymentBg}; color: ${paymentColor};">
                                 ${remittance.mode_of_payment.toUpperCase()}
                             </span>
                         </td>
-                        <td style="padding: 12px; text-align: center;">
+                        <td data-label="Status" style="padding: 12px; text-align: center;">
                             <span style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${statusBg}; color: ${statusColor};">
                                 <span style="display:block; line-height:1.2;">${statusText}</span>
                                 ${statusSubText ? `<span style="display:block; margin-top:2px; font-size:10px; font-style:italic; font-weight:500; line-height:1.2;">${statusSubText}</span>` : ''}
                             </span>
                         </td>
-                        <td style="padding: 12px; font-size: 13px; color: #333; max-width: 250px;">${formatRemarksHtmlLines(remittance.remarks)}</td>
+                        <td data-label="Remarks" style="padding: 12px; font-size: 13px; color: #333; max-width: 250px;">${formatRemarksHtmlLines(remittance.remarks)}</td>
                     </tr>
                 `;
             });
@@ -5574,6 +6032,505 @@
             return raw.replace(/(^|\|\s*|\n)\d+\.\s*/g, (match, prefix) => `${prefix}- `);
         }
 
+        function getRemitAmountColor(amount) {
+            return Number(amount || 0) < 0 ? '#dc2626' : '#436026';
+        }
+
+        function isOriginalGoodTasteMerchant(merchantName) {
+            const normalized = String(merchantName ?? '')
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, ' ');
+
+            return normalized === 'the original good taste restaurant';
+        }
+
+        function isVictoriaBakeryMagsaysayBranch(merchantName) {
+            const normalized = String(merchantName ?? '')
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, ' ');
+
+            return normalized === 'victoria bakery - magsaysay branch';
+        }
+
+        function isTenPercentNonPartnerMerchant(merchantType, commissionType, commissionRate) {
+            const normalizedMerchantType = String(merchantType ?? '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+            const normalizedCommissionType = String(commissionType ?? '').trim().toLowerCase();
+            const normalizedCommissionRate = Number(String(commissionRate ?? '0').replace('%', '').trim() || 0);
+            const isNonPartner = normalizedMerchantType === 'non-partner';
+            const isPercentageType = normalizedCommissionType.includes('percent');
+            const isTenPercentRate = Math.abs(normalizedCommissionRate - 10) < 0.0001;
+
+            return isNonPartner && (isTenPercentRate || (isPercentageType && isTenPercentRate));
+        }
+
+        function computeDetailedMerchantValues(
+            merchantName,
+            totalAmount,
+            deliveryFee,
+            gtReceipt,
+            receiptNonPartners = 0,
+            merchantType = '',
+            commissionType = '',
+            commissionRate = 0,
+            paymentType = '',
+            fallbackTotalRemit = 0,
+            fallbackCf = 0
+        ) {
+            const normalizedTotalAmount = Number(totalAmount || 0);
+            const normalizedDeliveryFee = Number(deliveryFee || 0);
+            const normalizedGtReceipt = Number(gtReceipt || 0);
+            const normalizedReceiptNonPartners = Number(receiptNonPartners || 0);
+            const defaultTotalRemit = Number(fallbackTotalRemit || 0);
+            const defaultCf = Number(fallbackCf || 0);
+            const normalizedPaymentType = String(paymentType ?? '').trim().toUpperCase();
+
+            if (isVictoriaBakeryMagsaysayBranch(merchantName) && normalizedPaymentType === 'PYR') {
+                return {
+                    totalRemit: defaultTotalRemit,
+                    cf: defaultCf,
+                    estimateSalesAdminFee: normalizedTotalAmount - normalizedDeliveryFee - normalizedReceiptNonPartners,
+                };
+            }
+
+            if (isVictoriaBakeryMagsaysayBranch(merchantName) && normalizedPaymentType === 'COD') {
+                return {
+                    totalRemit: normalizedTotalAmount - normalizedDeliveryFee - normalizedReceiptNonPartners,
+                    cf: defaultCf,
+                    estimateSalesAdminFee: normalizedTotalAmount + defaultCf,
+                };
+            }
+
+            if (isTenPercentNonPartnerMerchant(merchantType, commissionType, commissionRate)) {
+                return {
+                    totalRemit: normalizedTotalAmount - normalizedDeliveryFee - normalizedReceiptNonPartners,
+                    cf: defaultCf,
+                    estimateSalesAdminFee: normalizedTotalAmount + defaultCf,
+                };
+            }
+
+            if (!isOriginalGoodTasteMerchant(merchantName)) {
+                return {
+                    totalRemit: defaultTotalRemit,
+                    cf: defaultCf,
+                    estimateSalesAdminFee: normalizedTotalAmount + defaultCf,
+                };
+            }
+
+            const totalRemit = normalizedTotalAmount - normalizedDeliveryFee;
+            const cf = normalizedTotalAmount - normalizedDeliveryFee - normalizedGtReceipt;
+            const afterDeductingTen = totalRemit - 10;
+            const tenPercentCharge = afterDeductingTen * 0.10;
+            const estimateSalesAdminFee = tenPercentCharge + 10;
+
+            return {
+                totalRemit,
+                cf,
+                estimateSalesAdminFee,
+            };
+        }
+
+        const totalDeliveriesBreakdownCache = {};
+
+        function getRemitStatsDate() {
+            const statsDateInput = document.getElementById('statsDateInput');
+            if (statsDateInput && statsDateInput.value) {
+                return statsDateInput.value;
+            }
+
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        function getTotalDeliveriesCacheKey(riderId, date) {
+            return `${String(riderId || '').trim()}|${String(date || '').trim()}`;
+        }
+
+        async function getDetailedBreakdownTotalRemitByRider(riderId, targetDate) {
+            const riderKey = String(riderId || '').trim();
+            if (!riderKey) return 0;
+
+            const safeDate = targetDate || getRemitStatsDate();
+            const cacheKey = getTotalDeliveriesCacheKey(riderKey, safeDate);
+
+            let payload = totalDeliveriesBreakdownCache[cacheKey];
+            if (!payload) {
+                const response = await fetch(`/riders/${encodeURIComponent(riderKey)}/delivery-breakdown?date=${encodeURIComponent(safeDate)}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to load delivery breakdown');
+                }
+
+                payload = data;
+                totalDeliveriesBreakdownCache[cacheKey] = payload;
+            }
+
+            const mergedPayload = mergeManganEntriesIntoBreakdown(payload);
+            const items = Array.isArray(mergedPayload?.breakdown) ? mergedPayload.breakdown : [];
+
+            return items.reduce((sum, item) => {
+                const merchantName = item?.merchant_name || 'Unknown Merchant';
+                const orders = Array.isArray(item?.orders) ? item.orders : [];
+
+                const merchantTotal = orders.reduce((orderSum, order) => {
+                    const totalAmount = Number(order?.total_collection || 0);
+                    const deliveryFee = Number(order?.delivery_fee || 0);
+                    const gtReceipt = Number(order?.gt_grumpy_receipt || 0);
+                    const fallbackTotalRemit = Number(order?.total_remit || 0);
+                    const fallbackCf = Number(order?.cf_amount || 0);
+                    const merchantValues = computeDetailedMerchantValues(
+                        merchantName,
+                        totalAmount,
+                        deliveryFee,
+                        gtReceipt,
+                        Number(order?.receipt_non_partners || 0),
+                        order?.merchant_type || item?.merchant_type || '',
+                        order?.commission_type || item?.commission_type || '',
+                        Number(order?.commission_rate || item?.commission_rate || 0),
+                        order?.payment_type || '',
+                        fallbackTotalRemit,
+                        fallbackCf
+                    );
+
+                    return orderSum + Number(merchantValues.totalRemit || 0);
+                }, 0);
+
+                return sum + merchantTotal;
+            }, 0);
+        }
+
+        function mergeManganEntriesIntoBreakdown(payload) {
+            const basePayload = payload && typeof payload === 'object' ? payload : {};
+            const baseBreakdown = Array.isArray(basePayload.breakdown) ? basePayload.breakdown : [];
+            const entries = Array.isArray(manganEntries) ? manganEntries : [];
+
+            if (!entries.length) {
+                return {
+                    ...basePayload,
+                    breakdown: baseBreakdown
+                };
+            }
+
+            const merged = baseBreakdown.map(item => ({
+                ...item,
+                deliveries: Number(item?.deliveries || 0),
+                total_collection: Number(item?.total_collection || 0),
+                order_ids: Array.isArray(item?.order_ids) ? [...item.order_ids] : [],
+                orders: Array.isArray(item?.orders) ? item.orders.map(order => ({ ...order })) : []
+            }));
+
+            entries.forEach((entry, idx) => {
+                const merchant = String(entry?.merchant || '').trim() || 'Mangan App';
+                const merchantKey = merchant.toLowerCase();
+                const orderId = `MANGAN-LOCAL-${idx + 1}`;
+                const deliveryFee = Number(entry?.df || 0);
+                const tipAmount = Number(entry?.tips || 0);
+                const gtReceipt = Number(entry?.gt || 0);
+                const receiptNonPartners = Number(entry?.receipt || 0);
+                const totalAmount = Number(entry?.amount || 0);
+                const explicitTotalRemit = Number(entry?.totalRemit || 0);
+                const fallbackTotalRemit = explicitTotalRemit > 0 ? explicitTotalRemit : Math.max(0, deliveryFee + tipAmount);
+                const merchantValues = computeDetailedMerchantValues(
+                    merchant,
+                    totalAmount,
+                    deliveryFee,
+                    gtReceipt,
+                    receiptNonPartners,
+                    '',
+                    '',
+                    0,
+                    '',
+                    fallbackTotalRemit,
+                    0
+                );
+
+                const orderRow = {
+                    order_id: orderId,
+                    payment_type: '',
+                    total_collection: totalAmount,
+                    delivery_fee: deliveryFee,
+                    tip_amount: tipAmount,
+                    gt_grumpy_receipt: gtReceipt,
+                    receipt_non_partners: receiptNonPartners,
+                    total_remit: merchantValues.totalRemit,
+                    cf_amount: merchantValues.cf
+                };
+
+                const foundIndex = merged.findIndex(item => String(item?.merchant_name || '').trim().toLowerCase() === merchantKey);
+                if (foundIndex === -1) {
+                    merged.push({
+                        merchant_name: merchant,
+                        deliveries: 1,
+                        total_collection: totalAmount,
+                        order_ids: [orderId],
+                        orders: [orderRow]
+                    });
+                } else {
+                    const target = merged[foundIndex];
+                    target.deliveries = Number(target.deliveries || 0) + 1;
+                    target.total_collection = Number(target.total_collection || 0) + totalAmount;
+                    target.order_ids = Array.isArray(target.order_ids) ? target.order_ids : [];
+                    target.orders = Array.isArray(target.orders) ? target.orders : [];
+                    target.order_ids.push(orderId);
+                    target.orders.push(orderRow);
+                }
+            });
+
+            const summary = {
+                merchant_count: merged.length,
+                total_deliveries: merged.reduce((sum, item) => sum + Number(item?.deliveries || 0), 0),
+                total_collection: merged.reduce((sum, item) => sum + Number(item?.total_collection || 0), 0)
+            };
+
+            return {
+                ...basePayload,
+                breakdown: merged,
+                summary
+            };
+        }
+
+        function renderTotalDeliveriesDetailedSheet(payload) {
+            const container = document.getElementById('totalDeliveriesBreakdownBody');
+            if (!container) {
+                return;
+            }
+
+            const items = Array.isArray(payload?.breakdown) ? payload.breakdown : [];
+            if (!items.length) {
+                container.innerHTML = `
+                    <div style="text-align:center; color:#6b7280; font-size: 13px; padding: 30px 12px;">
+                        No delivery breakdown found for the selected date.
+                    </div>
+                `;
+                return;
+            }
+
+            const riderName = document.getElementById('remitRiderName')?.value || 'N/A';
+            const detailRows = [];
+            let taskCounter = 0;
+
+            items.forEach(item => {
+                const merchantName = item?.merchant_name || 'Unknown Merchant';
+                const orders = Array.isArray(item?.orders) ? item.orders : [];
+
+                orders.forEach(order => {
+                    taskCounter += 1;
+                    const totalAmount = Number(order?.total_collection || 0);
+                    const deliveryFee = Number(order?.delivery_fee || 0);
+                    const gtReceipt = Number(order?.gt_grumpy_receipt || 0);
+                    const merchantValues = computeDetailedMerchantValues(
+                        merchantName,
+                        totalAmount,
+                        deliveryFee,
+                        gtReceipt,
+                        Number(order?.receipt_non_partners || 0),
+                        order?.merchant_type || item?.merchant_type || '',
+                        order?.commission_type || item?.commission_type || '',
+                        Number(order?.commission_rate || item?.commission_rate || 0),
+                        order?.payment_type || payload?.mode_of_payment || remittance?.mode_of_payment || '',
+                        Number(order?.total_remit || 0),
+                        Number(order?.cf_amount || 0)
+                    );
+
+                    detailRows.push({
+                        task_no: taskCounter,
+                        rider: riderName,
+                        mop: formatPaymentType(order?.payment_type, ''),
+                        ref_no: order?.order_id || '',
+                        merchant: merchantName,
+                        total_amount: totalAmount,
+                        df: deliveryFee,
+                        gt_grumpy_receipt: gtReceipt,
+                        tip: Number(order?.tip_amount || 0),
+                        receipt_non_partners: Number(order?.receipt_non_partners || 0),
+                        total_remit: merchantValues.totalRemit,
+                        cf: merchantValues.cf,
+                        estimate_sales_admin_fee: merchantValues.estimateSalesAdminFee,
+                        remarks: ''
+                    });
+                });
+            });
+
+            const totalDeliveryFeeOverall = detailRows.reduce((sum, row) => sum + Number(row.df || 0), 0);
+            const totalTipsOverall = detailRows.reduce((sum, row) => sum + Number(row.tip || 0), 0);
+            const totalRemitOverall = detailRows.reduce((sum, row) => sum + Number(row.total_remit || 0), 0);
+
+            const detailedRowsHtml = detailRows.length ? detailRows.map((row, idx) => `
+                <tr style="${idx % 2 === 0 ? 'background:#fff;' : 'background:#f7fbf4;'} border-bottom:1px solid #e5eee0;">
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; font-weight:600; color:#436026;">${row.task_no}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#374151;">${escapeHtml(row.rider)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.mop || '-')}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#0d6efd; font-weight:600;">${escapeHtml(row.ref_no || '-')}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.merchant)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.total_amount.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.df.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.gt_grumpy_receipt.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.tip.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.receipt_non_partners.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#666;">-</td>
+                </tr>
+            `).join('') : `
+                <tr>
+                    <td colspan="14" style="padding:24px; text-align:center; color:#9ca3af; font-size:13px;">No detailed order rows available.</td>
+                </tr>
+            `;
+
+            container.innerHTML = `
+                <div style="margin-top:0; border:1px solid #dce8d4; border-radius:8px; overflow:hidden; background:#fff;">
+                    <div style="padding:12px 14px; background:linear-gradient(135deg,#f0f7ed 0%,#f8fcf5 100%); border-bottom:1px solid #dce8d4; font-size:13px; font-weight:700; color:#2d4016;">
+                        Detailed Breakdown (Sheet Format)
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(3, minmax(160px, 1fr)); gap:10px; padding:12px 14px; background:#f4faf0; border-bottom:1px solid #dce8d4;">
+                        <div style="background:#fff; border:1px solid #dce8d4; border-radius:8px; padding:10px 12px;">
+                            <div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:0.35px;">Total Delivery Fee</div>
+                            <div style="margin-top:4px; font-size:18px; font-weight:800; color:#1f2937;">₱${totalDeliveryFeeOverall.toFixed(2)}</div>
+                        </div>
+                        <div style="background:#fff; border:1px solid #dce8d4; border-radius:8px; padding:10px 12px;">
+                            <div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:0.35px;">Total Tips</div>
+                            <div style="margin-top:4px; font-size:18px; font-weight:800; color:#1f2937;">₱${totalTipsOverall.toFixed(2)}</div>
+                        </div>
+                        <div style="background:#fff; border:1px solid #dce8d4; border-radius:8px; padding:10px 12px;">
+                            <div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:0.35px;">Total Remit</div>
+                            <div style="margin-top:4px; font-size:18px; font-weight:800; color:${getRemitAmountColor(totalRemitOverall)};">₱${totalRemitOverall.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div class="sheet-breakdown-responsive-wrap" style="overflow:auto; max-height:500px; position:relative;">
+                        <table class="sheet-breakdown-responsive-table" style="width:100%; border-collapse:collapse; table-layout:auto;">
+                            <thead style="position: sticky; top: 0; z-index: 10;">
+                                <tr style="background:#e8dbc4; color:#1f2937;">
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:60px; background:#e8dbc4;"># of Task</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:110px; background:#e8dbc4;">Rider</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:120px; background:#e8dbc4;">MOP</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:80px; background:#e8dbc4;">REF #</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:170px; background:#e8dbc4;">Merchant</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Amount</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">DF</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:100px; background:#e8dbc4;">GT / Grumpy Receipt</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">Tip</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:110px; background:#e8dbc4;">Receipt (Non Partners)</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Remit</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">CF</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:120px; background:#e8dbc4;">ESTIMATE SALES+ADMIN FEE</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:140px; background:#e8dbc4;">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>${detailedRowsHtml}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            applySheetBreakdownDataLabels(container);
+        }
+
+        function applySheetBreakdownDataLabels(container) {
+            if (!container) {
+                return;
+            }
+
+            const tables = container.querySelectorAll('.sheet-breakdown-responsive-table');
+            tables.forEach(table => {
+                const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+                if (!headers.length) {
+                    return;
+                }
+
+                const bodyRows = table.querySelectorAll('tbody tr');
+                bodyRows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    cells.forEach((cell, idx) => {
+                        const fallbackLabel = `Column ${idx + 1}`;
+                        cell.setAttribute('data-label', headers[idx] || fallbackLabel);
+                    });
+                });
+            });
+        }
+
+        async function openTotalDeliveriesBreakdown() {
+            const riderId = document.getElementById('remitRiderId')?.value;
+            const riderName = document.getElementById('remitRiderName')?.value;
+            if (!riderId) {
+                showToast('Please select a rider first.', 'warning');
+                return;
+            }
+
+            const modal = document.getElementById('totalDeliveriesBreakdownModal');
+            const body = document.getElementById('totalDeliveriesBreakdownBody');
+            if (!modal || !body) {
+                return;
+            }
+
+            modal.style.display = 'flex';
+            body.innerHTML = `
+                <div style="text-align:center; color:#436026; font-size: 13px; padding: 30px 12px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 20px;"></i>
+                    <p style="margin-top: 8px;">Loading delivery breakdown for ${escapeHtml(riderName || '')}...</p>
+                </div>
+            `;
+
+            const targetDate = getRemitStatsDate();
+            const cacheKey = getTotalDeliveriesCacheKey(riderId, targetDate);
+
+            try {
+                let payload = totalDeliveriesBreakdownCache[cacheKey];
+                if (!payload) {
+                    const response = await fetch(`/riders/${encodeURIComponent(riderId)}/delivery-breakdown?date=${encodeURIComponent(targetDate)}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'Failed to load delivery breakdown');
+                    }
+                    payload = data;
+                    totalDeliveriesBreakdownCache[cacheKey] = payload;
+                }
+
+                const mergedPayload = mergeManganEntriesIntoBreakdown(payload);
+                renderTotalDeliveriesDetailedSheet(mergedPayload);
+            } catch (error) {
+                body.innerHTML = `
+                    <div style="text-align:center; color:#b91c1c; font-size:13px; padding: 30px 12px;">
+                        <i class="fas fa-exclamation-triangle" style="margin-right: 6px;"></i>
+                        Unable to load delivery breakdown.
+                    </div>
+                `;
+                showToast(error.message || 'Unable to load delivery breakdown.', 'error');
+            }
+        }
+
+        function closeTotalDeliveriesBreakdown() {
+            const modal = document.getElementById('totalDeliveriesBreakdownModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            const isBreakdownOpen = document.getElementById('totalDeliveriesBreakdownModal')?.style.display === 'flex';
+            if (isBreakdownOpen && event.key === 'Escape') {
+                closeTotalDeliveriesBreakdown();
+                return;
+            }
+
+            const activeEl = document.activeElement;
+            if (activeEl && activeEl.id === 'totalDeliveries' && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                openTotalDeliveriesBreakdown();
+            }
+        });
+
         function setSelectedRemittanceRow(rowElement) {
             const remittanceId = Number(rowElement.getAttribute('data-remittance-id'));
             if (!remittanceId) {
@@ -5722,20 +6679,37 @@
 
                 orders.forEach(order => {
                     taskCounter += 1;
+                    const totalAmount = Number(order.total_collection || 0);
+                    const deliveryFee = Number(order.delivery_fee || 0);
+                    const gtReceipt = Number(order.gt_grumpy_receipt || 0);
+                    const merchantValues = computeDetailedMerchantValues(
+                        merchantName,
+                        totalAmount,
+                        deliveryFee,
+                        gtReceipt,
+                        Number(order.receipt_non_partners || 0),
+                        order.merchant_type || item.merchant_type || '',
+                        order.commission_type || item.commission_type || '',
+                        Number(order.commission_rate || item.commission_rate || 0),
+                        order.payment_type || payload?.mode_of_payment || currentSelectedBreakdownRemittance?.mode_of_payment || '',
+                        Number(order.total_remit || 0),
+                        Number(order.cf_amount || 0)
+                    );
+
                     detailRows.push({
                         task_no: taskCounter,
                         rider: currentRiderName || 'N/A',
                         mop: formatPaymentType(order?.payment_type, payload?.mode_of_payment || remittance?.mode_of_payment || ''),
                         ref_no: order.order_id || '',
                         merchant: merchantName,
-                        total_amount: Number(order.total_collection || 0),
-                        df: Number(order.delivery_fee || 0),
-                        gt_grumpy_receipt: Number(order.gt_grumpy_receipt || 0),
+                        total_amount: totalAmount,
+                        df: deliveryFee,
+                        gt_grumpy_receipt: gtReceipt,
                         tip: Number(order.tip_amount || 0),
                         receipt_non_partners: Number(order.receipt_non_partners || 0),
-                        total_remit: Number(order.total_remit || 0),
-                        cf: Number(order.cf_amount || 0),
-                        estimate_sales_admin_fee: Number(order.total_collection || 0) + Number(order.cf_amount || 0),
+                        total_remit: merchantValues.totalRemit,
+                        cf: merchantValues.cf,
+                        estimate_sales_admin_fee: merchantValues.estimateSalesAdminFee,
                         remarks: normalizeDetailedRemarks(payload?.remarks || remittance?.remarks || '')
                     });
                 });
@@ -5753,7 +6727,7 @@
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.gt_grumpy_receipt.toFixed(2)}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.tip.toFixed(2)}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.receipt_non_partners.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; font-weight:700; color:#436026;">₱${row.total_remit.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#666; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.remarks || '-')}</td>
@@ -5769,8 +6743,8 @@
                     <div style="padding:12px 14px; background:linear-gradient(135deg,#f0f7ed 0%,#f8fcf5 100%); border-bottom:1px solid #dce8d4; font-size:13px; font-weight:700; color:#2d4016;">
                         Detailed Breakdown (Sheet Format)
                     </div>
-                    <div style="overflow:auto; max-height:500px; position:relative;">
-                        <table style="width:100%; border-collapse:collapse; min-width: 1200px; table-layout: fixed;">
+                    <div class="sheet-breakdown-responsive-wrap" style="overflow:auto; max-height:500px; position:relative;">
+                        <table class="sheet-breakdown-responsive-table" style="width:100%; border-collapse:collapse; table-layout:auto;">
                             <thead style="position: sticky; top: 0; z-index: 10;">
                                 <tr style="background:#e8dbc4; color:#1f2937; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                     <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:60px; background:#e8dbc4;"># of Task</th>
@@ -5794,6 +6768,8 @@
                     </div>
                 </div>
             `;
+
+            applySheetBreakdownDataLabels(container);
         }
 
         function escapeCsvCell(value) {
@@ -5818,20 +6794,37 @@
                 const orders = Array.isArray(item.orders) ? item.orders : [];
                 orders.forEach(order => {
                     taskCounter += 1;
+                    const totalAmount = Number(order.total_collection || 0);
+                    const deliveryFee = Number(order.delivery_fee || 0);
+                    const gtReceipt = Number(order.gt_grumpy_receipt || 0);
+                    const merchantValues = computeDetailedMerchantValues(
+                        item.merchant_name || 'Unknown Merchant',
+                        totalAmount,
+                        deliveryFee,
+                        gtReceipt,
+                        Number(order.receipt_non_partners || 0),
+                        order.merchant_type || item.merchant_type || '',
+                        order.commission_type || item.commission_type || '',
+                        Number(order.commission_rate || item.commission_rate || 0),
+                        order.payment_type || payload?.mode_of_payment || currentSelectedBreakdownRemittance?.mode_of_payment || '',
+                        Number(order.total_remit || 0),
+                        Number(order.cf_amount || 0)
+                    );
+
                     rows.push([
                         taskCounter,
                         currentRiderName || '',
                         formatPaymentType(order?.payment_type, payload?.mode_of_payment || currentSelectedBreakdownRemittance?.mode_of_payment || ''),
                         order.order_id || '',
                         item.merchant_name || 'Unknown Merchant',
-                        Number(order.total_collection || 0).toFixed(2),
-                        Number(order.delivery_fee || 0).toFixed(2),
-                        Number(order.gt_grumpy_receipt || 0).toFixed(2),
+                        totalAmount.toFixed(2),
+                        deliveryFee.toFixed(2),
+                        gtReceipt.toFixed(2),
                         Number(order.tip_amount || 0).toFixed(2),
                         Number(order.receipt_non_partners || 0).toFixed(2),
-                        Number(order.total_remit || 0).toFixed(2),
-                        Number(order.cf_amount || 0).toFixed(2),
-                        (Number(order.total_collection || 0) + Number(order.cf_amount || 0)).toFixed(2),
+                        merchantValues.totalRemit.toFixed(2),
+                        merchantValues.cf.toFixed(2),
+                        merchantValues.estimateSalesAdminFee.toFixed(2),
                         normalizeDetailedRemarks(payload?.remarks || currentSelectedBreakdownRemittance?.remarks || '')
                     ].map(escapeCsvCell).join(','));
                 });
@@ -5879,6 +6872,23 @@
                 const orders = Array.isArray(item.orders) ? item.orders : [];
                 orders.forEach(order => {
                     taskCounter += 1;
+                    const totalAmount = Number(order.total_collection || 0);
+                    const deliveryFee = Number(order.delivery_fee || 0);
+                    const gtReceipt = Number(order.gt_grumpy_receipt || 0);
+                    const merchantValues = computeDetailedMerchantValues(
+                        item.merchant_name || 'Unknown Merchant',
+                        totalAmount,
+                        deliveryFee,
+                        gtReceipt,
+                        Number(order.receipt_non_partners || 0),
+                        order.merchant_type || item.merchant_type || '',
+                        order.commission_type || item.commission_type || '',
+                        Number(order.commission_rate || item.commission_rate || 0),
+                        order.payment_type || payload?.mode_of_payment || currentSelectedBreakdownRemittance?.mode_of_payment || '',
+                        Number(order.total_remit || 0),
+                        Number(order.cf_amount || 0)
+                    );
+
                     detailRows.push(`
                         <tr>
                             <td style="text-align:center;">${taskCounter}</td>
@@ -5886,14 +6896,14 @@
                             <td style="text-align:center; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(formatPaymentType(order?.payment_type, payload?.mode_of_payment || currentSelectedBreakdownRemittance?.mode_of_payment || ''))}</td>
                             <td style="text-align:center;">${escapeHtml(order.order_id || '')}</td>
                             <td style="white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(item.merchant_name || 'Unknown Merchant')}</td>
-                            <td style="text-align:right;">₱${Number(order.total_collection || 0).toFixed(2)}</td>
-                            <td style="text-align:right;">₱${Number(order.delivery_fee || 0).toFixed(2)}</td>
-                            <td style="text-align:right;">₱${Number(order.gt_grumpy_receipt || 0).toFixed(2)}</td>
+                            <td style="text-align:right;">₱${totalAmount.toFixed(2)}</td>
+                            <td style="text-align:right;">₱${deliveryFee.toFixed(2)}</td>
+                            <td style="text-align:right;">₱${gtReceipt.toFixed(2)}</td>
                             <td style="text-align:right;">₱${Number(order.tip_amount || 0).toFixed(2)}</td>
                             <td style="text-align:right;">₱${Number(order.receipt_non_partners || 0).toFixed(2)}</td>
-                            <td style="text-align:right;">₱${Number(order.total_remit || 0).toFixed(2)}</td>
-                            <td style="text-align:right;">₱${Number(order.cf_amount || 0).toFixed(2)}</td>
-                            <td style="text-align:right;">₱${(Number(order.total_collection || 0) + Number(order.cf_amount || 0)).toFixed(2)}</td>
+                            <td style="text-align:right;">₱${merchantValues.totalRemit.toFixed(2)}</td>
+                            <td style="text-align:right;">₱${merchantValues.cf.toFixed(2)}</td>
+                            <td style="text-align:right;">₱${merchantValues.estimateSalesAdminFee.toFixed(2)}</td>
                             <td style="white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(normalizeDetailedRemarks(payload?.remarks || currentSelectedBreakdownRemittance?.remarks || ''))}</td>
                         </tr>
                     `);
@@ -5971,9 +6981,14 @@
             renderRiderRemittancesPage();
         }
 
-        function filterRiderRecordsByDate() {
+        async function filterRiderRecordsByDate() {
             const filterDateInput = document.getElementById('riderRecordsFilterDate');
             const selectedDate = filterDateInput.value;
+
+            if (isRiderTaskOrdersMode) {
+                await loadRiderTaskOrderRecords(currentRiderId, currentRiderName, selectedDate || getRemitStatsDate());
+                return;
+            }
 
             if (!selectedDate) {
                 filteredRiderRemittances = currentRiderRemittances;
@@ -5989,6 +7004,11 @@
                         remittanceDate.getMonth() === filterDate.getMonth() &&
                         remittanceDate.getDate() === filterDate.getDate();
                 });
+
+                if (filteredRiderRemittances.length === 0 && currentRiderId) {
+                    await loadRiderTaskOrderRecords(currentRiderId, currentRiderName, selectedDate);
+                    return;
+                }
             }
 
             // Reset to page 1 and render
@@ -6001,6 +7021,14 @@
 
         function clearRiderRecordsDateFilter() {
             const filterDateInput = document.getElementById('riderRecordsFilterDate');
+
+            if (isRiderTaskOrdersMode) {
+                const fallbackDate = getRemitStatsDate();
+                filterDateInput.value = fallbackDate;
+                loadRiderTaskOrderRecords(currentRiderId, currentRiderName, fallbackDate);
+                return;
+            }
+
             filterDateInput.value = '';
             filteredRiderRemittances = currentRiderRemittances;
             currentPage = 1;
@@ -6016,6 +7044,8 @@
             currentRiderRemittances = [];
             filteredRiderRemittances = [];
             currentRiderName = '';
+            currentRiderId = null;
+            isRiderTaskOrdersMode = false;
             currentPage = 1;
             selectedRemittanceId = null;
             remittanceBreakdownCache = {};
@@ -6448,6 +7478,20 @@
             return Number.isNaN(parsedCollection) ? 0 : Math.max(0, parsedCollection);
         }
 
+        function getAutoTotalRemitByRider(riderId) {
+            const rawCollection = riderTotalCollectionMap[String(riderId)] ?? riderTotalCollectionMap[riderId] ?? 0;
+            const rawDeliveryFee = riderDeliveryChargesMap[String(riderId)] ?? riderDeliveryChargesMap[riderId] ?? 0;
+            const parsedCollection = parseFloat(rawCollection);
+            const parsedDeliveryFee = parseFloat(rawDeliveryFee);
+            if (Number.isNaN(parsedCollection) || Number.isNaN(parsedDeliveryFee)) {
+                const rawRemit = riderAutoRemitMap[String(riderId)] ?? riderAutoRemitMap[riderId] ?? 0;
+                const parsedRemit = parseFloat(rawRemit);
+                return Number.isNaN(parsedRemit) ? 0 : Math.max(0, parsedRemit);
+            }
+
+            return Math.max(0, parsedCollection - parsedDeliveryFee);
+        }
+
         function getAlreadyRemittedAmountByRider(riderId) {
             const rawRemitted = riderRemittedTotalsMap[String(riderId)] ?? riderRemittedTotalsMap[riderId] ?? 0;
             const parsedRemitted = parseFloat(rawRemitted);
@@ -6459,7 +7503,10 @@
             const riderId = document.getElementById('remitRiderId')?.value;
             if (!hintEl || !riderId) return;
 
-            const expectedTotal = getAutoTotalCollectionByRider(riderId);
+            const computedExpectedTotal = getAutoTotalRemitByRider(riderId);
+            const expectedTotal = computedExpectedTotal > 0
+                ? computedExpectedTotal
+                : getAutoTotalCollectionByRider(riderId);
             const alreadyRemitted = getAlreadyRemittedAmountByRider(riderId);
             const remainingBefore = Math.max(expectedTotal - alreadyRemitted, 0);
             const currentRemit = parseFloat(document.getElementById('totalRemit')?.value || '0') || 0;
@@ -6571,7 +7618,7 @@
             hintEl.textContent = `Based on total amount for ${displayDate}.`;
         }
 
-        function openRemitModal(riderId, riderName) {
+        async function openRemitModal(riderId, riderName) {
             const selectedRow = document.querySelector(`[data-rider-id="${riderId}"]`);
             if (selectedRow && selectedRow.dataset.blocked === 'true') {
                 showToast('This rider has unremitted deliveries from yesterday. Please settle yesterday first.',
@@ -6603,20 +7650,25 @@
             updateTotalCollectionHint();
             updateTotalTipsHint();
 
-            const expectedTotal = getAutoTotalCollectionByRider(riderId);
-            const alreadyRemitted = getAlreadyRemittedAmountByRider(riderId);
-            const remainingBefore = Math.max(expectedTotal - alreadyRemitted, 0);
-            if (alreadyRemitted > 0 && remainingBefore > 0) {
-                document.getElementById('totalRemit').value = remainingBefore.toFixed(2);
-            }
-            updateRemainingRemitHint();
-
-            // Reset Mangan entries
+            // Reset Mangan entries first so Total Remit fetch uses a clean baseline.
             closeManganModal();
             manganEntries = [];
             syncManganEntriesJson();
             renderManganEntries();
             updateManganBadge();
+
+            try {
+                const breakdownTotalRemit = await getDetailedBreakdownTotalRemitByRider(riderId, getRemitStatsDate());
+                document.getElementById('totalRemit').value = breakdownTotalRemit > 0 ? breakdownTotalRemit.toFixed(2) : '';
+            } catch (_) {
+                const computedExpectedTotal = getAutoTotalRemitByRider(riderId);
+                const expectedTotal = computedExpectedTotal > 0
+                    ? computedExpectedTotal
+                    : getAutoTotalCollectionByRider(riderId);
+                document.getElementById('totalRemit').value = expectedTotal > 0 ? expectedTotal.toFixed(2) : '';
+            }
+
+            updateRemainingRemitHint();
 
             document.getElementById('totalDeliveries').focus();
         }
@@ -6631,6 +7683,7 @@
             }
             resetRemitRemarksRows();
             closeManganModal();
+            closeTotalDeliveriesBreakdown();
             manganEntries = [];
             syncManganEntriesJson();
             renderManganEntries();
@@ -8976,7 +10029,10 @@
 
                 const riderId = document.getElementById('remitRiderId')?.value;
                 if (riderId) {
-                    const expectedTotal = getAutoTotalCollectionByRider(riderId);
+                    const computedExpectedTotal = getAutoTotalRemitByRider(riderId);
+                    const expectedTotal = computedExpectedTotal > 0
+                        ? computedExpectedTotal
+                        : getAutoTotalCollectionByRider(riderId);
                     const alreadyRemitted = getAlreadyRemittedAmountByRider(riderId);
                     const remainingBefore = Math.max(expectedTotal - alreadyRemitted, 0);
                     if (remainingBefore > 0) {
@@ -9042,11 +10098,6 @@
                 const display = document.getElementById('totalPaymentDisplay');
                 if (display) {
                     display.value = '₱' + total.toFixed(2);
-                }
-
-                const totalRemitInput = document.getElementById('totalRemit');
-                if (totalRemitInput) {
-                    totalRemitInput.value = total > 0 ? total.toFixed(2) : '';
                 }
 
                 updateRemainingRemitHint();

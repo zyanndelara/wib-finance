@@ -15,8 +15,8 @@ class RiderController extends Controller
 {
     public function index(Request $request)
     {
-        $legacyDb = DB::connection('wibfinance');
-        $legacySchema = Schema::connection('wibfinance');
+        $legacyDb = DB::connection('wheninba_MercifulGod');
+        $legacySchema = Schema::connection('wheninba_MercifulGod');
 
         $riders = $legacyDb->table('mt_driver')
             ->select('driver_id', 'first_name', 'last_name', 'date_created')
@@ -97,6 +97,7 @@ class RiderController extends Controller
         $riderDeliveryChargesMap = [];
         $riderTipsMap = [];
         $riderTotalCollectionMap = [];
+        $riderAutoRemitMap = [];
         $taskStatsDateParsed = \Carbon\Carbon::parse($request->get('stats_date', today()->toDateString()))->toDateString();
         
         try {
@@ -104,13 +105,20 @@ class RiderController extends Controller
             $riderKeyColumn = collect(['driver_id', 'rider_id'])->first(function ($column) use ($driverTaskColumns) {
                 return in_array($column, $driverTaskColumns, true);
             });
+            $merchantTypeColumn = null;
+            if ($legacySchema->hasTable('mt_merchant')) {
+                $merchantColumns = $legacySchema->getColumnListing('mt_merchant');
+                $merchantTypeColumn = collect(['partner_type', 'merchant_type', 'type'])->first(function ($column) use ($merchantColumns) {
+                    return in_array($column, $merchantColumns, true);
+                });
+            }
             
             if ($riderKeyColumn && $legacySchema->hasTable('mt_driver_task')) {
-                // Get delivery charges from mt_order (in wibfinance) joined with mt_driver_task by order_id
+                // Get delivery charges from mt_order (in wheninba_MercifulGod) joined with mt_driver_task by order_id
                 // Use raw join for cross-database queries
                 $chargeQuery = $legacyDb->table('mt_driver_task')
-                    ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wibfinance.mt_order.delivery_charge), 0) as total_delivery_charge")
-                    ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
+                    ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wheninba_MercifulGod.mt_order.delivery_charge), 0) as total_delivery_charge")
+                    ->leftJoin('wheninba_MercifulGod.mt_order', 'mt_driver_task.order_id', '=', 'wheninba_MercifulGod.mt_order.order_id')
                     ->groupBy('mt_driver_task.' . $riderKeyColumn);
                 
                 // Scope by selected date using delivery_date from mt_driver_task
@@ -132,8 +140,8 @@ class RiderController extends Controller
 
                 // Get tips from mt_order.cart_tip_value using the same rider/date scope.
                 $tipsQuery = $legacyDb->table('mt_driver_task')
-                    ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wibfinance.mt_order.cart_tip_value), 0) as total_tips")
-                    ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
+                    ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wheninba_MercifulGod.mt_order.cart_tip_value), 0) as total_tips")
+                    ->leftJoin('wheninba_MercifulGod.mt_order', 'mt_driver_task.order_id', '=', 'wheninba_MercifulGod.mt_order.order_id')
                     ->groupBy('mt_driver_task.' . $riderKeyColumn);
 
                 if ($taskDateColumn) {
@@ -150,8 +158,8 @@ class RiderController extends Controller
                 // Get total order amount from mt_order.total_w_tax using the same rider/date scope.
                 try {
                     $totalCollectionQuery = $legacyDb->table('mt_driver_task')
-                        ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wibfinance.mt_order.total_w_tax), 0) as total_collection")
-                        ->leftJoin('wibfinance.mt_order', 'mt_driver_task.order_id', '=', 'wibfinance.mt_order.order_id')
+                        ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key, COALESCE(SUM(wheninba_MercifulGod.mt_order.total_w_tax), 0) as total_collection")
+                        ->leftJoin('wheninba_MercifulGod.mt_order', 'mt_driver_task.order_id', '=', 'wheninba_MercifulGod.mt_order.order_id')
                         ->groupBy('mt_driver_task.' . $riderKeyColumn);
 
                     if ($taskDateColumn) {
@@ -168,12 +176,62 @@ class RiderController extends Controller
                     // If total order amount cannot be calculated, keep empty map.
                     $riderTotalCollectionMap = [];
                 }
+
+                // Compute auto total remit using the same formula used in Detailed Breakdown.
+                // - Good Taste / Grumpy: total_w_tax - delivery_charge
+                // - Other merchants: delivery_charge + tip
+                try {
+                    $remitRowsQuery = $legacyDb->table('mt_driver_task')
+                        ->leftJoin('wheninba_MercifulGod.mt_order', 'mt_driver_task.order_id', '=', 'wheninba_MercifulGod.mt_order.order_id')
+                        ->leftJoin('mt_merchant', 'wheninba_MercifulGod.mt_order.merchant_id', '=', 'mt_merchant.merchant_id')
+                        ->whereNotNull('mt_driver_task.order_id')
+                        ->selectRaw("mt_driver_task.{$riderKeyColumn} as rider_key")
+                        ->selectRaw("COALESCE(MAX(mt_merchant.restaurant_name), '') as merchant_name")
+                        ->selectRaw($merchantTypeColumn ? "COALESCE(MAX(mt_merchant.{$merchantTypeColumn}), '') as merchant_type" : "'' as merchant_type")
+                        ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.total_w_tax), 0) as order_total')
+                        ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.delivery_charge), 0) as delivery_fee')
+                        ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.cart_tip_value), 0) as tip_amount')
+                        ->selectRaw("COALESCE(MAX(CAST(wheninba_MercifulGod.mt_order.payment_type AS CHAR)), '') as payment_type")
+                        ->groupBy("mt_driver_task.{$riderKeyColumn}", 'mt_driver_task.order_id');
+
+                    if ($merchantTypeColumn) {
+                        $remitRowsQuery->groupBy('merchant_type');
+                    }
+
+                    if ($taskDateColumn) {
+                        $remitRowsQuery->whereDate("mt_driver_task.{$taskDateColumn}", $taskStatsDateParsed);
+                    }
+
+                    $riderAutoRemitMap = $remitRowsQuery
+                        ->get()
+                        ->groupBy('rider_key')
+                        ->map(function ($rows) {
+                            return (float) collect($rows)->sum(function ($row) {
+                                $orderTotal = (float) ($row->order_total ?? 0);
+                                $deliveryFee = (float) ($row->delivery_fee ?? 0);
+                                $paymentType = (string) ($row->payment_type ?? '');
+
+                                $remitAmount = max(0, $orderTotal - $deliveryFee);
+                                
+                                // If payment type is PYR, return negative amount
+                                if (strtoupper(trim($paymentType)) === 'PYR') {
+                                    return -$remitAmount;
+                                }
+                                
+                                return $remitAmount;
+                            });
+                        })
+                        ->toArray();
+                } catch (\Exception $e) {
+                    $riderAutoRemitMap = [];
+                }
             }
         } catch (\Exception $e) {
             // If delivery charges cannot be calculated, fall back to empty map
             $riderDeliveryChargesMap = [];
             $riderTipsMap = [];
             $riderTotalCollectionMap = [];
+            $riderAutoRemitMap = [];
         }
 
         // Calculate counts and collections — scoped to selected date (default: today)
@@ -451,7 +509,7 @@ class RiderController extends Controller
             ->orderBy('restaurant_name')
             ->get();
 
-        return view('remittance', compact('riders', 'payrolls', 'deductions', 'deductionsByRider', 'allDeductionsFlat', 'remittances', 'nonRemittingRiderCount', 'clearedCount', 'cashCollection', 'digitalCollection', 'statsDate', 'statsDateParsed', 'blockedRiderIds', 'blockedRiderOverdueMap', 'blockedOverdueAsOfDate', 'clearedRiderIds', 'remittedRiderIds', 'shortRiderIds', 'remittedTotalsByRider', 'riderRemittanceDateMap', 'riderTaskDeliveriesMap', 'riderDeliveryChargesMap', 'riderTipsMap', 'riderTotalCollectionMap', 'merchants'));
+        return view('remittance', compact('riders', 'payrolls', 'deductions', 'deductionsByRider', 'allDeductionsFlat', 'remittances', 'nonRemittingRiderCount', 'clearedCount', 'cashCollection', 'digitalCollection', 'statsDate', 'statsDateParsed', 'blockedRiderIds', 'blockedRiderOverdueMap', 'blockedOverdueAsOfDate', 'clearedRiderIds', 'remittedRiderIds', 'shortRiderIds', 'remittedTotalsByRider', 'riderRemittanceDateMap', 'riderTaskDeliveriesMap', 'riderDeliveryChargesMap', 'riderTipsMap', 'riderTotalCollectionMap', 'riderAutoRemitMap', 'merchants'));
     }
 
     public function store(Request $request)
