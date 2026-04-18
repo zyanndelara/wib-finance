@@ -1176,24 +1176,53 @@
             max-height: 500px;
         }
 
+        /* Improved sheet breakdown table styling to prevent numbers/refs from wrapping */
         .sheet-breakdown-responsive-table {
             width: 100%;
             border-collapse: collapse;
             background: white;
-            min-width: 0 !important;
-            table-layout: auto !important;
+            /* Allow horizontal scrolling on narrow screens instead of wrapping cells */
+            min-width: 900px; /* adjust if your table has many columns */
+            table-layout: fixed; /* keep column widths stable */
         }
 
-        .sheet-breakdown-responsive-table thead th,
-        .sheet-breakdown-responsive-table tbody td {
-            width: auto !important;
-            padding: 7px 8px !important;
-            font-size: 11px !important;
-            white-space: normal !important;
-            overflow-wrap: anywhere;
-            word-break: break-word;
-            line-height: 1.25;
+        .sheet-breakdown-responsive-table thead th {
+            padding: 10px 12px;
+            font-size: 12px;
+            white-space: nowrap; /* keep header on one line */
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
+
+        .sheet-breakdown-responsive-table tbody td {
+            padding: 8px 10px;
+            font-size: 12px;
+            vertical-align: middle;
+            white-space: nowrap; /* prevent wrapping of numbers and refs */
+            overflow: hidden;
+            text-overflow: ellipsis; /* show ellipsis instead of breaking layout */
+            word-break: normal;
+            overflow-wrap: normal;
+        }
+
+        /* Specific helpers */
+        .sheet-breakdown-responsive-table td.num,
+        .sheet-breakdown-responsive-table th.num { text-align: right; }
+
+        .sheet-breakdown-responsive-table td.center { text-align: center; }
+
+        /* Ensure REF # or order id columns do not wrap (and links stay inline) */
+        .sheet-breakdown-responsive-table td.ref,
+        .sheet-breakdown-responsive-table td.ref a {
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        /* Give merchant column a constrained width so it can't push other columns */
+        .sheet-breakdown-responsive-table td.merchant { max-width: 220px; }
+        .sheet-breakdown-responsive-table td.order-ids { max-width: 180px; }
+
+        .sheet-breakdown-responsive-table tr:hover td { background: #fbfbfd; }
 
         .table-empty-state {
             text-align: center;
@@ -1521,9 +1550,7 @@
                 text-align: right;
             }
 
-            .rider-records-responsive-table tbody td[data-label="Remarks"] {
-                align-items: flex-start;
-            }
+            /* Remarks column removed from rider records */
         }
 
         @include('partials.user-indicator-styles')
@@ -1531,6 +1558,162 @@
 </head>
 
 <body>
+    <style id="sheet-breakdown-styles">
+        /* Ensure sheet format breakdown tables have stable columns and do not wrap long IDs/REFs */
+        .sheet-breakdown-responsive-wrap {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .sheet-breakdown-responsive-table {
+            min-width: 900px; /* forces horizontal scroll on narrow screens */
+            width: 100%;
+            table-layout: fixed; /* stable column widths */
+            border-collapse: collapse;
+            background: #ffffff;
+        }
+
+        .sheet-breakdown-responsive-table th,
+        .sheet-breakdown-responsive-table td {
+            padding: 10px;
+            vertical-align: middle;
+            white-space: nowrap; /* prevent wrapping that breaks layout */
+            overflow: hidden;
+            text-overflow: ellipsis; /* show ellipsis when content overflows */
+            border-bottom: 1px solid #e5eee0;
+        }
+
+        /* helper width constraints for common columns */
+        .sheet-breakdown-responsive-table td.ref,
+        .sheet-breakdown-responsive-table td.order-ids {
+            max-width: 160px;
+        }
+
+        .sheet-breakdown-responsive-table td.merchant {
+            max-width: 220px;
+        }
+
+        .sheet-breakdown-responsive-table td.num,
+        .sheet-breakdown-responsive-table td.center {
+            text-align: center;
+        }
+
+        .sheet-breakdown-responsive-table td.right {
+            text-align: right;
+        }
+
+        /* Compact auto-fit mode: wraps long text in non-critical columns but keeps refs, MOP, and numbers intact */
+        .sheet-breakdown-responsive-table.compact {
+            table-layout: auto; /* let browser size columns to content */
+            width: 100%;
+            min-width: 0; /* allow shrinking inside responsive wrap */
+        }
+
+        .sheet-breakdown-responsive-table.compact thead th,
+        .sheet-breakdown-responsive-table.compact tbody td {
+            white-space: normal; /* allow wrapping where appropriate */
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            vertical-align: middle;
+        }
+
+        /* Preserve single-line display for short/critical cells */
+        .sheet-breakdown-responsive-table.compact td.ref,
+        .sheet-breakdown-responsive-table.compact td.order-ids,
+        .sheet-breakdown-responsive-table.compact td.mop,
+        .sheet-breakdown-responsive-table.compact td.num {
+            white-space: nowrap !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Merchant and other descriptive columns may wrap but have a max width */
+        .sheet-breakdown-responsive-table.compact td.merchant { max-width: 220px; }
+        .sheet-breakdown-responsive-table.compact td.merchant a { display:inline; }
+
+        /* Tweak on narrower screens to tighten merchant width */
+        @media (max-width: 900px) {
+            .sheet-breakdown-responsive-table.compact td.merchant { max-width: 140px; }
+        }
+
+        /* --- Ensure MOP stays on a single row even in stacked/mobile layout --- */
+        .sheet-breakdown-responsive-table tbody td[data-label="MOP"],
+        .sheet-breakdown-responsive-table tbody td[data-label="Payment"],
+        .sheet-breakdown-responsive-table tbody td.mop {
+            white-space: nowrap !important;
+            overflow-wrap: normal !important;
+            word-break: normal !important;
+        }
+
+        /* Force inline children inside MOP cells so each letter/link doesn't stack */
+        .sheet-breakdown-responsive-table tbody td[data-label="MOP"] *,
+        .sheet-breakdown-responsive-table tbody td.mop * {
+            display: inline !important;
+            white-space: nowrap !important;
+        }
+
+        /* Also apply same rules to the rider-records table (used by task/order breakdown) */
+        .rider-records-responsive-table tbody td[data-label="MOP"],
+        .rider-records-responsive-table tbody td[data-label="Payment"],
+        .rider-records-responsive-table tbody td.mop {
+            white-space: nowrap !important;
+            overflow-wrap: normal !important;
+            word-break: normal !important;
+        }
+
+        .rider-records-responsive-table tbody td[data-label="MOP"] *,
+        .rider-records-responsive-table tbody td.mop * {
+            display: inline !important;
+            white-space: nowrap !important;
+        }
+
+        /* --- Rider column: clamp to 2 lines to avoid very long single-row names pushing layout --- */
+        .sheet-breakdown-responsive-table tbody td[data-label="Rider"],
+        .sheet-breakdown-responsive-table td.rider {
+            white-space: normal;
+            min-width: 0;
+        }
+
+        .sheet-breakdown-responsive-table tbody td[data-label="Rider"] > .rider-name,
+        .sheet-breakdown-responsive-table td.rider > .rider-name {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            max-height: calc(1.3em * 2);
+        }
+
+        /* Clamp Rider in rider-records table too */
+        .rider-records-responsive-table tbody td[data-label="Rider"],
+        .rider-records-responsive-table td.rider {
+            white-space: normal;
+            min-width: 0;
+        }
+
+        .rider-records-responsive-table tbody td[data-label="Rider"] > .rider-name,
+        .rider-records-responsive-table td.rider > .rider-name {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            max-height: calc(1.3em * 2);
+        }
+
+        /* If you prefer to force no horizontal scroll at all, you can enable this: */
+        /* .sheet-breakdown-responsive-wrap { overflow-x: hidden; } */
+
+        /* On very small screens allow slightly smaller min-width so horizontal scroll is not excessive */
+        @media (max-width: 600px) {
+            .sheet-breakdown-responsive-table { min-width: 800px; }
+            .sheet-breakdown-responsive-table td.ref, .sheet-breakdown-responsive-table td.order-ids { max-width: 120px; }
+            .sheet-breakdown-responsive-table td.merchant { max-width: 160px; }
+        }
+    </style>
+
     @include('partials.app-sidebar', ['activePage' => 'remittance'])
 
     <!-- Main Content -->
@@ -2426,10 +2609,7 @@
 
                                 {{-- Column Headers --}}
                                 <div
-                                    style="display:grid; grid-template-columns:1fr 140px 36px; gap:8px; padding:10px 22px 6px; background:#f5f9f2; border-bottom:1px solid #e2ead9; flex-shrink:0;">
-                                    <div
-                                        style="font-size:11px; font-weight:700; color:#436026; text-transform:uppercase; letter-spacing:0.5px;">
-                                        Description / Remarks</div>
+                                    style="display:grid; grid-template-columns:140px 36px; gap:8px; padding:10px 22px 6px; background:#f5f9f2; border-bottom:1px solid #e2ead9; flex-shrink:0;">
                                     <div
                                         style="font-size:11px; font-weight:700; color:#436026; text-transform:uppercase; letter-spacing:0.5px;">
                                         Amount (₱)</div>
@@ -2441,12 +2621,7 @@
                                     <div id="payrollDeductionRows"
                                         style="display:flex; flex-direction:column; gap:8px;">
                                         <div class="payroll-deduction-row"
-                                            style="display:grid; grid-template-columns:1fr 140px 36px; gap:8px; align-items:center;">
-                                            <input type="text" class="pd-remarks"
-                                                placeholder="e.g. Cash shortage, Equipment damage..."
-                                                style="width:100%; font-size:13px; padding:9px 12px; border-radius:8px; border:1.5px solid #d1d5db; background:#fff; box-sizing:border-box; transition:border-color 0.2s;"
-                                                onfocus="this.style.borderColor='#436026'"
-                                                onblur="this.style.borderColor='#d1d5db'">
+                                            style="display:grid; grid-template-columns:140px 36px; gap:8px; align-items:center; justify-content:flex-end;">
                                             <input type="number" class="pd-amount" step="0.01" min="0.01"
                                                 placeholder="0.00"
                                                 style="width:100%; font-size:13px; padding:9px 12px; border-radius:8px; border:1.5px solid #d1d5db; background:#fff; box-sizing:border-box; transition:border-color 0.2s;"
@@ -2455,7 +2630,8 @@
                                                 oninput="updatePayrollDeductionTotal()">
                                             <button type="button" class="pd-remove-btn"
                                                 onclick="removePayrollDeductionRow(this)"
-                                                style="display:none; width:36px; height:36px; background:#fee2e2; color:#dc3545; border:1.5px solid #fca5a5; border-radius:8px; font-size:14px; cursor:pointer; display:flex !important; align-items:center; justify-content:center; visibility:hidden;">
+                                                style="width:36px; height:36px; background:#fee2e2; color:#dc3545; border:1.5px solid #fca5a5; border-radius:8px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; visibility:hidden; transition:background 0.2s;"
+                                                onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </div>
@@ -2500,6 +2676,44 @@
                     </div>
                 </div>
                 <script>
+                    // Normalize MOP display and clamp Rider names after DOM ready
+                    document.addEventListener('DOMContentLoaded', function () {
+                        // Normalize MOP cells: collapse newlines, collapse spaced letters (C O D -> COD)
+                        const mopSelector = '.sheet-breakdown-responsive-table td[data-label="MOP"], .sheet-breakdown-responsive-table td[data-label="Payment"], .sheet-breakdown-responsive-table td.mop';
+                        document.querySelectorAll(mopSelector).forEach(td => {
+                            let raw = (td.textContent || td.innerText || '').trim();
+                            if (!raw) return;
+                            // Replace line breaks and multiple spaces
+                            raw = raw.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+                            // Collapse sequences like 'C O D' or 'C  O  D' into 'COD'
+                            raw = raw.replace(/\b([A-Za-z])(?:\s+([A-Za-z])){1,}\b/g, m => m.replace(/\s+/g, ''));
+                            // Remove stray non-separators except common punctuation
+                            raw = raw.replace(/[^A-Za-z0-9,\/\|;\-\s]/g, '').trim();
+                            // Put back normalized text
+                            td.textContent = raw;
+                        });
+
+                        // Wrap Rider cell content into .rider-name span for clamping
+                        const riderSelector = '.sheet-breakdown-responsive-table td[data-label="Rider"], .sheet-breakdown-responsive-table td.rider';
+                        document.querySelectorAll(riderSelector).forEach(td => {
+                            // If already has a rider-name child, skip
+                            if (td.querySelector('.rider-name')) return;
+                            const text = (td.textContent || td.innerText || '').trim();
+                            if (!text) return;
+                            // Preserve any links inside by moving nodes into span if present
+                            const span = document.createElement('span');
+                            span.className = 'rider-name';
+                            span.textContent = text;
+                            td.textContent = '';
+                            td.appendChild(span);
+                        });
+                    });
+                    // Enable compact auto-fit table mode so long values stay readable
+                    document.addEventListener('DOMContentLoaded', function () {
+                        document.querySelectorAll('.sheet-breakdown-responsive-table').forEach(tbl => {
+                            tbl.classList.add('compact');
+                        });
+                    });
                     const riderRemittanceDateMap = @json($riderRemittanceDateMap ?? []);
                     const riderTaskDeliveriesMap = @json($riderTaskDeliveriesMap ?? []);
                     const riderDeliveryChargesMap = @json($riderDeliveryChargesMap ?? []);
@@ -3376,14 +3590,10 @@
                     }
 
                     function buildDeductionRowHtml(showRemove) {
-                        return `<div class="payroll-deduction-row" style="display:grid; grid-template-columns:1fr 140px 36px; gap:8px; align-items:center;">
-                                <input type="text" class="pd-remarks" placeholder="e.g. Cash shortage, Equipment damage..."
-                                    style="width:100%; font-size:13px; padding:9px 12px; border-radius:8px; border:1.5px solid #d1d5db; background:#fff; box-sizing:border-box; transition:border-color 0.2s;"
-                                    onfocus="this.style.borderColor='#436026'" onblur="this.style.borderColor='#d1d5db'">
+                        return `<div class="payroll-deduction-row" style="display:grid; grid-template-columns:140px 36px; gap:8px; align-items:center; justify-content:flex-end;">
                                 <input type="number" class="pd-amount" step="0.01" min="0.01" placeholder="0.00"
                                     style="width:100%; font-size:13px; padding:9px 12px; border-radius:8px; border:1.5px solid #d1d5db; background:#fff; box-sizing:border-box; transition:border-color 0.2s;"
-                                    onfocus="this.style.borderColor='#436026'" onblur="this.style.borderColor='#d1d5db'"
-                                    oninput="updatePayrollDeductionTotal()">
+                                    onfocus="this.style.borderColor='#436026'" onblur="this.style.borderColor='#d1d5db'" oninput="updatePayrollDeductionTotal()">
                                 <button type="button" class="pd-remove-btn" onclick="removePayrollDeductionRow(this)"
                                     style="width:36px; height:36px; background:#fee2e2; color:#dc3545; border:1.5px solid #fca5a5; border-radius:8px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; visibility:${showRemove ? 'visible' : 'hidden'}; transition:background 0.2s;"
                                     onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
@@ -3439,24 +3649,15 @@
                         const rows = document.querySelectorAll('#payrollDeductionRows .payroll-deduction-row');
                         const deductions = [];
                         for (const row of rows) {
-                            const remarks = (row.querySelector('.pd-remarks').value || '').trim();
                             const amountRaw = (row.querySelector('.pd-amount').value || '').trim();
-                            if (!remarks && !amountRaw) continue;
-                            if (remarks && !amountRaw) {
-                                showToast('Please enter an amount for: ' + remarks, 'warning');
-                                return;
-                            }
-                            if (!remarks && amountRaw) {
-                                showToast('Please enter a description for amount: ' + amountRaw, 'warning');
-                                return;
-                            }
+                            if (!amountRaw) continue; // skip empty rows
                             const amount = parseFloat(amountRaw);
-                            if (amount <= 0) {
+                            if (isNaN(amount) || amount <= 0) {
                                 showToast('Deduction amount must be greater than 0', 'warning');
                                 return;
                             }
                             deductions.push({
-                                remarks,
+                                remarks: '', // description removed; send empty remarks
                                 amount
                             });
                         }
@@ -5514,8 +5715,10 @@
             selectedRemittanceId = null;
             remittanceBreakdownCache = {};
 
-            // Clear any previous filter
-            filterDateInput.value = '';
+            // Initialize date filter to the current stats date and apply it so the list is filtered by date
+            if (filterDateInput) {
+                filterDateInput.value = getRemitStatsDate();
+            }
 
             if (remittances.length === 0) {
                 dateFilter.style.display = 'none';
@@ -5531,7 +5734,8 @@
             // Show date filter
             dateFilter.style.display = 'block';
 
-            renderRiderRemittancesPage();
+            // Apply the date filter immediately (this will re-render the page correctly)
+            filterRiderRecordsByDate();
         }
 
         async function loadRiderTaskOrderRecords(riderId, riderName, targetDate) {
@@ -5675,7 +5879,7 @@
                     <td data-label="Total Remit" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
                     <td data-label="CF" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
                     <td data-label="ESTIMATE SALES+ADMIN FEE" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
-                    <td data-label="Remarks" style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#666; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.remarks || '-')}</td>
+                    <!-- Remarks column removed -->
                 </tr>
             `).join('');
 
@@ -5709,7 +5913,7 @@
                                 <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#436026;">Total Remit</th>
                                 <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#436026;">CF</th>
                                 <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:120px; background:#436026;">ESTIMATE SALES+ADMIN FEE</th>
-                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:140px; background:#436026;">Remarks</th>
+                                <!-- Remarks column removed -->
                             </tr>
                         </thead>
                         <tbody>${rowsHtml}</tbody>
@@ -6376,11 +6580,11 @@
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#666;">-</td>
+                    <!-- Remarks column removed -->
                 </tr>
             `).join('') : `
                 <tr>
-                    <td colspan="14" style="padding:24px; text-align:center; color:#9ca3af; font-size:13px;">No detailed order rows available.</td>
+                    <td colspan="13" style="padding:24px; text-align:center; color:#9ca3af; font-size:13px;">No detailed order rows available.</td>
                 </tr>
             `;
 
@@ -6420,7 +6624,7 @@
                                     <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Remit</th>
                                     <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">CF</th>
                                     <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:120px; background:#e8dbc4;">ESTIMATE SALES+ADMIN FEE</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:140px; background:#e8dbc4;">Remarks</th>
+                                    <!-- Remarks column removed -->
                                 </tr>
                             </thead>
                             <tbody>${detailedRowsHtml}</tbody>
@@ -6730,7 +6934,7 @@
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#666; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.remarks || '-')}</td>
+                    <!-- Remarks column removed from detailed breakdown -->
                 </tr>
             `).join('') : `
                 <tr>
@@ -6787,7 +6991,7 @@
             }
 
             const rows = [];
-            rows.push(['# of Task', 'Rider', 'MOP', 'REF #', 'Merchant', 'Total Amount', 'DF', 'GT/Grumpy Receipt', 'Tip', 'Receipt (Non Partners)', 'Total Remit', 'CF', 'ESTIMATE SALES+ADMIN FEE', 'Remarks'].map(escapeCsvCell).join(','));
+            rows.push(['# of Task', 'Rider', 'MOP', 'REF #', 'Merchant', 'Total Amount', 'DF', 'GT/Grumpy Receipt', 'Tip', 'Receipt (Non Partners)', 'Total Remit', 'CF', 'ESTIMATE SALES+ADMIN FEE'].map(escapeCsvCell).join(','));
 
             let taskCounter = 0;
             items.forEach(item => {
@@ -6904,7 +7108,7 @@
                             <td style="text-align:right;">₱${merchantValues.totalRemit.toFixed(2)}</td>
                             <td style="text-align:right;">₱${merchantValues.cf.toFixed(2)}</td>
                             <td style="text-align:right;">₱${merchantValues.estimateSalesAdminFee.toFixed(2)}</td>
-                            <td style="white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(normalizeDetailedRemarks(payload?.remarks || currentSelectedBreakdownRemittance?.remarks || ''))}</td>
+                            <!-- Remarks column removed from PDF export -->
                         </tr>
                     `);
                 });
