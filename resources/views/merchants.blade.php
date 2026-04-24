@@ -1408,6 +1408,7 @@
                                     class="fas fa-plus"></i> Add Item</button>
                         </div>
                         <div id="add_item_rows"></div>
+                        <datalist id="add_item_suggestions"></datalist>
                     </div>
                     <div style="margin-top:14px;">
                         <label
@@ -1578,6 +1579,7 @@
                                     class="fas fa-plus"></i> Add Item</button>
                         </div>
                         <div id="edit_item_rows"></div>
+                        <datalist id="edit_item_suggestions"></datalist>
                     </div>
                     <div style="margin-top:14px;">
                         <label
@@ -1768,6 +1770,15 @@
     <script>
         // Merchant data JSON for edit pre-fill
         const merchantsData = @json($merchantsJson);
+        const merchantItemSuggestionsUrl = @json(route('merchants.item-suggestions'));
+        const merchantItemSuggestionsCache = {
+            add: [],
+            edit: []
+        };
+        const merchantItemSuggestionsAbort = {
+            add: null,
+            edit: null
+        };
         const merchantTypeLabels = {
             partner: 'Partner',
             'non-partner': 'Non-Partner'
@@ -1946,6 +1957,243 @@
             'mixed': 'Commission Value',
         };
 
+        function isItemLookupCommissionType(type) {
+            return type === 'fixed_per_item' || type === 'category_based_fixed';
+        }
+
+        function shouldUseItemLookup(prefix) {
+            const typeEl = document.getElementById(prefix + '_commission_type');
+            if (!typeEl) return false;
+            return isItemLookupCommissionType(typeEl.value);
+        }
+
+        function getItemLookupContext(prefix) {
+            const context = {};
+
+            if (prefix === 'edit') {
+                const merchantId = parseInt(document.getElementById('editMerchantId')?.value || '0', 10);
+                if (merchantId > 0) {
+                    context.merchant_id = String(merchantId);
+                }
+            } else if (prefix === 'add') {
+                const merchantName = (document.getElementById('add_merchant_name')?.value || '').trim();
+                if (merchantName) {
+                    context.merchant_name = merchantName;
+                }
+            }
+
+            return context;
+        }
+
+        function addAllItemsOverallRow(prefix, itemNames, amount = '') {
+            const container = document.getElementById(prefix + '_item_rows');
+            if (!container || !Array.isArray(itemNames) || !itemNames.length) return;
+
+            const normalizedUnique = Array.from(new Set(itemNames
+                .map(name => String(name || '').trim())
+                .filter(Boolean)));
+
+            if (!normalizedUnique.length) return;
+
+            container.innerHTML = '';
+
+            const row = document.createElement('div');
+            row.className = 'item-row item-row-all';
+            row.dataset.allItemsJson = JSON.stringify(normalizedUnique);
+            row.style.cssText =
+                'display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center;';
+
+            row.innerHTML = `
+                <div class="item-label-wrap" style="position:relative;">
+                    <span style="position:absolute;top:-9px;right:8px;background:#4338ca;color:#fff;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:.2px;box-shadow:0 2px 6px rgba(67,56,202,.3);z-index:2;">Overall mode</span>
+                    <input type="text" class="item-label"
+                        value="All items for this merchant (${normalizedUnique.length})"
+                        readonly
+                        style="border:1.5px solid #c7d2fe;border-radius:7px;padding:8px 10px;font-size:13px;outline:none;background:#eef2ff;color:#3730a3;font-weight:700;width:100%;">
+                </div>
+                <input type="number" placeholder="Overall amount (0.00)" class="item-amount" min="0" step="0.01"
+                    value="${String(amount || '').replace(/\"/g, '&quot;')}"
+                    style="border:1.5px solid #ddd6fe;border-radius:7px;padding:8px 10px;font-size:13px;outline:none;background:#fdf6ff;width:100%;">
+                <button type="button" onclick="clearAllItemsOverall(this, '${prefix}')"
+                    title="Clear select all mode"
+                    style="width:32px;height:32px;border-radius:7px;border:none;background:#fee2e2;color:#dc3545;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">
+                    <i class="fas fa-times"></i>
+                </button>`;
+
+            container.appendChild(row);
+            showToast(`Select all enabled (${normalizedUnique.length} items). Set one overall amount.`, 'success');
+        }
+
+        function clearAllItemsOverall(btn, prefix) {
+            const row = btn?.closest('.item-row-all');
+            const container = document.getElementById(prefix + '_item_rows');
+            if (row) row.remove();
+            if (container && !container.querySelector('.item-row')) {
+                addItemRow(prefix);
+            }
+        }
+
+        function renderItemSuggestionOptions(prefix, items, inputEl = null) {
+            merchantItemSuggestionsCache[prefix] = Array.isArray(items) ? items : [];
+            if (!inputEl) return;
+
+            const menu = inputEl.closest('.item-label-wrap')?.querySelector('.item-suggestion-dropdown');
+            if (!menu) return;
+
+            menu.innerHTML = '';
+            if (!merchantItemSuggestionsCache[prefix].length) {
+                menu.style.display = 'none';
+                return;
+            }
+
+            if (shouldUseItemLookup(prefix)) {
+                const selectAllOption = document.createElement('button');
+                selectAllOption.type = 'button';
+                selectAllOption.innerHTML = '<i class="fas fa-layer-group" style="margin-right:6px;"></i>Select all items for this merchant';
+                selectAllOption.style.cssText =
+                    'display:block;width:100%;text-align:left;border:none;background:#eef2ff;padding:8px 8px;border-radius:6px;font-size:12px;color:#3730a3;cursor:pointer;font-weight:700;margin-bottom:4px;';
+                selectAllOption.addEventListener('mouseenter', () => {
+                    selectAllOption.style.background = '#e0e7ff';
+                });
+                selectAllOption.addEventListener('mouseleave', () => {
+                    selectAllOption.style.background = '#eef2ff';
+                });
+                selectAllOption.addEventListener('mousedown', e => e.preventDefault());
+                selectAllOption.addEventListener('click', async () => {
+                    await fetchMerchantItemSuggestions(prefix, '', {
+                        includeAll: true,
+                        inputEl,
+                        applyAll: true
+                    });
+                });
+                menu.appendChild(selectAllOption);
+            }
+
+            merchantItemSuggestionsCache[prefix].forEach(itemName => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.textContent = String(itemName || '');
+                option.style.cssText =
+                    'display:block;width:100%;text-align:left;border:none;background:transparent;padding:7px 8px;border-radius:6px;font-size:12px;color:#374151;cursor:pointer;';
+                option.addEventListener('mouseenter', () => {
+                    option.style.background = '#f5f3ff';
+                });
+                option.addEventListener('mouseleave', () => {
+                    option.style.background = 'transparent';
+                });
+                option.addEventListener('mousedown', e => e.preventDefault());
+                option.addEventListener('click', () => {
+                    inputEl.value = String(itemName || '');
+                    menu.style.display = 'none';
+                });
+                menu.appendChild(option);
+            });
+
+            menu.style.display = 'block';
+        }
+
+        function hideItemSuggestionOptions(inputEl) {
+            if (!inputEl) return;
+            const menu = inputEl.closest('.item-label-wrap')?.querySelector('.item-suggestion-dropdown');
+            if (!menu) return;
+            menu.style.display = 'none';
+        }
+
+        async function fetchMerchantItemSuggestions(prefix, query, options = {}) {
+            const inputEl = options.inputEl || null;
+            if (!shouldUseItemLookup(prefix)) {
+                renderItemSuggestionOptions(prefix, [], inputEl);
+                return;
+            }
+
+            const term = String(query || '').trim();
+            const includeAll = options.includeAll === true;
+            if (term.length < 1 && !includeAll) {
+                renderItemSuggestionOptions(prefix, [], inputEl);
+                return;
+            }
+
+            if (merchantItemSuggestionsAbort[prefix]) {
+                merchantItemSuggestionsAbort[prefix].abort();
+            }
+
+            const controller = new AbortController();
+            merchantItemSuggestionsAbort[prefix] = controller;
+
+            const params = new URLSearchParams({
+                q: term,
+                limit: includeAll ? '200' : '10'
+            });
+            if (includeAll) {
+                params.set('include_all', '1');
+            }
+
+            const context = getItemLookupContext(prefix);
+            if (context.merchant_id) {
+                params.set('merchant_id', context.merchant_id);
+            }
+            if (context.merchant_name) {
+                params.set('merchant_name', context.merchant_name);
+            }
+
+            try {
+                const resp = await fetch(`${merchantItemSuggestionsUrl}?${params.toString()}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    signal: controller.signal,
+                });
+
+                if (!resp.ok) {
+                    renderItemSuggestionOptions(prefix, [], inputEl);
+                    return;
+                }
+
+                const data = await resp.json();
+                const items = Array.isArray(data.items) ? data.items : [];
+                if (options.applyAll === true) {
+                    addAllItemsOverallRow(prefix, items);
+                    hideItemSuggestionOptions(inputEl);
+                    return;
+                }
+
+                renderItemSuggestionOptions(prefix, items, inputEl);
+            } catch (error) {
+                if (error && error.name === 'AbortError') return;
+                renderItemSuggestionOptions(prefix, [], inputEl);
+            }
+        }
+
+        function setupItemLookupInput(prefix, inputEl) {
+            if (!inputEl) return;
+            inputEl.setAttribute('autocomplete', 'off');
+            inputEl.addEventListener('input', () => fetchMerchantItemSuggestions(prefix, inputEl.value, {
+                inputEl
+            }));
+            inputEl.addEventListener('focus', () => {
+                const currentValue = String(inputEl.value || '').trim();
+                if (currentValue.length > 0) {
+                    fetchMerchantItemSuggestions(prefix, currentValue, {
+                        inputEl
+                    });
+                } else {
+                    fetchMerchantItemSuggestions(prefix, '', {
+                        includeAll: true,
+                        inputEl
+                    });
+                }
+            });
+            inputEl.addEventListener('blur', () => {
+                setTimeout(() => hideItemSuggestionOptions(inputEl), 120);
+            });
+            inputEl.addEventListener('keydown', e => {
+                if (e.key === 'Escape') {
+                    hideItemSuggestionOptions(inputEl);
+                }
+            });
+        }
+
         function updateCommissionLabel(prefix) {
             const type = document.getElementById(prefix + '_commission_type').value;
             const label = document.getElementById(prefix + '_commission_rate_label');
@@ -1958,14 +2206,15 @@
             const isOrder = type === 'fixed_per_order';
             const isMixed = type === 'mixed';
             const isItem = type === 'fixed_per_item';
+            const showItemFields = isItemLookupCommissionType(type);
             const hideRate = isCat || isOrder || isMixed || isItem;
             if (rateCol) rateCol.style.display = hideRate ? 'none' : '';
             if (catFields) catFields.style.display = isCat ? 'grid' : 'none';
             if (orderFields) orderFields.style.display = isOrder ? 'grid' : 'none';
             if (mixedFields) mixedFields.style.display = isMixed ? 'grid' : 'none';
-            if (itemFields) itemFields.style.display = isItem ? '' : 'none';
+            if (itemFields) itemFields.style.display = showItemFields ? '' : 'none';
             if (label) label.textContent = commissionRateLabels[type] || 'Commission Value';
-            if (isItem) {
+            if (showItemFields) {
                 const c = document.getElementById(prefix + '_item_rows');
                 if (c && !c.children.length) addItemRow(prefix);
             }
@@ -1980,9 +2229,13 @@
             row.style.cssText =
                 'display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center;';
             row.innerHTML = `
-                <input type="text" placeholder="Item name (e.g. Burger)" class="item-label"
-                    value="${label.replace(/"/g, '&quot;')}"
-                    style="border:1.5px solid #ddd6fe;border-radius:7px;padding:8px 10px;font-size:13px;outline:none;background:#fdf6ff;width:100%;">
+                <div class="item-label-wrap" style="position:relative;">
+                    <input type="text" placeholder="Item name (e.g. Burger)" class="item-label"
+                        value="${label.replace(/"/g, '&quot;')}"
+                        style="border:1.5px solid #ddd6fe;border-radius:7px;padding:8px 10px;font-size:13px;outline:none;background:#fdf6ff;width:100%;">
+                    <div class="item-suggestion-dropdown"
+                        style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:190px;overflow-y:auto;background:#ffffff;border:1px solid #ddd6fe;border-radius:8px;box-shadow:0 10px 22px rgba(76,29,149,.15);padding:4px;z-index:30;"></div>
+                </div>
                 <input type="number" placeholder="0.00" class="item-amount" min="0" step="0.01"
                     value="${amount}"
                     style="border:1.5px solid #ddd6fe;border-radius:7px;padding:8px 10px;font-size:13px;outline:none;background:#fdf6ff;width:100%;">
@@ -1991,6 +2244,9 @@
                     <i class="fas fa-times"></i>
                 </button>`;
             container.appendChild(row);
+
+            const labelInput = row.querySelector('.item-label');
+            setupItemLookupInput(prefix, labelInput);
         }
 
         function removeItemRow(btn) {
@@ -2014,27 +2270,84 @@
             openModal('addModal');
         }
 
+        function validateItemRows(prefix) {
+            const rows = document.querySelectorAll(`#${prefix}_item_rows .item-row`);
+            let hasIncompleteItems = false;
+            rows.forEach(row => {
+                const lbl = row.querySelector('.item-label').value.trim();
+                const amt = row.querySelector('.item-amount').value.trim();
+                const isAllRow = row.classList.contains('item-row-all') && !!row.dataset.allItemsJson;
+                const hasInvalidAllRow = isAllRow && !amt;
+                const hasInvalidSingleRow = !isAllRow && ((lbl && !amt) || (!lbl && amt));
+
+                if (hasInvalidAllRow || hasInvalidSingleRow) {
+                    row.style.borderColor = '#fca5a5';
+                    row.style.backgroundColor = '#fef2f2';
+                    hasIncompleteItems = true;
+                } else {
+                    row.style.borderColor = '';
+                    row.style.backgroundColor = '';
+                }
+            });
+            return hasIncompleteItems;
+        }
+
         async function submitAddMerchant(e) {
             e.preventDefault();
             if (checkDuplicateMerchantName()) {
                 showToast('This merchant is already added.', 'warning');
                 return;
             }
+            if (isItemLookupCommissionType(document.getElementById('add_commission_type').value)) {
+                if (validateItemRows('add')) {
+                    showToast('Each item must have both a name and an amount.', 'warning');
+                    return;
+                }
+            }
             const btn = document.getElementById('addSubmitBtn');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
             const fd = new FormData(e.target);
-            if (document.getElementById('add_commission_type').value === 'fixed_per_item') {
+            if (isItemLookupCommissionType(document.getElementById('add_commission_type').value)) {
                 const items = [];
                 document.querySelectorAll('#add_item_rows .item-row').forEach(row => {
-                    const lbl = row.querySelector('.item-label').value.trim();
                     const amt = row.querySelector('.item-amount').value.trim();
-                    if (lbl || amt) items.push({
-                        label: lbl,
-                        amount: amt
-                    });
+                    const isAllRow = row.classList.contains('item-row-all') && !!row.dataset.allItemsJson;
+
+                    if (isAllRow) {
+                        let allItems = [];
+                        try {
+                            const parsed = JSON.parse(row.dataset.allItemsJson || '[]');
+                            allItems = Array.isArray(parsed) ? parsed : [];
+                        } catch (_) {
+                            allItems = [];
+                        }
+
+                        if (amt) {
+                            allItems.forEach(itemName => {
+                                const label = String(itemName || '').trim();
+                                if (label) {
+                                    items.push({
+                                        label,
+                                        amount: amt
+                                    });
+                                }
+                            });
+                        }
+                        return;
+                    }
+
+                    const lbl = row.querySelector('.item-label').value.trim();
+                    if (lbl && amt) {
+                        items.push({
+                            label: lbl,
+                            amount: amt
+                        });
+                    }
                 });
                 fd.set('commission_items', JSON.stringify(items));
+            } else {
+                fd.set('commission_items', JSON.stringify([]));
             }
             try {
                 const resp = await fetch('{{ route('merchants.store') }}', {
@@ -2190,7 +2503,7 @@
             document.getElementById('edit_commission_mixed_percentage').value = m.commission_mixed_percentage || '';
             document.getElementById('edit_commission_mixed_amount').value = m.commission_mixed_amount || '';
             resetItemRows('edit');
-            if (normalizeCommissionType(m.commission_type) === 'fixed_per_item' && m.commission_items && m
+            if (isItemLookupCommissionType(normalizeCommissionType(m.commission_type)) && m.commission_items && m
                 .commission_items.length) {
                 m.commission_items.forEach(item => addItemRow('edit', item.label || '', item.amount || ''));
             }
@@ -2202,22 +2515,57 @@
         async function submitEditMerchant(e) {
             e.preventDefault();
             const id = document.getElementById('editMerchantId').value;
+            if (isItemLookupCommissionType(document.getElementById('edit_commission_type').value)) {
+                if (validateItemRows('edit')) {
+                    showToast('Each item must have both a name and an amount.', 'warning');
+                    return;
+                }
+            }
             const btn = document.getElementById('editSubmitBtn');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
             const fd = new FormData(e.target);
             fd.set('_method', 'PUT');
-            if (document.getElementById('edit_commission_type').value === 'fixed_per_item') {
+            if (isItemLookupCommissionType(document.getElementById('edit_commission_type').value)) {
                 const items = [];
                 document.querySelectorAll('#edit_item_rows .item-row').forEach(row => {
-                    const lbl = row.querySelector('.item-label').value.trim();
                     const amt = row.querySelector('.item-amount').value.trim();
-                    if (lbl || amt) items.push({
-                        label: lbl,
-                        amount: amt
-                    });
+                    const isAllRow = row.classList.contains('item-row-all') && !!row.dataset.allItemsJson;
+
+                    if (isAllRow) {
+                        let allItems = [];
+                        try {
+                            const parsed = JSON.parse(row.dataset.allItemsJson || '[]');
+                            allItems = Array.isArray(parsed) ? parsed : [];
+                        } catch (_) {
+                            allItems = [];
+                        }
+
+                        if (amt) {
+                            allItems.forEach(itemName => {
+                                const label = String(itemName || '').trim();
+                                if (label) {
+                                    items.push({
+                                        label,
+                                        amount: amt
+                                    });
+                                }
+                            });
+                        }
+                        return;
+                    }
+
+                    const lbl = row.querySelector('.item-label').value.trim();
+                    if (lbl && amt) {
+                        items.push({
+                            label: lbl,
+                            amount: amt
+                        });
+                    }
                 });
                 fd.set('commission_items', JSON.stringify(items));
+            } else {
+                fd.set('commission_items', JSON.stringify([]));
             }
             try {
                 const resp = await fetch(`/merchants/${id}`, {

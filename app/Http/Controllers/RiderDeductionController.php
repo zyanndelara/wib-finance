@@ -27,10 +27,20 @@ class RiderDeductionController extends Controller
             $validated = $request->validate([
                 'rider_id' => 'required|string',
                 'rider_name' => 'required|string',
+                'payroll_id' => 'nullable|integer|exists:rider_payrolls,id',
+                'replace_existing' => 'nullable|boolean',
                 'amount' => 'required|numeric|min:0.01',
                 'date' => 'required|date',
                 'remarks' => 'nullable|string',
             ]);
+
+            if (!empty($validated['replace_existing']) && !empty($validated['payroll_id'])) {
+                RiderDeduction::where('rider_id', $validated['rider_id'])
+                    ->where('payroll_id', $validated['payroll_id'])
+                    ->delete();
+            }
+
+            unset($validated['replace_existing']);
 
             Log::info('Validation passed', $validated);
 

@@ -170,6 +170,45 @@
             border-radius: 2px;
         }
 
+        .queue-tools {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .queue-icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .queue-icon-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .queue-icon-btn:disabled {
+            opacity: 0.7;
+            cursor: default;
+            transform: none;
+        }
+
+        .queue-icon-btn.reset-all-btn {
+            background: linear-gradient(135deg, #9c7a2d 0%, #b0892f 100%);
+            box-shadow: 0 2px 6px rgba(156, 122, 45, 0.25);
+        }
+
+        .queue-icon-btn.reset-all-btn:hover {
+            background: linear-gradient(135deg, #ad8a36 0%, #c79a36 100%);
+            box-shadow: 0 5px 14px rgba(156, 122, 45, 0.35);
+        }
+
         .add-remit-btn {
             background: linear-gradient(135deg, #436026 0%, #5a7d33 100%);
             color: white;
@@ -529,6 +568,32 @@
         .rider-action-btn.records-btn:hover {
             background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
             box-shadow: 0 5px 14px rgba(52, 58, 64, 0.35);
+        }
+
+        .rider-action-btn.reset-remit-btn {
+            background: linear-gradient(135deg, #9c7a2d 0%, #b0892f 100%);
+            box-shadow: 0 2px 6px rgba(156, 122, 45, 0.25);
+        }
+
+        .rider-action-btn.reset-remit-btn:hover {
+            background: linear-gradient(135deg, #ad8a36 0%, #c79a36 100%);
+            box-shadow: 0 5px 14px rgba(156, 122, 45, 0.35);
+        }
+
+        .rider-action-btn.icon-only {
+            flex: 0 0 auto;
+            width: 34px;
+            min-width: 34px;
+            padding: 6px;
+            gap: 0;
+        }
+
+        .rider-action-btn.icon-only span {
+            display: none;
+        }
+
+        .rider-action-btn.icon-only i {
+            font-size: 12px;
         }
 
         .rider-avatar {
@@ -1222,6 +1287,23 @@
         .sheet-breakdown-responsive-table td.merchant { max-width: 220px; }
         .sheet-breakdown-responsive-table td.order-ids { max-width: 180px; }
 
+        .sheet-breakdown-responsive-table td[data-label="Merchant"],
+        .sheet-breakdown-responsive-table td.merchant-cell,
+        .sheet-breakdown-responsive-table td.merchant {
+            text-align: center !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            word-break: normal !important;
+            overflow-wrap: break-word !important;
+            line-height: 1.35;
+        }
+
+        .sheet-breakdown-responsive-table th.col-merchant,
+        .sheet-breakdown-responsive-table thead th[data-label="Merchant"] {
+            text-align: center !important;
+        }
+
         .sheet-breakdown-responsive-table tr:hover td { background: #fbfbfd; }
 
         .table-empty-state {
@@ -1667,6 +1749,32 @@
             white-space: nowrap !important;
         }
 
+        /* Merchant column readability in Rider Records */
+        .rider-records-responsive-table th.col-merchant {
+            width: 220px !important;
+            min-width: 220px;
+        }
+
+        .rider-records-responsive-table tbody td.merchant-cell {
+            min-width: 220px;
+            max-width: 280px;
+            text-align: center;
+            white-space: normal !important;
+            overflow-wrap: break-word !important;
+            word-break: normal !important;
+            line-height: 1.35;
+            hyphens: auto;
+        }
+
+        @media (max-width: 600px) {
+            .rider-records-responsive-table th.col-merchant,
+            .rider-records-responsive-table tbody td.merchant-cell {
+                width: auto !important;
+                min-width: 0;
+                max-width: none;
+            }
+        }
+
         /* --- Rider column: clamp to 2 lines to avoid very long single-row names pushing layout --- */
         .sheet-breakdown-responsive-table tbody td[data-label="Rider"],
         .sheet-breakdown-responsive-table td.rider {
@@ -1907,8 +2015,19 @@
         <div class="remittance-container">
             <!-- Rider Queue Panel -->
             <div class="rider-queue-panel">
+                @php $canUseOptionalRemitReset = auth()->check() && auth()->user()->isAdmin(); @endphp
                 <div class="panel-header">
                     <h2>Rider Queue</h2>
+                    @if ($canUseOptionalRemitReset)
+                        <div class="queue-tools">
+                            <button class="queue-icon-btn reset-all-btn" type="button"
+                                title="Optional: reset all disabled Remit buttons"
+                                aria-label="Reset all disabled remit buttons"
+                                onclick="resetAllOptionalRemit()">
+                                <i class="fas fa-layer-group"></i>
+                            </button>
+                        </div>
+                    @endif
                 </div>
                 <div class="search-bar">
                     <i class="fas fa-search"></i>
@@ -1932,14 +2051,14 @@
                                         </div>
                                     </div>
                                     <div style="display:flex;align-items:center;gap:6px;">
-                                        @if ($isBlocked)
-                                            <span class="rider-status pending">Pending</span>
-                                        @elseif($isAlreadyRemitted)
+                                        @if ($isAlreadyRemitted)
                                             <span class="rider-status cleared">
                                                 <i class="fas fa-check" style="font-size:8px;"></i> Remitted
                                             </span>
                                         @elseif($isShortRemit)
                                             <span class="rider-status short">Short</span>
+                                        @elseif ($isBlocked)
+                                            <span class="rider-status pending">Pending</span>
                                         @elseif(in_array($rider->id, $clearedRiderIds))
                                             <span class="rider-status cleared">
                                                 <i class="fas fa-check" style="font-size:8px;"></i> Cleared
@@ -1952,32 +2071,53 @@
                                 </div>
                                 <div class="rider-dropdown-body" style="flex-direction:column;">
                                     <div style="display:flex;gap:10px;">
-                                        @if ($isBlocked)
-                                            <button class="rider-action-btn blocked-btn" disabled
-                                                title="Rider did not remit yesterday">
-                                                <i class="fas fa-money-bill-wave"></i>
-                                                <span>Remit</span>
-                                            </button>
-                                        @elseif($isAlreadyRemitted)
-                                            <button class="rider-action-btn blocked-btn" disabled
+                                        @if($isAlreadyRemitted)
+                                            <button class="rider-action-btn blocked-btn" data-role="remit" disabled
                                                 title="Rider already fully remitted for the selected date">
                                                 <i class="fas fa-money-bill-wave"></i>
                                                 <span>Remit</span>
                                             </button>
+                                            @if ($canUseOptionalRemitReset)
+                                                <button class="rider-action-btn reset-remit-btn icon-only"
+                                                    title="Optional: temporarily enable Remit for manual retry"
+                                                    aria-label="Reset Remit"
+                                                    onclick="enableOptionalRemit({{ $rider->id }}, @js($rider->name), 'remitted');event.stopPropagation()">
+                                                    <i class="fas fa-rotate-left"></i>
+                                                </button>
+                                            @endif
+                                        @elseif ($isBlocked)
+                                            <button class="rider-action-btn blocked-btn" data-role="remit" disabled
+                                                title="Rider did not remit yesterday">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                                <span>Remit</span>
+                                            </button>
+                                            @if ($canUseOptionalRemitReset)
+                                                <button class="rider-action-btn reset-remit-btn icon-only"
+                                                    title="Optional: temporarily enable Remit for manual retry"
+                                                    aria-label="Reset Remit"
+                                                    onclick="enableOptionalRemit({{ $rider->id }}, @js($rider->name), 'blocked');event.stopPropagation()">
+                                                    <i class="fas fa-rotate-left"></i>
+                                                </button>
+                                            @endif
                                         @else
-                                            <button class="rider-action-btn"
-                                                onclick="openRemitModal({{ $rider->id }}, '{{ $rider->name }}');event.stopPropagation()">
+                                            <button class="rider-action-btn" data-role="remit"
+                                                onclick="openRemitModal({{ $rider->id }}, @js($rider->name));event.stopPropagation()">
                                                 <i class="fas fa-money-bill-wave"></i>
                                                 <span>Remit</span>
                                             </button>
                                         @endif
                                         <button class="rider-action-btn records-btn"
-                                            onclick="openRiderRecordsModal({{ $rider->id }}, '{{ $rider->name }}');event.stopPropagation()">
+                                            onclick="openRiderRecordsModal({{ $rider->id }}, @js($rider->name));event.stopPropagation()">
                                             <i class="fas fa-history"></i>
                                             <span>Records</span>
                                         </button>
                                     </div>
-                                    @if ($isBlocked)
+                                    @if($isAlreadyRemitted)
+                                        <div class="rider-blocked-notice" style="background: #e9f7ef; border-color: #b8e0c3; color: #1f6b3d;">
+                                            <i class="fas fa-check-circle"></i>
+                                            This rider is fully remitted for the selected date.
+                                        </div>
+                                    @elseif ($isBlocked)
                                         <div class="rider-blocked-notice">
                                             <i class="fas fa-exclamation-triangle"></i>
                                             This rider did not remit yesterday. Please settle before proceeding.
@@ -1986,11 +2126,6 @@
                                                     Unremitted for: {{ $blockedOverdueDuration }} (as of {{ $blockedOverdueAsOfDate ?? $statsDateParsed }})
                                                 </div>
                                             @endif
-                                        </div>
-                                    @elseif($isAlreadyRemitted)
-                                        <div class="rider-blocked-notice" style="background: #e9f7ef; border-color: #b8e0c3; color: #1f6b3d;">
-                                            <i class="fas fa-check-circle"></i>
-                                            This rider is fully remitted for the selected date.
                                         </div>
                                     @endif
                                 </div>
@@ -2250,6 +2385,32 @@
                             border-color: #9dc183 !important;
                         }
 
+                        .form-input-readonly-warning {
+                            background: #fff5f5 !important;
+                            color: #991b1b !important;
+                            border-color: #f5a8a8 !important;
+                        }
+
+                        .base-salary-status {
+                            grid-column: 2;
+                            margin-top: -10px;
+                            margin-bottom: 4px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            color: #6b7280;
+                            display: none;
+                        }
+
+                        .base-salary-status.is-warning {
+                            display: block;
+                            color: #b91c1c;
+                        }
+
+                        .base-salary-status.is-success {
+                            display: block;
+                            color: #166534;
+                        }
+
                         .adda-df-container {
                             display: flex;
                             flex-direction: column;
@@ -2408,9 +2569,319 @@
                             font-size: 14px;
                         }
 
+                        .payroll-deductions-modal-overlay {
+                            display: none;
+                            position: fixed;
+                            inset: 0;
+                            background: rgba(15, 23, 42, 0.58);
+                            z-index: 9999;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 14px;
+                        }
+
+                        .payroll-deductions-modal {
+                            background: #fff;
+                            border-radius: 16px;
+                            width: min(620px, 96vw);
+                            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+                            overflow: hidden;
+                            max-height: 92vh;
+                            display: flex;
+                            flex-direction: column;
+                        }
+
+                        .payroll-deductions-modal-header {
+                            background: linear-gradient(135deg, #2d5f0e 0%, #5a7d35 100%);
+                            color: #fff;
+                            padding: 18px 24px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                        }
+
+                        .payroll-deductions-modal-title-wrap {
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+                        }
+
+                        .payroll-deductions-modal-icon {
+                            width: 42px;
+                            height: 42px;
+                            border-radius: 12px;
+                            background: rgba(255, 255, 255, 0.16);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 18px;
+                            flex-shrink: 0;
+                        }
+
+                        .payroll-deductions-modal-title {
+                            font-size: 28px;
+                            font-weight: 800;
+                            line-height: 1;
+                            letter-spacing: 0.2px;
+                        }
+
+                        .payroll-deductions-modal-subtitle {
+                            margin-top: 4px;
+                            font-size: 12px;
+                            opacity: 0.86;
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                            flex-wrap: wrap;
+                        }
+
+                        .payroll-deductions-modal-close {
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            border: none;
+                            background: rgba(255, 255, 255, 0.2);
+                            color: #fff;
+                            font-size: 20px;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            transition: background 0.2s;
+                        }
+
+                        .payroll-deductions-modal-close:hover {
+                            background: rgba(255, 255, 255, 0.33);
+                        }
+
+                        .payroll-deductions-colhead {
+                            display: grid;
+                            grid-template-columns: 1.45fr 0.95fr 42px;
+                            gap: 8px;
+                            padding: 10px 22px 7px;
+                            background: #f5f9f2;
+                            border-bottom: 1px solid #e2ead9;
+                        }
+
+                        .payroll-deductions-colhead-label {
+                            font-size: 11px;
+                            font-weight: 700;
+                            color: #436026;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        }
+
+                        .payroll-deductions-modal-body {
+                            padding: 14px 22px 16px;
+                            overflow-y: auto;
+                            flex: 1;
+                            background: linear-gradient(180deg, #ffffff 0%, #fbfdf9 100%);
+                        }
+
+                        .payroll-deduction-rows {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 10px;
+                        }
+
+                        .payroll-deduction-row {
+                            display: grid;
+                            grid-template-columns: 1.45fr 0.95fr 42px;
+                            gap: 8px;
+                            align-items: center;
+                        }
+
+                        .payroll-deduction-reason {
+                            width: 100%;
+                            font-size: 14px;
+                            padding: 10px 12px;
+                            border-radius: 9px;
+                            border: 1.5px solid #d1d5db;
+                            background: #fff;
+                            box-sizing: border-box;
+                            transition: border-color 0.2s, box-shadow 0.2s;
+                        }
+
+                        .payroll-deduction-reason:focus {
+                            outline: none;
+                            border-color: #436026;
+                            box-shadow: 0 0 0 3px rgba(67, 96, 38, 0.14);
+                        }
+
+                        .payroll-deduction-amount {
+                            width: 100%;
+                            font-size: 14px;
+                            padding: 10px 12px;
+                            border-radius: 9px;
+                            border: 1.5px solid #d1d5db;
+                            background: #fff;
+                            box-sizing: border-box;
+                            transition: border-color 0.2s, box-shadow 0.2s;
+                        }
+
+                        .payroll-deduction-amount:focus {
+                            outline: none;
+                            border-color: #436026;
+                            box-shadow: 0 0 0 3px rgba(67, 96, 38, 0.14);
+                        }
+
+                        .payroll-deduction-remove {
+                            width: 42px;
+                            height: 42px;
+                            background: #fee2e2;
+                            color: #dc3545;
+                            border: 1.5px solid #fca5a5;
+                            border-radius: 9px;
+                            font-size: 13px;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            transition: background 0.2s;
+                        }
+
+                        .payroll-deduction-remove:hover {
+                            background: #fecaca;
+                        }
+
+                        .payroll-deduction-add-btn {
+                            margin-top: 12px;
+                            width: 100%;
+                            background: #f0f7eb;
+                            color: #436026;
+                            border: 1.5px dashed #aacb87;
+                            border-radius: 9px;
+                            padding: 10px 14px;
+                            font-size: 14px;
+                            font-weight: 700;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 7px;
+                            transition: background 0.2s;
+                        }
+
+                        .payroll-deduction-add-btn:hover {
+                            background: #e3f0d8;
+                        }
+
+                        .payroll-deductions-modal-footer {
+                            padding: 14px 22px;
+                            background: #f9fafb;
+                            border-top: 1px solid #e5e7eb;
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            gap: 12px;
+                        }
+
+                        .payroll-deductions-total-label {
+                            font-size: 13px;
+                            color: #6c757d;
+                            font-weight: 600;
+                        }
+
+                        .payroll-deductions-total-amount {
+                            font-size: 24px;
+                            font-weight: 800;
+                            color: #dc3545;
+                            line-height: 1;
+                        }
+
+                        .payroll-deductions-actions {
+                            display: flex;
+                            gap: 10px;
+                            align-items: center;
+                        }
+
+                        .payroll-deductions-cancel-btn {
+                            padding: 10px 22px;
+                            border: 1.5px solid #d1d5db;
+                            border-radius: 10px;
+                            background: #fff;
+                            color: #6c757d;
+                            font-size: 13px;
+                            font-weight: 700;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        }
+
+                        .payroll-deductions-cancel-btn:hover {
+                            border-color: #9ca3af;
+                            color: #374151;
+                        }
+
+                        .payroll-deductions-submit-btn {
+                            padding: 10px 24px;
+                            border: none;
+                            border-radius: 10px;
+                            background: linear-gradient(135deg, #436026, #5a7d35);
+                            color: #fff;
+                            font-size: 13px;
+                            font-weight: 700;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            box-shadow: 0 2px 8px rgba(67, 96, 38, 0.3);
+                            transition: opacity 0.2s;
+                        }
+
+                        .payroll-deductions-submit-btn:hover {
+                            opacity: 0.92;
+                        }
+
                         @media (max-width: 768px) {
                             .payroll-sections-grid {
                                 grid-template-columns: 1fr;
+                            }
+
+                            .payroll-deductions-modal-overlay {
+                                padding: 10px;
+                            }
+
+                            .payroll-deductions-modal {
+                                width: 100%;
+                                max-height: calc(100vh - 20px);
+                                border-radius: 14px;
+                            }
+
+                            .payroll-deductions-modal-header {
+                                padding: 14px 16px;
+                            }
+
+                            .payroll-deductions-modal-title {
+                                font-size: 22px;
+                            }
+
+                            .payroll-deductions-modal-subtitle {
+                                font-size: 11px;
+                            }
+
+                            .payroll-deductions-colhead {
+                                padding: 9px 14px 6px;
+                            }
+
+                            .payroll-deductions-modal-body {
+                                padding: 12px 14px 14px;
+                            }
+
+                            .payroll-deductions-modal-footer {
+                                padding: 12px 14px;
+                                flex-direction: column;
+                                align-items: stretch;
+                                gap: 10px;
+                            }
+
+                            .payroll-deductions-actions {
+                                width: 100%;
+                            }
+
+                            .payroll-deductions-cancel-btn,
+                            .payroll-deductions-submit-btn {
+                                flex: 1;
+                                justify-content: center;
                             }
 
                             .payroll-section-full > div > div[style*="grid-template-columns"] {
@@ -2442,6 +2913,81 @@
                             .adda-df-amount,
                             .adda-df-date {
                                 min-width: calc(50% - 5px);
+                            }
+                        }
+
+                        @media (max-width: 420px) {
+                            .payroll-deductions-modal-overlay {
+                                padding: 0;
+                            }
+
+                            .payroll-deductions-modal {
+                                border-radius: 0;
+                                max-height: 100vh;
+                                min-height: 100vh;
+                            }
+
+                            .payroll-deductions-modal-header {
+                                padding: 12px 12px;
+                            }
+
+                            .payroll-deductions-modal-title {
+                                font-size: 20px;
+                            }
+
+                            .payroll-deductions-modal-icon {
+                                width: 36px;
+                                height: 36px;
+                                border-radius: 10px;
+                                font-size: 16px;
+                            }
+
+                            .payroll-deductions-modal-close {
+                                width: 32px;
+                                height: 32px;
+                            }
+
+                            .payroll-deductions-colhead {
+                                padding: 8px 12px 6px;
+                            }
+
+                            .payroll-deductions-modal-body {
+                                padding: 10px 12px 12px;
+                            }
+
+                            .payroll-deduction-row {
+                                grid-template-columns: 1.4fr 0.9fr 38px;
+                                gap: 6px;
+                            }
+
+                            .payroll-deduction-reason,
+                            .payroll-deduction-amount {
+                                font-size: 13px;
+                                padding: 9px 10px;
+                            }
+
+                            .payroll-deduction-remove {
+                                width: 38px;
+                                height: 38px;
+                                border-radius: 8px;
+                            }
+
+                            .payroll-deductions-modal-footer {
+                                padding: 10px 12px;
+                            }
+
+                            .payroll-deductions-actions {
+                                flex-direction: column;
+                                gap: 8px;
+                            }
+
+                            .payroll-deductions-cancel-btn,
+                            .payroll-deductions-submit-btn {
+                                width: 100%;
+                            }
+
+                            .payroll-deductions-total-amount {
+                                font-size: 21px;
                             }
                         }
                     </style>
@@ -2525,6 +3071,7 @@
                                         <label class="form-label">Base Salary:</label>
                                         <input type="number" name="base_salary" class="form-input form-input-readonly-highlight" step="0.01"  readonly>
                                     </div>
+                                    <div id="baseSalaryStatus" class="base-salary-status"></div>
                                     <div class="form-row">
                                         <label class="form-label">Incentives (Optional):</label>
                                         <input type="number" name="incentives" class="form-input" step="0.01" placeholder="Enter incentives">
@@ -2576,96 +3123,75 @@
                         </form>
 
                         {{-- Payroll Deductions Modal --}}
-                        <div id="payrollDeductionsModal"
-                            style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;">
-                            <div
-                                style="background:#fff; border-radius:16px; padding:0; max-width:600px; width:96%; box-shadow:0 16px 60px rgba(0,0,0,0.25); overflow:hidden; max-height:92vh; display:flex; flex-direction:column;">
+                        <div id="payrollDeductionsModal" class="payroll-deductions-modal-overlay">
+                            <div class="payroll-deductions-modal">
 
                                 {{-- Header --}}
-                                <div
-                                    style="background:linear-gradient(135deg,#2d5f0e 0%,#5a7d35 100%); color:#fff; padding:20px 26px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
-                                    <div style="display:flex; align-items:center; gap:14px;">
-                                        <div
-                                            style="width:44px; height:44px; border-radius:12px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">
+                                <div class="payroll-deductions-modal-header">
+                                    <div class="payroll-deductions-modal-title-wrap">
+                                        <div class="payroll-deductions-modal-icon">
                                             <i class="fas fa-receipt"></i>
                                         </div>
                                         <div>
-                                            <div style="font-size:17px; font-weight:800; letter-spacing:0.2px;">
+                                            <div class="payroll-deductions-modal-title">
                                                 Deductions</div>
-                                            <div
-                                                style="font-size:12px; opacity:0.8; margin-top:2px; display:flex; align-items:center; gap:5px;">
+                                            <div class="payroll-deductions-modal-subtitle">
                                                 <i class="fas fa-user" style="font-size:10px;"></i>
                                                 <span id="payrollDeductionRiderName" style="font-weight:600;"></span>
                                                 <span style="opacity:0.6; margin:0 4px;">·</span>
-                                                <span style="opacity:0.75;">Optional — leave empty to skip</span>
+                                                <span style="opacity:0.78;">Optional — leave empty to skip</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <button type="button" onclick="closePayrollDeductionsModal()"
-                                        style="background:rgba(255,255,255,0.18); border:none; color:#fff; width:34px; height:34px; border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; transition:background 0.2s;"
-                                        onmouseover="this.style.background='rgba(255,255,255,0.3)'"
-                                        onmouseout="this.style.background='rgba(255,255,255,0.18)'">&times;</button>
+                                    <button type="button" class="payroll-deductions-modal-close" onclick="closePayrollDeductionsModal()">&times;</button>
                                 </div>
 
                                 {{-- Column Headers --}}
-                                <div
-                                    style="display:grid; grid-template-columns:140px 36px; gap:8px; padding:10px 22px 6px; background:#f5f9f2; border-bottom:1px solid #e2ead9; flex-shrink:0;">
-                                    <div
-                                        style="font-size:11px; font-weight:700; color:#436026; text-transform:uppercase; letter-spacing:0.5px;">
+                                <div class="payroll-deductions-colhead">
+                                    <div class="payroll-deductions-colhead-label">
+                                        Reason</div>
+                                    <div class="payroll-deductions-colhead-label">
                                         Amount (₱)</div>
                                     <div></div>
                                 </div>
 
                                 {{-- Rows --}}
-                                <div style="padding:14px 22px; overflow-y:auto; flex:1;">
-                                    <div id="payrollDeductionRows"
-                                        style="display:flex; flex-direction:column; gap:8px;">
-                                        <div class="payroll-deduction-row"
-                                            style="display:grid; grid-template-columns:140px 36px; gap:8px; align-items:center; justify-content:flex-end;">
-                                            <input type="number" class="pd-amount" step="0.01" min="0.01"
-                                                placeholder="0.00"
-                                                style="width:100%; font-size:13px; padding:9px 12px; border-radius:8px; border:1.5px solid #d1d5db; background:#fff; box-sizing:border-box; transition:border-color 0.2s;"
-                                                onfocus="this.style.borderColor='#436026'"
-                                                onblur="this.style.borderColor='#d1d5db'"
-                                                oninput="updatePayrollDeductionTotal()">
-                                            <button type="button" class="pd-remove-btn"
-                                                onclick="removePayrollDeductionRow(this)"
-                                                style="width:36px; height:36px; background:#fee2e2; color:#dc3545; border:1.5px solid #fca5a5; border-radius:8px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; visibility:hidden; transition:background 0.2s;"
-                                                onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
+                                <div class="payroll-deductions-modal-body">
+                                    <div id="payrollDeductionRows" class="payroll-deduction-rows">
+                                        <div class="payroll-deduction-row">
+                                            <input type="text" class="pd-reason payroll-deduction-reason" maxlength="255"
+                                                placeholder="Enter reason">
+                                            <input type="number" class="pd-amount payroll-deduction-amount" step="0.01" min="0.01"
+                                                placeholder="0.00" oninput="updatePayrollDeductionTotal()">
+                                            <button type="button" class="pd-remove-btn payroll-deduction-remove"
+                                                onclick="removePayrollDeductionRow(this)" style="visibility:hidden;">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </div>
                                     </div>
 
                                     <button type="button" onclick="addPayrollDeductionRow()"
-                                        style="margin-top:12px; background:#f0f7eb; color:#436026; border:1.5px dashed #aacb87; border-radius:8px; padding:9px 18px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:7px; width:100%; justify-content:center; transition:background 0.2s;"
-                                        onmouseover="this.style.background='#e3f0d8'"
-                                        onmouseout="this.style.background='#f0f7eb'">
+                                        class="payroll-deduction-add-btn">
                                         <i class="fas fa-plus-circle"></i> Add Another Row
                                     </button>
                                 </div>
 
                                 {{-- Footer --}}
-                                <div
-                                    style="padding:14px 22px; background:#f9fafb; border-top:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
-                                    <div style="display:flex; align-items:center; gap:8px;">
-                                        <span style="font-size:12px; color:#6c757d; font-weight:500;">Total
+                                <div class="payroll-deductions-modal-footer">
+                                    <div>
+                                        <span class="payroll-deductions-total-label">Total
                                             Deductions:</span>
                                         <span id="payrollDeductionTotal"
-                                            style="font-size:15px; font-weight:800; color:#dc3545;">₱0.00</span>
+                                            class="payroll-deductions-total-amount">₱0.00</span>
                                     </div>
-                                    <div style="display:flex; gap:10px;">
+                                    <div class="payroll-deductions-actions">
                                         <button type="button" onclick="closePayrollDeductionsModal()"
-                                            style="padding:10px 22px; border:1.5px solid #d1d5db; border-radius:8px; background:#fff; color:#6c757d; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;"
-                                            onmouseover="this.style.borderColor='#9ca3af';this.style.color='#374151'"
-                                            onmouseout="this.style.borderColor='#d1d5db';this.style.color='#6c757d'">
+                                            class="payroll-deductions-cancel-btn">
                                             Cancel
                                         </button>
                                         <button type="button" id="payrollDeductionConfirmBtn"
                                             onclick="submitPayrollWithDeductions()"
-                                            style="padding:10px 24px; border:none; border-radius:8px; background:linear-gradient(135deg,#436026,#5a7d35); color:#fff; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 2px 8px rgba(67,96,38,0.3); transition:opacity 0.2s;"
-                                            onmouseover="this.style.opacity='0.9'"
-                                            onmouseout="this.style.opacity='1'">
+                                            class="payroll-deductions-submit-btn">
                                             <i class="fas fa-check"></i> Submit
                                         </button>
                                     </div>
@@ -2790,24 +3316,49 @@
                         const baseSalaryInput = payrollForm.querySelector('[name="base_salary"]');
                         if (!baseSalaryInput) return 0;
 
+                        const setBaseSalaryStatus = (message, type = '') => {
+                            const statusEl = document.getElementById('baseSalaryStatus');
+                            baseSalaryInput.classList.remove('form-input-readonly-warning');
+
+                            if (type === 'warning') {
+                                baseSalaryInput.classList.add('form-input-readonly-warning');
+                            }
+
+                            if (!statusEl) return;
+
+                            statusEl.classList.remove('is-warning', 'is-success');
+                            statusEl.textContent = message || '';
+
+                            if (type === 'warning') {
+                                statusEl.classList.add('is-warning');
+                            } else if (type === 'success') {
+                                statusEl.classList.add('is-success');
+                            }
+                        };
+
                         if (!selectedSchedule) {
                             baseSalaryInput.value = '';
                             baseSalaryInput.placeholder = 'Select salary schedule first';
+                            setBaseSalaryStatus('');
                             return 0;
                         }
 
                         const riderKey = String(riderId || '').trim();
 
+                        const clearBaseSalary = () => {
+                            baseSalaryInput.value = '';
+                            baseSalaryInput.placeholder = `No remittance found for ${selectedSchedule}`;
+                            setBaseSalaryStatus(`No remittance matched ${selectedSchedule}. Base and net salary stay blank.`, 'warning');
+                            return 0;
+                        };
+
                         const applyBaseSalary = (amount) => {
                             const baseSalary = Number.isFinite(amount) ? amount : 0;
                             baseSalaryInput.value = baseSalary.toFixed(2);
                             baseSalaryInput.placeholder = `₱${baseSalary.toFixed(2)} (${selectedSchedule})`;
+                            setBaseSalaryStatus('Auto-calculated from matched remittance entries.', 'success');
                             return baseSalary;
                         };
-
-                        // Fast fallback while async weekly/schedule remittances are loading
-                        const fallbackAmount = parseFloat(riderDeliveryChargesMap[riderKey] || 0);
-                        applyBaseSalary(fallbackAmount);
 
                         getPayrollRemittancesByRider(riderKey)
                             .then(remittances => {
@@ -2818,15 +3369,21 @@
                                 }
 
                                 const scheduleAmount = sumDeliveryFeeBySchedule(remittances, selectedSchedule);
-                                applyBaseSalary(scheduleAmount);
+                                if (scheduleAmount > 0) {
+                                    applyBaseSalary(scheduleAmount);
+                                } else {
+                                    clearBaseSalary();
+                                }
                                 calculateAndPopulateNetSalary();
                             })
                             .catch(() => {
-                                // Keep fallback amount if fetch fails.
+                                clearBaseSalary();
+                                calculateAndPopulateNetSalary();
                             });
 
+                        clearBaseSalary();
                         calculateAndPopulateNetSalary();
-                        return fallbackAmount;
+                        return 0;
                     }
 
                     function calculateAndPopulateNetSalary() {
@@ -3185,7 +3742,7 @@
                             return 'You can only select Friday, Saturday, or Sunday within the schedule period';
                         }
                         if (schedule === 'Mon-Sun/Monday payout') {
-                            return 'You can select any day except Monday within the schedule period';
+                            return 'You can select Monday through Sunday within the schedule period';
                         }
                         if (schedule === 'Cut off payout') {
                             return 'You can select any day except the 15th and last day within the cutoff period';
@@ -3201,7 +3758,7 @@
                             return 'Only Friday, Saturday, and Sunday within the selected payroll week are allowed';
                         }
                         if (schedule === 'Mon-Sun/Monday payout') {
-                            return 'Any day except Monday within the selected payroll week is allowed';
+                            return 'Any day from Monday through Sunday within the selected payroll week is allowed';
                         }
                         if (schedule === 'Cut off payout') {
                             return 'Date must be inside the current cutoff period and cannot be the 15th or last day';
@@ -3257,9 +3814,9 @@
                         }
                         
                         // Mon-Sun/Monday payout: Work period is Mon-Sun, payout is following Mon
-                        // Allow any day except Monday (1)
+                        // Allow all days in the schedule period.
                         if (schedule === 'Mon-Sun/Monday payout') {
-                            return dayOfWeek !== 1; // Any day except Monday
+                            return dayOfWeek >= 0 && dayOfWeek <= 6;
                         }
                         
                         // Cut off payout: Allow any day except 15th and last day of month
@@ -3581,8 +4138,10 @@
                         confirmBtn.innerHTML = '<i class="fas fa-check"></i> Submit';
 
                         document.getElementById('payrollDeductionsModal').style.display = 'flex';
-                        setTimeout(() => rowsContainer.querySelector('.pd-remarks') && rowsContainer.querySelector('.pd-remarks')
-                            .focus(), 80);
+                        setTimeout(() => {
+                            const reasonInput = rowsContainer.querySelector('.pd-reason');
+                            if (reasonInput) reasonInput.focus();
+                        }, 80);
                     }
 
                     function closePayrollDeductionsModal() {
@@ -3590,13 +4149,12 @@
                     }
 
                     function buildDeductionRowHtml(showRemove) {
-                        return `<div class="payroll-deduction-row" style="display:grid; grid-template-columns:140px 36px; gap:8px; align-items:center; justify-content:flex-end;">
-                                <input type="number" class="pd-amount" step="0.01" min="0.01" placeholder="0.00"
-                                    style="width:100%; font-size:13px; padding:9px 12px; border-radius:8px; border:1.5px solid #d1d5db; background:#fff; box-sizing:border-box; transition:border-color 0.2s;"
-                                    onfocus="this.style.borderColor='#436026'" onblur="this.style.borderColor='#d1d5db'" oninput="updatePayrollDeductionTotal()">
-                                <button type="button" class="pd-remove-btn" onclick="removePayrollDeductionRow(this)"
-                                    style="width:36px; height:36px; background:#fee2e2; color:#dc3545; border:1.5px solid #fca5a5; border-radius:8px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; visibility:${showRemove ? 'visible' : 'hidden'}; transition:background 0.2s;"
-                                    onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
+                        return `<div class="payroll-deduction-row">
+                                <input type="text" class="pd-reason payroll-deduction-reason" maxlength="255" placeholder="Enter reason">
+                                <input type="number" class="pd-amount payroll-deduction-amount" step="0.01" min="0.01" placeholder="0.00"
+                                    oninput="updatePayrollDeductionTotal()">
+                                <button type="button" class="pd-remove-btn payroll-deduction-remove" onclick="removePayrollDeductionRow(this)"
+                                    style="visibility:${showRemove ? 'visible' : 'hidden'};">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>`;
@@ -3606,14 +4164,15 @@
                         const container = document.getElementById('payrollDeductionRows');
                         container.insertAdjacentHTML('beforeend', buildDeductionRowHtml(true));
                         updatePayrollDeductionRemoveButtons();
-                        container.lastElementChild.querySelector('.pd-remarks').focus();
+                        const reasonInput = container.lastElementChild.querySelector('.pd-reason');
+                        if (reasonInput) reasonInput.focus();
                     }
 
                     function removePayrollDeductionRow(btn) {
                         const rows = document.querySelectorAll('#payrollDeductionRows .payroll-deduction-row');
                         if (rows.length <= 1) {
                             const row = btn.closest('.payroll-deduction-row');
-                            row.querySelector('.pd-remarks').value = '';
+                            row.querySelector('.pd-reason').value = '';
                             row.querySelector('.pd-amount').value = '';
                         } else {
                             btn.closest('.payroll-deduction-row').remove();
@@ -3649,15 +4208,29 @@
                         const rows = document.querySelectorAll('#payrollDeductionRows .payroll-deduction-row');
                         const deductions = [];
                         for (const row of rows) {
+                            const reasonRaw = (row.querySelector('.pd-reason').value || '').trim();
                             const amountRaw = (row.querySelector('.pd-amount').value || '').trim();
-                            if (!amountRaw) continue; // skip empty rows
+
+                            // Skip completely empty rows
+                            if (!reasonRaw && !amountRaw) continue;
+
+                            if (reasonRaw && !amountRaw) {
+                                showToast('Please enter deduction amount for each provided reason', 'warning');
+                                return;
+                            }
+
+                            if (amountRaw && !reasonRaw) {
+                                showToast('Please enter deduction reason for each amount', 'warning');
+                                return;
+                            }
+
                             const amount = parseFloat(amountRaw);
                             if (isNaN(amount) || amount <= 0) {
                                 showToast('Deduction amount must be greater than 0', 'warning');
                                 return;
                             }
                             deductions.push({
-                                remarks: '', // description removed; send empty remarks
+                                remarks: reasonRaw,
                                 amount
                             });
                         }
@@ -3708,11 +4281,18 @@
                                 const today = new Date().toISOString().split('T')[0];
                                 let dSaved = 0,
                                     dFailed = 0;
-                                for (const d of deductions) {
+                                for (let index = 0; index < deductions.length; index++) {
+                                    const d = deductions[index];
                                     try {
                                         const fd = new FormData();
                                         fd.append('rider_id', riderId);
                                         fd.append('rider_name', riderName);
+                                        if (payrollId) {
+                                            fd.append('payroll_id', payrollId);
+                                            if (index === 0) {
+                                                fd.append('replace_existing', '1');
+                                            }
+                                        }
                                         fd.append('remarks', d.remarks);
                                         fd.append('amount', d.amount);
                                         fd.append('date', today);
@@ -4969,6 +5549,19 @@
                         </div>
                     </div>
 
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label for="grandTotal"><i class="fas fa-calculator"></i> Grand Total</label>
+                            <input type="number" id="grandTotal" name="grand_total" placeholder="0.00"
+                                step="0.01" min="0" readonly
+                                style="background: #f0f9f4; color: #2d4016; font-weight: 700; cursor: not-allowed; border-color: #9dc183;">
+                            <small style="color: #6c757d; font-size: 12px; display: block; margin-top: 5px;">
+                                Computed as Total Remit + Total Delivery Fee + Total Tips.
+                            </small>
+                        </div>
+                        <div></div>
+                    </div>
+
                     <!-- Payment Breakdown by Mode -->
                     <div id="paymentBreakdownSection" style="display: none; margin-bottom: 20px; padding: 16px; background: #f8faf7; border: 1.5px solid #d6eacc; border-radius: 10px;">
                         <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #2d4016;">
@@ -5408,6 +6001,8 @@
             const totalRemitEl = document.getElementById('totalRemit');
             totalRemitEl.value = ((parseFloat(totalRemitEl.value) || 0) + totalRemit).toFixed(2);
 
+            updateGrandTotalField();
+
             syncManganEntriesJson();
             renderManganEntries();
 
@@ -5446,6 +6041,8 @@
 
             const totalRemitEl = document.getElementById('totalRemit');
             totalRemitEl.value = Math.max(0, (parseFloat(totalRemitEl.value) || 0) - (entry.totalRemit || 0)).toFixed(2);
+
+            updateGrandTotalField();
 
             syncManganEntriesJson();
             renderManganEntries();
@@ -5801,44 +6398,43 @@
             };
 
             const detailRows = [];
-            breakdown.forEach(item => {
+            const latestFirstEntries = buildLatestFirstOrderEntries(breakdown);
+            latestFirstEntries.forEach((entry, index) => {
+                const item = entry.item || {};
+                const order = entry.order || {};
                 const merchantName = item?.merchant_name || 'Unknown Merchant';
-                const orders = Array.isArray(item?.orders) ? item.orders : [];
+                const totalAmount = Number(order?.total_collection || 0);
+                const deliveryFee = Number(order?.delivery_fee || 0);
+                const gtReceipt = Number(order?.gt_grumpy_receipt || 0);
+                const merchantValues = computeDetailedMerchantValues(
+                    merchantName,
+                    totalAmount,
+                    deliveryFee,
+                    gtReceipt,
+                    Number(order?.receipt_non_partners || 0),
+                    order?.merchant_type || item?.merchant_type || '',
+                    order?.commission_type || item?.commission_type || '',
+                    Number(order?.commission_rate || item?.commission_rate || 0),
+                    order?.payment_type || payload?.mode_of_payment || '',
+                    Number(order?.total_remit || 0),
+                    Number(order?.cf_amount || 0)
+                );
 
-                orders.forEach(order => {
-                    const totalAmount = Number(order?.total_collection || 0);
-                    const deliveryFee = Number(order?.delivery_fee || 0);
-                    const gtReceipt = Number(order?.gt_grumpy_receipt || 0);
-                    const merchantValues = computeDetailedMerchantValues(
-                        merchantName,
-                        totalAmount,
-                        deliveryFee,
-                        gtReceipt,
-                        Number(order?.receipt_non_partners || 0),
-                        order?.merchant_type || item?.merchant_type || '',
-                        order?.commission_type || item?.commission_type || '',
-                        Number(order?.commission_rate || item?.commission_rate || 0),
-                        order?.payment_type || payload?.mode_of_payment || '',
-                        Number(order?.total_remit || 0),
-                        Number(order?.cf_amount || 0)
-                    );
-
-                    detailRows.push({
-                        task_no: detailRows.length + 1,
-                        rider: riderName,
-                        mop: formatPaymentType(order?.payment_type, payload?.mode_of_payment || ''),
-                        ref_no: order?.order_id || '',
-                        merchant: merchantName,
-                        total_amount: totalAmount,
-                        df: deliveryFee,
-                        gt_grumpy_receipt: gtReceipt,
-                        tip: Number(order?.tip_amount || 0),
-                        receipt_non_partners: Number(order?.receipt_non_partners || 0),
-                        total_remit: merchantValues.totalRemit,
-                        cf: merchantValues.cf,
-                        estimate_sales_admin_fee: merchantValues.estimateSalesAdminFee,
-                        remarks: ''
-                    });
+                detailRows.push({
+                    task_no: index + 1,
+                    rider: riderName,
+                    mop: formatPaymentType(order?.payment_type, payload?.mode_of_payment || ''),
+                    ref_no: order?.order_id || '',
+                    merchant: merchantName,
+                    total_amount: totalAmount,
+                    df: deliveryFee,
+                    gt_grumpy_receipt: gtReceipt,
+                    tip: Number(order?.tip_amount || 0),
+                    receipt_non_partners: Number(order?.receipt_non_partners || 0),
+                    total_remit: merchantValues.totalRemit,
+                    cf: merchantValues.cf,
+                    estimate_sales_admin_fee: merchantValues.estimateSalesAdminFee,
+                    remarks: ''
                 });
             });
 
@@ -5867,18 +6463,18 @@
             const rowsHtml = detailRows.map((row, index) => `
                 <tr style="${index % 2 === 0 ? 'background:#fff;' : 'background:#f7fbf4;'} border-bottom:1px solid #e5eee0; transition: background 0.2s ease;">
                     <td data-label="# of Task" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; font-weight:600; color:#436026;">${row.task_no}</td>
-                    <td data-label="Rider" style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#374151;">${escapeHtml(row.rider)}</td>
+                    <td data-label="Rider" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.3;">${escapeHtml(row.rider)}</td>
                     <td data-label="MOP" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.mop || '-')}</td>
                     <td data-label="REF #" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#0d6efd; font-weight:600;">${escapeHtml(row.ref_no || '-')}</td>
-                    <td data-label="Merchant" style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.merchant)}</td>
-                    <td data-label="Total Amount" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.total_amount.toFixed(2)}</td>
-                    <td data-label="DF" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.df.toFixed(2)}</td>
-                    <td data-label="GT / Grumpy Receipt" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.gt_grumpy_receipt.toFixed(2)}</td>
-                    <td data-label="Tip" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.tip.toFixed(2)}</td>
-                    <td data-label="Receipt (Non Partners)" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${Number(row.receipt_non_partners || 0).toFixed(2)}</td>
-                    <td data-label="Total Remit" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
-                    <td data-label="CF" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
-                    <td data-label="ESTIMATE SALES+ADMIN FEE" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
+                    <td data-label="Merchant" class="merchant-cell" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.35;">${escapeHtml(row.merchant)}</td>
+                    <td data-label="Total Amount" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#1f2937; font-weight:600;">₱${row.total_amount.toFixed(2)}</td>
+                    <td data-label="DF" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.df.toFixed(2)}</td>
+                    <td data-label="GT / Grumpy Receipt" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.gt_grumpy_receipt.toFixed(2)}</td>
+                    <td data-label="Tip" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.tip.toFixed(2)}</td>
+                    <td data-label="Receipt (Non Partners)" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${Number(row.receipt_non_partners || 0).toFixed(2)}</td>
+                    <td data-label="Total Remit" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
+                    <td data-label="CF" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
+                    <td data-label="ESTIMATE SALES+ADMIN FEE" style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
                     <!-- Remarks column removed -->
                 </tr>
             `).join('');
@@ -5893,26 +6489,30 @@
                         <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total DF</div><div style="font-size: 20px; font-weight: bold; color: #1f2937;">₱${totalDeliveryFee.toFixed(2)}</div></div>
                         <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total Tips</div><div style="font-size: 20px; font-weight: bold; color: #1f2937;">₱${totalTips.toFixed(2)}</div></div>
                         <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total Remit</div><div style="font-size: 20px; font-weight: bold; color: ${getRemitAmountColor(totalRemit)};">₱${totalRemit.toFixed(2)}</div></div>
+                        <div style="background: linear-gradient(135deg, #f0f7ed 0%, #e8f5e9 100%); border: 2px solid #9dc183; border-radius: 10px; padding: 10px 12px; box-shadow: 0 2px 8px rgba(67,96,38,0.12);">
+                            <div style="font-size: 12px; color: #436026; margin-bottom: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.35px;">Grand Total</div>
+                            <div style="font-size: 22px; font-weight: 800; color: #2d4016; line-height: 1.1;">₱${(totalRemit + totalDeliveryFee).toFixed(2)}</div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="rider-records-responsive-wrap" style="overflow:auto; max-height:500px; border: 1px solid #dce8d4; border-radius: 8px;">
-                    <table class="rider-records-responsive-table" style="width: 100%; border-collapse: collapse; background: white;">
+                    <table class="rider-records-responsive-table" style="width: 100%; min-width: 1500px; table-layout: fixed; border-collapse: collapse; background: white;">
                         <thead>
                             <tr style="background:#436026; color:white;">
                                 <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:60px; background:#436026;"># of Task</th>
-                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:110px; background:#436026;">Rider</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:110px; background:#436026;">Rider</th>
                                 <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:120px; background:#436026;">MOP</th>
                                 <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:80px; background:#436026;">REF #</th>
-                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:170px; background:#436026;">Merchant</th>
-                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#436026;">Total Amount</th>
-                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#436026;">DF</th>
-                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:100px; background:#436026;">GT / Grumpy Receipt</th>
-                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#436026;">Tip</th>
-                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:110px; background:#436026;">Receipt (Non Partners)</th>
-                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#436026;">Total Remit</th>
-                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#436026;">CF</th>
-                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:120px; background:#436026;">ESTIMATE SALES+ADMIN FEE</th>
+                                <th class="col-merchant" style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:260px; background:#436026;">Merchant</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:90px; background:#436026;">Total Amount</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:70px; background:#436026;">DF</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:100px; background:#436026;">GT / Grumpy Receipt</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:70px; background:#436026;">Tip</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:110px; background:#436026;">Receipt (Non Partners)</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:90px; background:#436026;">Total Remit</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:70px; background:#436026;">CF</th>
+                                <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:120px; background:#436026;">ESTIMATE SALES+ADMIN FEE</th>
                                 <!-- Remarks column removed -->
                             </tr>
                         </thead>
@@ -5998,8 +6598,16 @@
                             <div style="font-size: 20px; font-weight: bold; color: #28a745;">₱${totalRemit.toFixed(2)}</div>
                         </div>
                         <div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total Tips</div>
+                            <div style="font-size: 20px; font-weight: bold; color: #1f2937;">₱${totalTips.toFixed(2)}</div>
+                        </div>
+                        <div>
                             <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Total Collection</div>
                             <div style="font-size: 20px; font-weight: bold; color: #007bff;">₱${totalCollection.toFixed(2)}</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f0f7ed 0%, #e8f5e9 100%); border: 2px solid #9dc183; border-radius: 10px; padding: 10px 12px; box-shadow: 0 2px 8px rgba(67,96,38,0.12);">
+                            <div style="font-size: 12px; color: #436026; margin-bottom: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.35px;">Grand Total</div>
+                            <div style="font-size: 22px; font-weight: 800; color: #2d4016; line-height: 1.1;">₱${(totalRemit + totalDeliveryFee + totalTips).toFixed(2)}</div>
                         </div>
                     </div>
                 </div>
@@ -6290,6 +6898,15 @@
             const defaultCf = Number(fallbackCf || 0);
             const normalizedPaymentType = String(paymentType ?? '').trim().toUpperCase();
 
+            // If MOP is PYR or PAYMONGO_GCASH, the sheet total remit is the negative of DF + Receipt (Non Partners).
+            if (normalizedPaymentType === 'PYR' || normalizedPaymentType === 'PAYMONGO_GCASH') {
+                return {
+                    totalRemit: -(normalizedDeliveryFee + normalizedReceiptNonPartners),
+                    cf: defaultCf,
+                    estimateSalesAdminFee: normalizedTotalAmount - normalizedDeliveryFee - normalizedReceiptNonPartners,
+                };
+            }
+
             if (isVictoriaBakeryMagsaysayBranch(merchantName) && normalizedPaymentType === 'PYR') {
                 return {
                     totalRemit: defaultTotalRemit,
@@ -6499,6 +7116,54 @@
             };
         }
 
+        function getOrderRecencyValue(order) {
+            const dateCandidates = [
+                order?.task_created_at,
+                order?.created_at,
+                order?.date_created,
+                order?.updated_at,
+                order?.delivery_date,
+            ];
+
+            for (const value of dateCandidates) {
+                if (!value) continue;
+                const timestamp = Date.parse(String(value));
+                if (!Number.isNaN(timestamp)) {
+                    return timestamp;
+                }
+            }
+
+            const orderId = String(order?.order_id ?? '').trim();
+            const numericOrderId = Number.parseInt(orderId.replace(/\D/g, ''), 10);
+            return Number.isFinite(numericOrderId) ? numericOrderId : 0;
+        }
+
+        function buildLatestFirstOrderEntries(items) {
+            const entries = [];
+            let sequence = 0;
+
+            items.forEach(item => {
+                const orders = Array.isArray(item?.orders) ? item.orders : [];
+                orders.forEach(order => {
+                    entries.push({
+                        item,
+                        order,
+                        recency: getOrderRecencyValue(order),
+                        sequence: sequence++,
+                    });
+                });
+            });
+
+            entries.sort((a, b) => {
+                if (b.recency !== a.recency) {
+                    return b.recency - a.recency;
+                }
+                return a.sequence - b.sequence;
+            });
+
+            return entries;
+        }
+
         function renderTotalDeliveriesDetailedSheet(payload) {
             const container = document.getElementById('totalDeliveriesBreakdownBody');
             if (!container) {
@@ -6517,47 +7182,44 @@
 
             const riderName = document.getElementById('remitRiderName')?.value || 'N/A';
             const detailRows = [];
-            let taskCounter = 0;
+            const latestFirstEntries = buildLatestFirstOrderEntries(items);
 
-            items.forEach(item => {
+            latestFirstEntries.forEach((entry, index) => {
+                const item = entry.item || {};
+                const order = entry.order || {};
                 const merchantName = item?.merchant_name || 'Unknown Merchant';
-                const orders = Array.isArray(item?.orders) ? item.orders : [];
+                const totalAmount = Number(order?.total_collection || 0);
+                const deliveryFee = Number(order?.delivery_fee || 0);
+                const gtReceipt = Number(order?.gt_grumpy_receipt || 0);
+                const merchantValues = computeDetailedMerchantValues(
+                    merchantName,
+                    totalAmount,
+                    deliveryFee,
+                    gtReceipt,
+                    Number(order?.receipt_non_partners || 0),
+                    order?.merchant_type || item?.merchant_type || '',
+                    order?.commission_type || item?.commission_type || '',
+                    Number(order?.commission_rate || item?.commission_rate || 0),
+                    order?.payment_type || payload?.mode_of_payment || remittance?.mode_of_payment || '',
+                    Number(order?.total_remit || 0),
+                    Number(order?.cf_amount || 0)
+                );
 
-                orders.forEach(order => {
-                    taskCounter += 1;
-                    const totalAmount = Number(order?.total_collection || 0);
-                    const deliveryFee = Number(order?.delivery_fee || 0);
-                    const gtReceipt = Number(order?.gt_grumpy_receipt || 0);
-                    const merchantValues = computeDetailedMerchantValues(
-                        merchantName,
-                        totalAmount,
-                        deliveryFee,
-                        gtReceipt,
-                        Number(order?.receipt_non_partners || 0),
-                        order?.merchant_type || item?.merchant_type || '',
-                        order?.commission_type || item?.commission_type || '',
-                        Number(order?.commission_rate || item?.commission_rate || 0),
-                        order?.payment_type || payload?.mode_of_payment || remittance?.mode_of_payment || '',
-                        Number(order?.total_remit || 0),
-                        Number(order?.cf_amount || 0)
-                    );
-
-                    detailRows.push({
-                        task_no: taskCounter,
-                        rider: riderName,
-                        mop: formatPaymentType(order?.payment_type, ''),
-                        ref_no: order?.order_id || '',
-                        merchant: merchantName,
-                        total_amount: totalAmount,
-                        df: deliveryFee,
-                        gt_grumpy_receipt: gtReceipt,
-                        tip: Number(order?.tip_amount || 0),
-                        receipt_non_partners: Number(order?.receipt_non_partners || 0),
-                        total_remit: merchantValues.totalRemit,
-                        cf: merchantValues.cf,
-                        estimate_sales_admin_fee: merchantValues.estimateSalesAdminFee,
-                        remarks: ''
-                    });
+                detailRows.push({
+                    task_no: index + 1,
+                    rider: riderName,
+                    mop: formatPaymentType(order?.payment_type, ''),
+                    ref_no: order?.order_id || '',
+                    merchant: merchantName,
+                    total_amount: totalAmount,
+                    df: deliveryFee,
+                    gt_grumpy_receipt: gtReceipt,
+                    tip: Number(order?.tip_amount || 0),
+                    receipt_non_partners: Number(order?.receipt_non_partners || 0),
+                    total_remit: merchantValues.totalRemit,
+                    cf: merchantValues.cf,
+                    estimate_sales_admin_fee: merchantValues.estimateSalesAdminFee,
+                    remarks: ''
                 });
             });
 
@@ -6571,15 +7233,15 @@
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#374151;">${escapeHtml(row.rider)}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.mop || '-')}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#0d6efd; font-weight:600;">${escapeHtml(row.ref_no || '-')}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.merchant)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.total_amount.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.df.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.gt_grumpy_receipt.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.tip.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.receipt_non_partners.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151; white-space:normal; overflow-wrap:break-word; word-break:normal; line-height:1.25;">${escapeHtml(row.merchant)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#1f2937; font-weight:600;">₱${row.total_amount.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.df.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.gt_grumpy_receipt.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.tip.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.receipt_non_partners.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
                     <!-- Remarks column removed -->
                 </tr>
             `).join('') : `
@@ -6593,7 +7255,7 @@
                     <div style="padding:12px 14px; background:linear-gradient(135deg,#f0f7ed 0%,#f8fcf5 100%); border-bottom:1px solid #dce8d4; font-size:13px; font-weight:700; color:#2d4016;">
                         Detailed Breakdown (Sheet Format)
                     </div>
-                    <div style="display:grid; grid-template-columns: repeat(3, minmax(160px, 1fr)); gap:10px; padding:12px 14px; background:#f4faf0; border-bottom:1px solid #dce8d4;">
+                    <div style="display:grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap:10px; padding:12px 14px; background:#f4faf0; border-bottom:1px solid #dce8d4;">
                         <div style="background:#fff; border:1px solid #dce8d4; border-radius:8px; padding:10px 12px;">
                             <div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:0.35px;">Total Delivery Fee</div>
                             <div style="margin-top:4px; font-size:18px; font-weight:800; color:#1f2937;">₱${totalDeliveryFeeOverall.toFixed(2)}</div>
@@ -6606,6 +7268,10 @@
                             <div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:0.35px;">Total Remit</div>
                             <div style="margin-top:4px; font-size:18px; font-weight:800; color:${getRemitAmountColor(totalRemitOverall)};">₱${totalRemitOverall.toFixed(2)}</div>
                         </div>
+                        <div style="background:#fff; border:1px solid #dce8d4; border-radius:8px; padding:10px 12px; background: linear-gradient(135deg, #f0f7ed 0%, #e8f5e9 100%); border: 2px solid #9dc183;">
+                            <div style="font-size:11px; color:#436026; font-weight:700; text-transform:uppercase; letter-spacing:0.35px;">Grand Total</div>
+                            <div style="margin-top:4px; font-size:18px; font-weight:800; color:#2d4016;">₱${(totalRemitOverall + totalDeliveryFeeOverall).toFixed(2)}</div>
+                        </div>
                     </div>
                     <div class="sheet-breakdown-responsive-wrap" style="overflow:auto; max-height:500px; position:relative;">
                         <table class="sheet-breakdown-responsive-table" style="width:100%; border-collapse:collapse; table-layout:auto;">
@@ -6615,15 +7281,15 @@
                                     <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:110px; background:#e8dbc4;">Rider</th>
                                     <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:120px; background:#e8dbc4;">MOP</th>
                                     <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:80px; background:#e8dbc4;">REF #</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:170px; background:#e8dbc4;">Merchant</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Amount</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">DF</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:100px; background:#e8dbc4;">GT / Grumpy Receipt</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">Tip</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:110px; background:#e8dbc4;">Receipt (Non Partners)</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Remit</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">CF</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:120px; background:#e8dbc4;">ESTIMATE SALES+ADMIN FEE</th>
+                                    <th class="col-merchant" style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:220px; background:#e8dbc4;">Merchant</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Amount</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">DF</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:100px; background:#e8dbc4;">GT / Grumpy Receipt</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">Tip</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:110px; background:#e8dbc4;">Receipt (Non Partners)</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Remit</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">CF</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:120px; background:#e8dbc4;">ESTIMATE SALES+ADMIN FEE</th>
                                     <!-- Remarks column removed -->
                                 </tr>
                             </thead>
@@ -6873,49 +7539,43 @@
             }).join('');
 
             const detailRows = [];
-            let taskCounter = 0;
-            items.forEach(item => {
+            const latestFirstEntries = buildLatestFirstOrderEntries(items);
+            latestFirstEntries.forEach((entry, index) => {
+                const item = entry.item || {};
+                const order = entry.order || {};
                 const merchantName = item.merchant_name || 'Unknown Merchant';
-                const orders = Array.isArray(item.orders) ? item.orders : [];
-                if (!orders.length) {
-                    return;
-                }
+                const totalAmount = Number(order.total_collection || 0);
+                const deliveryFee = Number(order.delivery_fee || 0);
+                const gtReceipt = Number(order.gt_grumpy_receipt || 0);
+                const merchantValues = computeDetailedMerchantValues(
+                    merchantName,
+                    totalAmount,
+                    deliveryFee,
+                    gtReceipt,
+                    Number(order.receipt_non_partners || 0),
+                    order.merchant_type || item.merchant_type || '',
+                    order.commission_type || item.commission_type || '',
+                    Number(order.commission_rate || item.commission_rate || 0),
+                    order.payment_type || payload?.mode_of_payment || currentSelectedBreakdownRemittance?.mode_of_payment || '',
+                    Number(order.total_remit || 0),
+                    Number(order.cf_amount || 0)
+                );
 
-                orders.forEach(order => {
-                    taskCounter += 1;
-                    const totalAmount = Number(order.total_collection || 0);
-                    const deliveryFee = Number(order.delivery_fee || 0);
-                    const gtReceipt = Number(order.gt_grumpy_receipt || 0);
-                    const merchantValues = computeDetailedMerchantValues(
-                        merchantName,
-                        totalAmount,
-                        deliveryFee,
-                        gtReceipt,
-                        Number(order.receipt_non_partners || 0),
-                        order.merchant_type || item.merchant_type || '',
-                        order.commission_type || item.commission_type || '',
-                        Number(order.commission_rate || item.commission_rate || 0),
-                        order.payment_type || payload?.mode_of_payment || currentSelectedBreakdownRemittance?.mode_of_payment || '',
-                        Number(order.total_remit || 0),
-                        Number(order.cf_amount || 0)
-                    );
-
-                    detailRows.push({
-                        task_no: taskCounter,
-                        rider: currentRiderName || 'N/A',
-                        mop: formatPaymentType(order?.payment_type, payload?.mode_of_payment || remittance?.mode_of_payment || ''),
-                        ref_no: order.order_id || '',
-                        merchant: merchantName,
-                        total_amount: totalAmount,
-                        df: deliveryFee,
-                        gt_grumpy_receipt: gtReceipt,
-                        tip: Number(order.tip_amount || 0),
-                        receipt_non_partners: Number(order.receipt_non_partners || 0),
-                        total_remit: merchantValues.totalRemit,
-                        cf: merchantValues.cf,
-                        estimate_sales_admin_fee: merchantValues.estimateSalesAdminFee,
-                        remarks: normalizeDetailedRemarks(payload?.remarks || remittance?.remarks || '')
-                    });
+                detailRows.push({
+                    task_no: index + 1,
+                    rider: currentRiderName || 'N/A',
+                    mop: formatPaymentType(order?.payment_type, payload?.mode_of_payment || remittance?.mode_of_payment || ''),
+                    ref_no: order.order_id || '',
+                    merchant: merchantName,
+                    total_amount: totalAmount,
+                    df: deliveryFee,
+                    gt_grumpy_receipt: gtReceipt,
+                    tip: Number(order.tip_amount || 0),
+                    receipt_non_partners: Number(order.receipt_non_partners || 0),
+                    total_remit: merchantValues.totalRemit,
+                    cf: merchantValues.cf,
+                    estimate_sales_admin_fee: merchantValues.estimateSalesAdminFee,
+                    remarks: normalizeDetailedRemarks(payload?.remarks || remittance?.remarks || '')
                 });
             });
 
@@ -6926,14 +7586,14 @@
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.mop || '-')}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#0d6efd; font-weight:600;">${escapeHtml(row.ref_no || '-')}</td>
                     <td style="padding:10px; border-bottom:1px solid #e5eee0; font-size:12px; color:#374151; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(row.merchant)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.total_amount.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.df.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.gt_grumpy_receipt.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.tip.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.receipt_non_partners.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
-                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:right; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#1f2937; font-weight:600;">₱${row.total_amount.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.df.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.gt_grumpy_receipt.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.tip.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.receipt_non_partners.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; font-weight:700; color:${getRemitAmountColor(row.total_remit)};">₱${row.total_remit.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#374151;">₱${row.cf.toFixed(2)}</td>
+                    <td style="padding:10px; border-bottom:1px solid #e5eee0; text-align:center; font-size:12px; color:#1f2937; font-weight:600;">₱${row.estimate_sales_admin_fee.toFixed(2)}</td>
                     <!-- Remarks column removed from detailed breakdown -->
                 </tr>
             `).join('') : `
@@ -6956,14 +7616,14 @@
                                     <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:120px; background:#e8dbc4;">MOP</th>
                                     <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:80px; background:#e8dbc4;">REF #</th>
                                     <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:170px; background:#e8dbc4;">Merchant</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Amount</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">DF</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:100px; background:#e8dbc4;">GT / Grumpy Receipt</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">Tip</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:110px; background:#e8dbc4;">Receipt (Non Partners)</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Remit</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">CF</th>
-                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:right; border-bottom:2px solid #cdbd9f; width:120px; background:#e8dbc4;">ESTIMATE SALES+ADMIN FEE</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Amount</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">DF</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:100px; background:#e8dbc4;">GT / Grumpy Receipt</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">Tip</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:110px; background:#e8dbc4;">Receipt (Non Partners)</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:90px; background:#e8dbc4;">Total Remit</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:70px; background:#e8dbc4;">CF</th>
+                                    <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:center; border-bottom:2px solid #cdbd9f; width:120px; background:#e8dbc4;">ESTIMATE SALES+ADMIN FEE</th>
                                     <th style="padding:10px 10px; font-size:11px; font-weight:700; text-align:left; border-bottom:2px solid #cdbd9f; width:140px; background:#e8dbc4;">Remarks</th>
                                 </tr>
                             </thead>
@@ -7100,14 +7760,14 @@
                             <td style="text-align:center; white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(formatPaymentType(order?.payment_type, payload?.mode_of_payment || currentSelectedBreakdownRemittance?.mode_of_payment || ''))}</td>
                             <td style="text-align:center;">${escapeHtml(order.order_id || '')}</td>
                             <td style="white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.25;">${escapeHtml(item.merchant_name || 'Unknown Merchant')}</td>
-                            <td style="text-align:right;">₱${totalAmount.toFixed(2)}</td>
-                            <td style="text-align:right;">₱${deliveryFee.toFixed(2)}</td>
-                            <td style="text-align:right;">₱${gtReceipt.toFixed(2)}</td>
-                            <td style="text-align:right;">₱${Number(order.tip_amount || 0).toFixed(2)}</td>
-                            <td style="text-align:right;">₱${Number(order.receipt_non_partners || 0).toFixed(2)}</td>
-                            <td style="text-align:right;">₱${merchantValues.totalRemit.toFixed(2)}</td>
-                            <td style="text-align:right;">₱${merchantValues.cf.toFixed(2)}</td>
-                            <td style="text-align:right;">₱${merchantValues.estimateSalesAdminFee.toFixed(2)}</td>
+                            <td style="text-align:center;">₱${totalAmount.toFixed(2)}</td>
+                            <td style="text-align:center;">₱${deliveryFee.toFixed(2)}</td>
+                            <td style="text-align:center;">₱${gtReceipt.toFixed(2)}</td>
+                            <td style="text-align:center;">₱${Number(order.tip_amount || 0).toFixed(2)}</td>
+                            <td style="text-align:center;">₱${Number(order.receipt_non_partners || 0).toFixed(2)}</td>
+                            <td style="text-align:center;">₱${merchantValues.totalRemit.toFixed(2)}</td>
+                            <td style="text-align:center;">₱${merchantValues.cf.toFixed(2)}</td>
+                            <td style="text-align:center;">₱${merchantValues.estimateSalesAdminFee.toFixed(2)}</td>
                             <!-- Remarks column removed from PDF export -->
                         </tr>
                     `);
@@ -7151,14 +7811,14 @@
                                 <th style="text-align:center;">MOP</th>
                                 <th style="text-align:center;">REF #</th>
                                 <th>Merchant</th>
-                                <th style="text-align:right;">Total Amount</th>
-                                <th style="text-align:right;">DF</th>
-                                <th style="text-align:right;">GT/Grumpy</th>
-                                <th style="text-align:right;">Tip</th>
-                                <th style="text-align:right;">Receipt (NP)</th>
-                                <th style="text-align:right;">Total Remit</th>
-                                <th style="text-align:right;">CF</th>
-                                <th style="text-align:right;">Estimate Sales+Admin Fee</th>
+                                <th style="text-align:center;">Total Amount</th>
+                                <th style="text-align:center;">DF</th>
+                                <th style="text-align:center;">GT/Grumpy</th>
+                                <th style="text-align:center;">Tip</th>
+                                <th style="text-align:center;">Receipt (NP)</th>
+                                <th style="text-align:center;">Total Remit</th>
+                                <th style="text-align:center;">CF</th>
+                                <th style="text-align:center;">Estimate Sales+Admin Fee</th>
                                 <th>Remarks</th>
                             </tr>
                         </thead>
@@ -7734,6 +8394,25 @@
             hintEl.textContent = '';
         }
 
+        function updateGrandTotalField() {
+            const grandTotalInput = document.getElementById('grandTotal');
+            if (!grandTotalInput) return;
+
+            const rawDeliveryFee = (document.getElementById('totalDeliveryFee')?.value || '').trim();
+            const rawTips = (document.getElementById('totalTips')?.value || '').trim();
+            const rawRemit = (document.getElementById('totalRemit')?.value || '').trim();
+
+            if (rawDeliveryFee === '' && rawTips === '' && rawRemit === '') {
+                grandTotalInput.value = '';
+                return;
+            }
+
+            const totalDeliveryFee = parseFloat(rawDeliveryFee || '0') || 0;
+            const totalTips = parseFloat(rawTips || '0') || 0;
+            const totalRemit = parseFloat(rawRemit || '0') || 0;
+            grandTotalInput.value = (totalRemit + totalDeliveryFee + totalTips).toFixed(2);
+        }
+
         function updateTotalDeliveriesDateHint() {
             const hintEl = document.getElementById('totalDeliveriesHint');
             if (!hintEl) return;
@@ -7822,14 +8501,140 @@
             hintEl.textContent = `Based on total amount for ${displayDate}.`;
         }
 
+        function wireRemitButton(row, riderId, riderName) {
+            if (!row) return;
+            const remitBtn = row.querySelector('.rider-action-btn[data-role="remit"]');
+            if (!remitBtn) return;
+            const safeName = JSON.stringify(String(riderName || ''));
+            remitBtn.setAttribute('onclick', `openRemitModal(${Number(riderId)}, ${safeName});event.stopPropagation()`);
+        }
+
+        function markRiderAsRemittedInQueue(riderId) {
+            const selectedRow = document.querySelector(`[data-rider-id="${riderId}"]`);
+            if (!selectedRow) return;
+
+            selectedRow.dataset.blocked = 'false';
+            selectedRow.dataset.remitted = 'true';
+            delete selectedRow.dataset.overrideRemit;
+
+            const statusEl = selectedRow.querySelector('.rider-dropdown-header .rider-status');
+            if (statusEl) {
+                statusEl.className = 'rider-status cleared';
+                statusEl.innerHTML = '<i class="fas fa-check" style="font-size:8px;"></i> Remitted';
+            }
+
+            const remitBtn = selectedRow.querySelector('.rider-action-btn[data-role="remit"]');
+            if (remitBtn) {
+                remitBtn.disabled = true;
+                remitBtn.classList.add('blocked-btn');
+                remitBtn.removeAttribute('onclick');
+                remitBtn.title = 'Rider already fully remitted for the selected date';
+            }
+
+            const noticeEl = selectedRow.querySelector('.rider-dropdown-body .rider-blocked-notice');
+            if (noticeEl) {
+                noticeEl.style.background = '#e9f7ef';
+                noticeEl.style.borderColor = '#b8e0c3';
+                noticeEl.style.color = '#1f6b3d';
+                noticeEl.innerHTML = '<i class="fas fa-check-circle"></i> This rider is fully remitted for the selected date.';
+            }
+        }
+
+        function applyOptionalRemitOverride(selectedRow, riderId, riderName, reasonType, showToastMessage = true) {
+            if (!selectedRow) return false;
+
+            selectedRow.dataset.overrideRemit = 'true';
+
+            const remitBtn = selectedRow.querySelector('.rider-action-btn[data-role="remit"]');
+            if (remitBtn) {
+                remitBtn.disabled = false;
+                remitBtn.classList.remove('blocked-btn');
+                remitBtn.removeAttribute('title');
+            }
+
+            wireRemitButton(selectedRow, riderId, riderName);
+
+            const resetBtn = selectedRow.querySelector('.rider-action-btn.reset-remit-btn');
+            if (resetBtn) {
+                resetBtn.disabled = true;
+                resetBtn.style.opacity = '0.7';
+                resetBtn.style.cursor = 'default';
+                resetBtn.title = 'Reset applied for this rider';
+            }
+
+            if (showToastMessage) {
+                const message = reasonType === 'blocked'
+                    ? 'Optional reset enabled. Previous-day block will be bypassed for this rider when you submit Remit.'
+                    : 'Optional reset enabled. You can retry Remit now, but fully-remitted riders are still validated by the server.';
+                showToast(message, 'info');
+            }
+
+            return true;
+        }
+
+        function enableOptionalRemit(riderId, riderName, reasonType) {
+            const selectedRow = document.querySelector(`[data-rider-id="${riderId}"]`);
+            if (!selectedRow) {
+                showToast('Unable to reset Remit action for this rider.', 'error');
+                return;
+            }
+
+            const reasonText = reasonType === 'blocked'
+                ? 'This rider is blocked due to unremitted previous-day deliveries.'
+                : 'This rider is already fully remitted for the selected date.';
+
+            showConfirmModal(
+                `${reasonText}\n\nEnable optional Remit override for this rider?`,
+                function() {
+                    applyOptionalRemitOverride(selectedRow, riderId, riderName, reasonType, true);
+                }
+            );
+        }
+
+        function resetAllOptionalRemit() {
+            const disabledRows = Array.from(document.querySelectorAll('.rider-row')).filter((row) => {
+                const remitBtn = row.querySelector('.rider-action-btn[data-role="remit"]');
+                return remitBtn && remitBtn.disabled;
+            });
+
+            if (disabledRows.length === 0) {
+                showToast('No disabled Remit buttons to reset.', 'info');
+                return;
+            }
+
+            showConfirmModal(
+                `Enable optional Remit override for ${disabledRows.length} rider(s)?`,
+                function() {
+                    let updatedCount = 0;
+
+                    disabledRows.forEach((row) => {
+                        const riderId = Number(row.getAttribute('data-rider-id') || 0);
+                        if (!riderId) return;
+
+                        const riderName = (row.querySelector('.rider-item-info strong')?.textContent || '').trim();
+                        const reasonType = row.dataset.blocked === 'true' ? 'blocked' : 'remitted';
+                        const applied = applyOptionalRemitOverride(row, riderId, riderName, reasonType, false);
+                        if (applied) updatedCount += 1;
+                    });
+
+                    if (updatedCount > 0) {
+                        showToast(`Optional reset applied to ${updatedCount} rider(s).`, 'info');
+                    } else {
+                        showToast('No rider was updated by Reset All.', 'warning');
+                    }
+                }
+            );
+        }
+
         async function openRemitModal(riderId, riderName) {
             const selectedRow = document.querySelector(`[data-rider-id="${riderId}"]`);
-            if (selectedRow && selectedRow.dataset.blocked === 'true') {
+            const hasOverride = selectedRow && selectedRow.dataset.overrideRemit === 'true';
+            if (selectedRow && selectedRow.dataset.blocked === 'true' && !hasOverride) {
                 showToast('This rider has unremitted deliveries from yesterday. Please settle yesterday first.',
                     'warning');
                 return;
             }
-            if (selectedRow && selectedRow.dataset.remitted === 'true') {
+            if (selectedRow && selectedRow.dataset.remitted === 'true' && !hasOverride) {
                 showToast('This rider is already fully remitted for the selected date.', 'warning');
                 return;
             }
@@ -7872,6 +8677,7 @@
                 document.getElementById('totalRemit').value = expectedTotal > 0 ? expectedTotal.toFixed(2) : '';
             }
 
+            updateGrandTotalField();
             updateRemainingRemitHint();
 
             document.getElementById('totalDeliveries').focus();
@@ -7880,6 +8686,7 @@
         function closeRemitModal() {
             document.getElementById('remitModal').classList.remove('active');
             document.getElementById('remitForm').reset();
+            updateGrandTotalField();
             const hintEl = document.getElementById('remainingRemitHint');
             if (hintEl) {
                 hintEl.style.display = 'none';
@@ -7927,6 +8734,9 @@
                 const formData = new FormData(form);
                 const riderId = document.getElementById('remitRiderId').value;
                 const riderName = document.getElementById('remitRiderName').value;
+                const selectedRow = document.querySelector(`[data-rider-id="${riderId}"]`);
+                const hasOverride = selectedRow && selectedRow.dataset.overrideRemit === 'true';
+                const isBlockedRow = selectedRow && selectedRow.dataset.blocked === 'true';
                 const totalDeliveries = document.getElementById('totalDeliveries').value;
                 const totalDeliveryFee = document.getElementById('totalDeliveryFee').value;
                 const totalRemit = document.getElementById('totalRemit').value;
@@ -7952,6 +8762,13 @@
                 formData.set('payment_modes_json', JSON.stringify(selectedModes));
                 formData.set('payment_breakdown_json', JSON.stringify(paymentBreakdown));
                 formData.set('remarks_amount', remarksAmount);
+
+                // Admin optional reset for blocked riders: allow bypassing previous-day block check.
+                if (hasOverride && isBlockedRow) {
+                    formData.set('optional_blocked_override', '1');
+                } else {
+                    formData.delete('optional_blocked_override');
+                }
 
                 // Store form data for later submission
                 pendingRemittance = {
@@ -8185,8 +9002,10 @@
 
                     const saveResult = pendingRemittance && pendingRemittance.saveResult ? pendingRemittance.saveResult : null;
 
-                    // Keep badge as Pending — Cleared only shows the next day
-                    // when viewing this date as a past date.
+                    // Reflect queue status immediately after successful remittance.
+                    if (saveResult && saveResult.is_complete !== false && pendingRemittance && pendingRemittance.riderId) {
+                        markRiderAsRemittedInQueue(pendingRemittance.riderId);
+                    }
 
                     // Clear pending remittance
                     pendingRemittance = null;
@@ -8250,6 +9069,7 @@
             document.getElementById('totalRemit').value = pendingRemittance.totalRemit;
             document.getElementById('totalTips').value = pendingRemittance.totalTips;
             document.getElementById('totalCollection').value = pendingRemittance.totalCollection;
+            updateGrandTotalField();
 
             const paymentModeCheckboxes = document.querySelectorAll('.payment-mode-checkbox');
             paymentModeCheckboxes.forEach(cb => {
@@ -8316,9 +9136,9 @@
             riderItems.forEach((row) => {
                 const riderId = row.getAttribute('data-rider-id');
                 const riderName = row.querySelector('.rider-item-info strong').textContent;
-                const remitBtn = row.querySelector('.rider-action-btn:not(.records-btn)');
+                const remitBtn = row.querySelector('.rider-action-btn[data-role="remit"]');
                 if (remitBtn && riderId) {
-                    remitBtn.setAttribute('onclick', `openRemitModal(${riderId}, '${riderName}')`);
+                    wireRemitButton(row, riderId, riderName);
                 }
             });
             
@@ -10305,6 +11125,7 @@
                 }
 
                 updateRemainingRemitHint();
+                updateGrandTotalField();
             };
 
             // Add event listeners to checkboxes
@@ -10448,7 +11269,22 @@
             const totalRemitInput = document.getElementById('totalRemit');
             if (totalRemitInput) {
                 totalRemitInput.addEventListener('input', updateRemainingRemitHint);
+                totalRemitInput.addEventListener('input', updateGrandTotalField);
             }
+
+            const totalDeliveryFeeInput = document.getElementById('totalDeliveryFee');
+            if (totalDeliveryFeeInput) {
+                totalDeliveryFeeInput.addEventListener('input', updateGrandTotalField);
+                totalDeliveryFeeInput.addEventListener('change', updateGrandTotalField);
+            }
+
+            const totalTipsInput = document.getElementById('totalTips');
+            if (totalTipsInput) {
+                totalTipsInput.addEventListener('input', updateGrandTotalField);
+                totalTipsInput.addEventListener('change', updateGrandTotalField);
+            }
+
+            updateGrandTotalField();
         });
     </script>
 

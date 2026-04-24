@@ -12,6 +12,7 @@ class RiderDeduction extends Model
     protected $fillable = [
         'rider_id',
         'rider_name',
+        'payroll_id',
         'amount',
         'date',
         'remarks',

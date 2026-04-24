@@ -51,7 +51,334 @@ class RemittanceController extends Controller
         });
     }
 
-    private function calculateMerchantRemitAmount(string $merchantName, string $merchantType, float $orderTotal, float $deliveryFee, float $tipAmount, string $paymentType = '', float $receiptNonPartners = 0): float
+    private function resolveMerchantCommissionItemsColumn($legacySchema): ?string
+    {
+        if (!$legacySchema->hasTable('mt_merchant')) {
+            return null;
+        }
+
+        $merchantColumns = $legacySchema->getColumnListing('mt_merchant');
+
+        return collect(['commission_items'])->first(function ($column) use ($merchantColumns) {
+            return in_array($column, $merchantColumns, true);
+        });
+    }
+
+    private function calculateReceiptNonPartnersAmount(float $subTotal, float $commissionRate): float
+    {
+        $normalizedCommissionRate = abs($commissionRate);
+
+        if ($normalizedCommissionRate > 1) {
+            $normalizedCommissionRate /= 100;
+        }
+
+        return $this->calculateReceiptNonPartnersAmountByDivisor($subTotal, 1 + $normalizedCommissionRate);
+    }
+
+    private function calculateReceiptNonPartnersAmountByDivisor(float $subTotal, float $commissionStructureDivisor): float
+    {
+        if ($commissionStructureDivisor <= 0) {
+            return max(0, $subTotal);
+        }
+
+        return max(0, $subTotal / $commissionStructureDivisor);
+    }
+
+    private function isNonPartnerMerchantType(string $merchantType): bool
+    {
+        $normalizedMerchantType = str_replace(['_', ' '], '-', strtolower(trim($merchantType)));
+        return in_array($normalizedMerchantType, ['non-partner', 'nonpartner'], true);
+    }
+
+    private function isFixedPerItemCommissionType(string $commissionType): bool
+    {
+        $normalizedCommissionType = str_replace(['-', ' '], '_', strtolower(trim($commissionType)));
+        return $normalizedCommissionType === 'fixed_per_item';
+    }
+
+    private function isPercentageCommissionType(string $commissionType): bool
+    {
+        $normalizedCommissionType = str_replace(['-', ' '], '_', strtolower(trim($commissionType)));
+        return in_array($normalizedCommissionType, [
+            'percentage_based',
+            'percentage',
+            'percent',
+            'percentagebased',
+        ], true);
+    }
+
+    private function normalizeCommissionItemKey($value): string
+    {
+        return strtolower(trim((string) $value));
+    }
+
+    private function extractCommissionItemRateMap($commissionItems): array
+    {
+        if (is_array($commissionItems)) {
+            $decoded = $commissionItems;
+        } else {
+            $raw = trim((string) ($commissionItems ?? ''));
+            if ($raw === '') {
+                return [];
+            }
+
+            $decoded = json_decode($raw, true);
+            if (!is_array($decoded)) {
+                return [];
+            }
+        }
+
+        $rateMap = [];
+        foreach ($decoded as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+
+            $label = $this->normalizeCommissionItemKey($entry['label'] ?? '');
+            $amount = (float) ($entry['amount'] ?? 0);
+            if ($label === '' || $amount < 0) {
+                continue;
+            }
+
+            $rateMap[$label] = $amount;
+        }
+
+        return $rateMap;
+    }
+
+    private function resolveOrderItemNameById(int $itemId, string $legacyConnection = 'wheninba_MercifulGod'): ?string
+    {
+        static $itemLookupMeta = [];
+        static $itemNameCache = [];
+
+        if ($itemId <= 0) {
+            return null;
+        }
+
+        if (isset($itemNameCache[$legacyConnection][$itemId])) {
+            return $itemNameCache[$legacyConnection][$itemId];
+        }
+
+        if (!isset($itemLookupMeta[$legacyConnection])) {
+            $schema = Schema::connection($legacyConnection);
+            if (!$schema->hasTable('mt_item')) {
+                $itemLookupMeta[$legacyConnection] = ['ready' => false];
+            } else {
+                $columns = $schema->getColumnListing('mt_item');
+                $idColumn = collect(['item_id'])->first(function ($column) use ($columns) {
+                    return in_array($column, $columns, true);
+                });
+                $nameColumn = collect(['item_name', 'name'])->first(function ($column) use ($columns) {
+                    return in_array($column, $columns, true);
+                });
+
+                $itemLookupMeta[$legacyConnection] = [
+                    'ready' => (bool) ($idColumn && $nameColumn),
+                    'id_column' => $idColumn,
+                    'name_column' => $nameColumn,
+                ];
+            }
+        }
+
+        $meta = $itemLookupMeta[$legacyConnection];
+        if (empty($meta['ready'])) {
+            return null;
+        }
+
+        try {
+            $itemName = DB::connection($legacyConnection)
+                ->table('mt_item')
+                ->where($meta['id_column'], $itemId)
+                ->value($meta['name_column']);
+
+            $normalized = $itemName !== null ? trim((string) $itemName) : '';
+            $itemNameCache[$legacyConnection][$itemId] = $normalized !== '' ? $normalized : null;
+        } catch (\Throwable $e) {
+            $itemNameCache[$legacyConnection][$itemId] = null;
+        }
+
+        return $itemNameCache[$legacyConnection][$itemId];
+    }
+
+    private function calculateFixedPerItemReceiptFromCommissionStructure(
+        $jsonDetails,
+        $commissionItems,
+        string $legacyConnection = 'wheninba_MercifulGod'
+    ): float {
+        $rateMap = $this->extractCommissionItemRateMap($commissionItems);
+        if (empty($rateMap)) {
+            return 0.0;
+        }
+
+        if (is_array($jsonDetails)) {
+            $decodedItems = $jsonDetails;
+        } else {
+            $raw = trim((string) ($jsonDetails ?? ''));
+            if ($raw === '') {
+                return 0.0;
+            }
+
+            $decodedItems = json_decode($raw, true);
+            if (!is_array($decodedItems)) {
+                return 0.0;
+            }
+        }
+
+        $total = 0.0;
+        foreach ($decodedItems as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $qty = (float) ($item['qty'] ?? 0);
+            if ($qty <= 0) {
+                continue;
+            }
+
+            $candidateKeys = [];
+
+            $itemIdRaw = $item['item_id'] ?? null;
+            $itemId = (int) $itemIdRaw;
+            if ($itemId > 0) {
+                $candidateKeys[] = $this->normalizeCommissionItemKey((string) $itemId);
+            }
+
+            if (isset($item['item_name'])) {
+                $candidateKeys[] = $this->normalizeCommissionItemKey($item['item_name']);
+            }
+
+            if ($itemId > 0) {
+                $resolvedItemName = $this->resolveOrderItemNameById($itemId, $legacyConnection);
+                if ($resolvedItemName !== null) {
+                    $candidateKeys[] = $this->normalizeCommissionItemKey($resolvedItemName);
+                }
+            }
+
+            $rate = null;
+            foreach ($candidateKeys as $key) {
+                if ($key !== '' && array_key_exists($key, $rateMap)) {
+                    $rate = (float) $rateMap[$key];
+                    break;
+                }
+            }
+
+            if ($rate === null) {
+                continue;
+            }
+
+            $total += max(0, $qty * $rate);
+        }
+
+        return max(0, $total);
+    }
+
+    private function calculateFixedPerItemPyrReceiptFromJsonDetails($jsonDetails, float $commissionRate, $commissionItems): float
+    {
+        if (is_array($jsonDetails)) {
+            $decodedItems = $jsonDetails;
+        } else {
+            $raw = trim((string) ($jsonDetails ?? ''));
+            if ($raw === '') {
+                return 0.0;
+            }
+
+            $decodedItems = json_decode($raw, true);
+            if (!is_array($decodedItems)) {
+                return 0.0;
+            }
+        }
+
+        $normalizedCommissionRate = max(0, abs($commissionRate));
+        $totalPrice = 0.0;
+        $totalQty = 0.0;
+
+        foreach ($decodedItems as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $qty = (float) ($item['qty'] ?? 0);
+            $price = (float) ($item['price'] ?? 0);
+            if ($qty <= 0 || $price < 0) {
+                continue;
+            }
+
+            $totalQty += $qty;
+            $totalPrice += ($qty * $price);
+        }
+
+        $commissionFromRate = $totalQty * $normalizedCommissionRate;
+        $commissionFromStructure = $this->calculateFixedPerItemReceiptFromCommissionStructure($decodedItems, $commissionItems);
+        $effectiveCommission = max(0, $commissionFromRate, $commissionFromStructure);
+
+        return max(0, $totalPrice - $effectiveCommission);
+    }
+
+    private function extractTotalQtyFromJsonDetails($jsonDetails): float
+    {
+        if (is_array($jsonDetails)) {
+            $decoded = $jsonDetails;
+        } else {
+            $raw = trim((string) ($jsonDetails ?? ''));
+            if ($raw === '') {
+                return 0.0;
+            }
+
+            $decoded = json_decode($raw, true);
+            if (!is_array($decoded)) {
+                return 0.0;
+            }
+        }
+
+        return (float) collect($decoded)
+            ->sum(function ($item) {
+                if (!is_array($item)) {
+                    return 0;
+                }
+
+                return (float) ($item['qty'] ?? 0);
+            });
+    }
+
+    private function calculateReceiptNonPartnersFromOrder(
+        string $merchantType,
+        string $commissionType,
+        float $commissionRate,
+        string $paymentType,
+        float $orderSubTotal,
+        float $orderTotal,
+        float $deliveryFee,
+        float $tipAmount,
+        bool $isGtOrGrumpy,
+        $jsonDetails,
+        $commissionItems
+    ): float {
+        $paymentTypeNormalized = strtoupper(trim($paymentType));
+
+        if ($this->isNonPartnerMerchantType($merchantType) && $this->isFixedPerItemCommissionType($commissionType)) {
+            if ($paymentTypeNormalized === 'PYR') {
+                return $this->calculateFixedPerItemPyrReceiptFromJsonDetails($jsonDetails, $commissionRate, $commissionItems);
+            }
+
+            return $this->calculateFixedPerItemReceiptFromCommissionStructure($jsonDetails, $commissionItems);
+        }
+
+        if ($this->isNonPartnerMerchantType($merchantType) && $this->isPercentageCommissionType($commissionType)) {
+            return $this->calculateReceiptNonPartnersAmount($orderSubTotal, $commissionRate);
+        }
+
+        if (in_array($paymentTypeNormalized, ['PYR', 'PAYMONGO_GCASH'], true)) {
+            return $this->calculateReceiptNonPartnersAmount($orderSubTotal, $commissionRate);
+        }
+
+        if ($isGtOrGrumpy || $this->isNonPartnerMerchantType($merchantType) || strtolower(trim($merchantType)) === 'partner') {
+            return 0;
+        }
+
+        return max(0, $orderTotal - $deliveryFee - $tipAmount);
+    }
+
+    private function calculateMerchantRemitAmount(string $merchantName, float $orderTotal, float $deliveryFee, string $paymentType = '', float $receiptNonPartners = 0): float
     {
         $normalizedMerchantName = strtolower(trim(preg_replace('/\s+/', ' ', $merchantName)));
         $normalizedPaymentType = strtoupper(trim($paymentType));
@@ -61,9 +388,9 @@ class RemittanceController extends Controller
             return max(0, $orderTotal - $deliveryFee - $receiptNonPartners);
         }
         
-        // If payment type is PYR (Payment on Remittance), return negative amount
-        // This will be deducted from overall total remit
-        if ($normalizedPaymentType === 'PYR') {
+        // If payment type is PYR or PAYMONGO_GCASH, return negative delivery fee remit.
+        // This will be deducted from overall total remit.
+        if (in_array($normalizedPaymentType, ['PYR', 'PAYMONGO_GCASH'], true)) {
             return -$remitAmount;
         }
         
@@ -77,11 +404,15 @@ class RemittanceController extends Controller
                 'rider_id' => 'required|exists:wheninba_MercifulGod.mt_driver,driver_id',
                 'total_deliveries' => 'required|integer|min:0',
                 'total_delivery_fee' => 'required|numeric|min:0',
-                'total_remit' => 'required|numeric|min:0',
+                'total_remit' => 'required|numeric|min:0.01',
                 'total_tips' => 'nullable|numeric|min:0',
                 'total_collection' => 'required|numeric|min:0',
-                'mode_of_payment' => 'required|string',
+                'mode_of_payment' => 'required|string|in:cash,gcash,multiple',
+                'payment_modes_json' => 'nullable|string|max:255',
+                'payment_breakdown_json' => 'nullable|string|max:1000',
+                'remittance_date' => 'nullable|date_format:Y-m-d|before_or_equal:today',
                 'remit_photo' => 'nullable|image|max:5120', // 5MB max
+                'remarks' => 'nullable|string|max:1000',
                 'remarks_amount' => 'nullable|numeric|min:0',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -95,12 +426,101 @@ class RemittanceController extends Controller
             throw $e;
         }
 
+        $allowedModes = ['cash', 'gcash'];
+        $modeOfPayment = strtolower(trim((string) $request->mode_of_payment));
+
+        $selectedModes = [];
+        if ($request->filled('payment_modes_json')) {
+            $decodedModes = json_decode((string) $request->payment_modes_json, true);
+            if (!is_array($decodedModes)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid payment mode payload format.'
+                ], 422);
+            }
+
+            $selectedModes = array_values(array_unique(array_filter(array_map(function ($mode) use ($allowedModes) {
+                $normalized = strtolower(trim((string) $mode));
+                return in_array($normalized, $allowedModes, true) ? $normalized : null;
+            }, $decodedModes))));
+        }
+
+        if (empty($selectedModes)) {
+            $selectedModes = in_array($modeOfPayment, $allowedModes, true) ? [$modeOfPayment] : [];
+        }
+
+        if (empty($selectedModes)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'At least one valid payment mode is required.'
+            ], 422);
+        }
+
+        if ($modeOfPayment === 'multiple' && count($selectedModes) < 2) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Multiple mode requires at least two payment modes.'
+            ], 422);
+        }
+
+        if ($modeOfPayment !== 'multiple' && (count($selectedModes) !== 1 || $selectedModes[0] !== $modeOfPayment)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mode of payment does not match selected payment mode(s).'
+            ], 422);
+        }
+
+        $incomingRemitAmount = (float) $request->total_remit;
+        $totalCollection = (float) $request->total_collection;
+        if ($incomingRemitAmount - $totalCollection > 0.0001) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Total remit cannot be greater than total collection.'
+            ], 422);
+        }
+
+        if ($request->filled('payment_breakdown_json')) {
+            $decodedBreakdown = json_decode((string) $request->payment_breakdown_json, true);
+            if (!is_array($decodedBreakdown)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid payment breakdown payload format.'
+                ], 422);
+            }
+
+            $breakdownTotal = 0.0;
+            foreach ($selectedModes as $mode) {
+                $modeAmount = array_key_exists($mode, $decodedBreakdown) ? (float) $decodedBreakdown[$mode] : 0.0;
+                if ($modeAmount < 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Payment breakdown values cannot be negative.'
+                    ], 422);
+                }
+                $breakdownTotal += $modeAmount;
+            }
+
+            if ($breakdownTotal > 0 && ($breakdownTotal - $totalCollection > 0.0001)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment breakdown cannot exceed total collection.'
+                ], 422);
+            }
+        }
+
         $targetRemittanceDate = $request->filled('remittance_date')
             ? \Carbon\Carbon::parse($request->remittance_date)->toDateString()
             : today()->toDateString();
 
         $targetDate = \Carbon\Carbon::parse($targetRemittanceDate);
         $previousDate = $targetDate->copy()->subDay()->toDateString();
+
+        $requestedBlockedOverride = filter_var($request->input('optional_blocked_override', false), FILTER_VALIDATE_BOOLEAN);
+        $authUser = $request->user();
+        $canBypassPreviousDayBlock = $requestedBlockedOverride
+            && $authUser
+            && method_exists($authUser, 'isAdmin')
+            && $authUser->isAdmin();
 
         $hasRemittedPreviousDate = Remittance::query()
             ->where('rider_id', $request->rider_id)
@@ -132,7 +552,7 @@ class RemittanceController extends Controller
                 }
             }
 
-            if ($hadDeliveriesPreviousDate) {
+            if ($hadDeliveriesPreviousDate && !$canBypassPreviousDayBlock) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This rider has unremitted deliveries from the previous day. Please remit that day first before proceeding.'
@@ -150,6 +570,16 @@ class RemittanceController extends Controller
         $merchantTypeColumn = $this->resolveMerchantTypeColumn($legacySchema);
         $commissionTypeColumn = $this->resolveMerchantCommissionTypeColumn($legacySchema);
         $commissionRateColumn = $this->resolveMerchantCommissionRateColumn($legacySchema);
+        $commissionItemsColumn = $this->resolveMerchantCommissionItemsColumn($legacySchema);
+        $orderColumns = $legacySchema->hasTable('mt_order')
+            ? $legacySchema->getColumnListing('mt_order')
+            : [];
+        $hasOrderSubTotal = in_array('sub_total', $orderColumns, true);
+        $hasOrderJsonDetails = in_array('json_details', $orderColumns, true);
+        $orderColumns = $legacySchema->hasTable('mt_order')
+            ? $legacySchema->getColumnListing('mt_order')
+            : [];
+        $hasOrderSubTotal = in_array('sub_total', $orderColumns, true);
 
         $expectedTotalAmount = 0.0;
         if ($legacySchema->hasTable('mt_driver_task')) {
@@ -186,10 +616,8 @@ class RemittanceController extends Controller
                 $expectedTotalAmount = (float) $expectedRows->sum(function ($row) {
                     return $this->calculateMerchantRemitAmount(
                         (string) ($row->merchant_name ?? ''),
-                        (string) ($row->merchant_type ?? ''),
                         (float) ($row->order_total ?? 0),
                         (float) ($row->delivery_fee ?? 0),
-                        (float) ($row->tip_amount ?? 0),
                         (string) ($row->payment_type ?? ''),
                         0
                     );
@@ -197,7 +625,6 @@ class RemittanceController extends Controller
             }
         }
 
-        $incomingRemitAmount = (float) $request->total_remit;
         $remainingAmount = max($expectedTotalAmount - $alreadyRemittedAmount, 0);
 
         if ($expectedTotalAmount > 0 && $remainingAmount <= 0) {
@@ -224,18 +651,10 @@ class RemittanceController extends Controller
             ->latest('id')
             ->first();
 
-        // Handle payment mode - support both single and multiple modes
-        $modeOfPayment = $request->mode_of_payment;
-        if ($request->filled('payment_modes_json')) {
-            try {
-                $modes = json_decode($request->payment_modes_json, true);
-                if (is_array($modes) && count($modes) > 0) {
-                    $modeOfPayment = json_encode($modes);
-                }
-            } catch (\Exception $e) {
-                // Fallback to original mode if JSON decode fails
-            }
-        }
+        // Store as JSON only when multiple modes were selected.
+        $modeOfPayment = count($selectedModes) > 1
+            ? json_encode($selectedModes)
+            : $selectedModes[0];
 
         $extractModes = function ($rawMode) {
             if (!is_string($rawMode) || trim($rawMode) === '') {
@@ -455,6 +874,12 @@ class RemittanceController extends Controller
         $merchantTypeColumn = $this->resolveMerchantTypeColumn($legacySchema);
         $commissionTypeColumn = $this->resolveMerchantCommissionTypeColumn($legacySchema);
         $commissionRateColumn = $this->resolveMerchantCommissionRateColumn($legacySchema);
+        $commissionItemsColumn = $this->resolveMerchantCommissionItemsColumn($legacySchema);
+        $orderColumns = $legacySchema->hasTable('mt_order')
+            ? $legacySchema->getColumnListing('mt_order')
+            : [];
+        $hasOrderSubTotal = in_array('sub_total', $orderColumns, true);
+        $hasOrderJsonDetails = in_array('json_details', $orderColumns, true);
 
         try {
             if (!$legacySchema->hasTable('mt_driver_task')) {
@@ -498,8 +923,11 @@ class RemittanceController extends Controller
                 ->selectRaw($merchantTypeColumn ? "COALESCE(MAX(mt_merchant.{$merchantTypeColumn}), '') as merchant_type" : "'' as merchant_type")
                 ->selectRaw($commissionTypeColumn ? "COALESCE(MAX(mt_merchant.{$commissionTypeColumn}), '') as commission_type" : "'' as commission_type")
                 ->selectRaw($commissionRateColumn ? "COALESCE(MAX(mt_merchant.{$commissionRateColumn}), 0) as commission_rate" : "0 as commission_rate")
+                ->selectRaw($commissionItemsColumn ? "COALESCE(MAX(CAST(mt_merchant.{$commissionItemsColumn} AS CHAR)), '') as merchant_commission_items" : "'' as merchant_commission_items")
                 ->selectRaw('mt_driver_task.order_id as order_id')
                 ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.total_w_tax), 0) as order_total')
+                ->selectRaw($hasOrderSubTotal ? 'COALESCE(MAX(wheninba_MercifulGod.mt_order.sub_total), 0) as order_sub_total' : '0 as order_sub_total')
+                ->selectRaw($hasOrderJsonDetails ? "COALESCE(MAX(CAST(wheninba_MercifulGod.mt_order.json_details AS CHAR)), '') as order_json_details" : "'' as order_json_details")
                 ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.delivery_charge), 0) as delivery_fee')
                 ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.cart_tip_value), 0) as tip_amount')
                 ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.packaging), 0) as cf_amount')
@@ -523,14 +951,25 @@ class RemittanceController extends Controller
                             $tipAmount = (float) ($row->tip_amount ?? 0);
                             $cfAmount = (float) ($row->cf_amount ?? 0);
                             $paymentType = (string) ($row->payment_type ?? '');
+                            $orderSubTotal = (float) ($row->order_sub_total ?? 0);
+                            $orderJsonDetails = (string) ($row->order_json_details ?? '');
+                            $merchantCommissionItems = (string) ($row->merchant_commission_items ?? '');
                             $isGtOrGrumpy = str_contains(strtolower($merchantName), 'good taste') || str_contains(strtolower($merchantName), 'grumpy');
-                            $isPartnerOrNonPartner = in_array(strtolower(trim($merchantType)), ['partner', 'non-partner'], true);
+                            $receiptNonPartners = $this->calculateReceiptNonPartnersFromOrder(
+                                $merchantType,
+                                $commissionType,
+                                $commissionRate,
+                                $paymentType,
+                                $orderSubTotal,
+                                $orderTotal,
+                                $deliveryFee,
+                                $tipAmount,
+                                $isGtOrGrumpy,
+                                $orderJsonDetails,
+                                $merchantCommissionItems
+                            );
 
-                            $receiptNonPartners = ($isGtOrGrumpy || $isPartnerOrNonPartner)
-                                ? 0
-                                : max(0, $orderTotal - $deliveryFee - $tipAmount);
-
-                            $totalRemit = $this->calculateMerchantRemitAmount($merchantName, $merchantType, $orderTotal, $deliveryFee, $tipAmount, $paymentType, $receiptNonPartners);
+                            $totalRemit = $this->calculateMerchantRemitAmount($merchantName, $orderTotal, $deliveryFee, $paymentType, $receiptNonPartners);
 
                             $gtGrumpyReceipt = $isGtOrGrumpy
                                 ? max(0, $totalRemit - $cfAmount)
@@ -673,6 +1112,12 @@ class RemittanceController extends Controller
         $merchantTypeColumn = $this->resolveMerchantTypeColumn($legacySchema);
         $commissionTypeColumn = $this->resolveMerchantCommissionTypeColumn($legacySchema);
         $commissionRateColumn = $this->resolveMerchantCommissionRateColumn($legacySchema);
+        $commissionItemsColumn = $this->resolveMerchantCommissionItemsColumn($legacySchema);
+        $orderColumns = $legacySchema->hasTable('mt_order')
+            ? $legacySchema->getColumnListing('mt_order')
+            : [];
+        $hasOrderSubTotal = in_array('sub_total', $orderColumns, true);
+        $hasOrderJsonDetails = in_array('json_details', $orderColumns, true);
 
         try {
             if (!$legacySchema->hasTable('mt_driver_task')) {
@@ -716,8 +1161,11 @@ class RemittanceController extends Controller
                 ->selectRaw($merchantTypeColumn ? "COALESCE(MAX(mt_merchant.{$merchantTypeColumn}), '') as merchant_type" : "'' as merchant_type")
                 ->selectRaw($commissionTypeColumn ? "COALESCE(MAX(mt_merchant.{$commissionTypeColumn}), '') as commission_type" : "'' as commission_type")
                 ->selectRaw($commissionRateColumn ? "COALESCE(MAX(mt_merchant.{$commissionRateColumn}), 0) as commission_rate" : "0 as commission_rate")
+                ->selectRaw($commissionItemsColumn ? "COALESCE(MAX(CAST(mt_merchant.{$commissionItemsColumn} AS CHAR)), '') as merchant_commission_items" : "'' as merchant_commission_items")
                 ->selectRaw('mt_driver_task.order_id as order_id')
                 ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.total_w_tax), 0) as order_total')
+                ->selectRaw($hasOrderSubTotal ? 'COALESCE(MAX(wheninba_MercifulGod.mt_order.sub_total), 0) as order_sub_total' : '0 as order_sub_total')
+                ->selectRaw($hasOrderJsonDetails ? "COALESCE(MAX(CAST(wheninba_MercifulGod.mt_order.json_details AS CHAR)), '') as order_json_details" : "'' as order_json_details")
                 ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.delivery_charge), 0) as delivery_fee')
                 ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.cart_tip_value), 0) as tip_amount')
                 ->selectRaw('COALESCE(MAX(wheninba_MercifulGod.mt_order.packaging), 0) as cf_amount')
@@ -741,14 +1189,25 @@ class RemittanceController extends Controller
                             $tipAmount = (float) ($row->tip_amount ?? 0);
                             $cfAmount = (float) ($row->cf_amount ?? 0);
                             $paymentType = (string) ($row->payment_type ?? '');
+                            $orderSubTotal = (float) ($row->order_sub_total ?? 0);
+                            $orderJsonDetails = (string) ($row->order_json_details ?? '');
+                            $merchantCommissionItems = (string) ($row->merchant_commission_items ?? '');
                             $isGtOrGrumpy = str_contains(strtolower($merchantName), 'good taste') || str_contains(strtolower($merchantName), 'grumpy');
-                            $isPartnerOrNonPartner = in_array(strtolower(trim($merchantType)), ['partner', 'non-partner'], true);
+                            $receiptNonPartners = $this->calculateReceiptNonPartnersFromOrder(
+                                $merchantType,
+                                $commissionType,
+                                $commissionRate,
+                                $paymentType,
+                                $orderSubTotal,
+                                $orderTotal,
+                                $deliveryFee,
+                                $tipAmount,
+                                $isGtOrGrumpy,
+                                $orderJsonDetails,
+                                $merchantCommissionItems
+                            );
 
-                            $receiptNonPartners = ($isGtOrGrumpy || $isPartnerOrNonPartner)
-                                ? 0
-                                : max(0, $orderTotal - $deliveryFee - $tipAmount);
-
-                            $totalRemit = $this->calculateMerchantRemitAmount($merchantName, $merchantType, $orderTotal, $deliveryFee, $tipAmount, $paymentType, $receiptNonPartners);
+                            $totalRemit = $this->calculateMerchantRemitAmount($merchantName, $orderTotal, $deliveryFee, $paymentType, $receiptNonPartners);
 
                             $gtGrumpyReceipt = $isGtOrGrumpy
                                 ? max(0, $totalRemit - $cfAmount)

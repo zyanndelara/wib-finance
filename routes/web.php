@@ -765,6 +765,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
     Route::middleware('page.access:merchants')->group(function () {
         Route::get('/merchants', [MerchantController::class, 'index'])->name('merchants');
         Route::get('/merchants/archived', [MerchantController::class, 'archivedIndex'])->name('merchants.archived');
+        Route::get('/merchants/item-suggestions', [MerchantController::class, 'itemSuggestions'])->name('merchants.item-suggestions');
         Route::post('/merchants', [MerchantController::class, 'store'])->name('merchants.store');
         Route::put('/merchants/{merchant}', [MerchantController::class, 'update'])->name('merchants.update');
         Route::patch('/merchants/{merchant}/archive', [MerchantController::class, 'archive'])->name('merchants.archive');

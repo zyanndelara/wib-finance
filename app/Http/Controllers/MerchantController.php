@@ -287,6 +287,14 @@ class MerchantController extends Controller
         if (isset($validated['commission_items'])) {
             $decoded = json_decode($validated['commission_items'], true);
             $validated['commission_items'] = is_array($decoded) ? $decoded : null;
+        } else {
+            $validated['commission_items'] = null;
+        }
+
+        // Clear commission_items if commission type doesn't support items
+        $commType = $validated['commission_type'] ?? 'percentage_based';
+        if (!in_array($commType, ['fixed_per_item', 'category_based_fixed'])) {
+            $validated['commission_items'] = null;
         }
 
         $createData = [
@@ -366,6 +374,14 @@ class MerchantController extends Controller
         if (isset($validated['commission_items'])) {
             $decoded = json_decode($validated['commission_items'], true);
             $validated['commission_items'] = is_array($decoded) ? $decoded : null;
+        } else {
+            $validated['commission_items'] = null;
+        }
+
+        // Clear commission_items if commission type doesn't support items
+        $commType = $validated['commission_type'] ?? $merchant->commission_type;
+        if (!in_array($commType, ['fixed_per_item', 'category_based_fixed'])) {
+            $validated['commission_items'] = null;
         }
 
         $updateData = $this->filterMerchantPayloadForExistingColumns($validated, $columnsLookup);
@@ -572,6 +588,111 @@ class MerchantController extends Controller
         }
 
         return redirect()->route('merchants.archived')->with('success', $message);
+    }
+
+    public function itemSuggestions(Request $request)
+    {
+        $validated = $request->validate([
+            'q' => 'nullable|string|max:255',
+            'merchant_id' => 'nullable|integer|min:1',
+            'merchant_name' => 'nullable|string|max:255',
+            'limit' => 'nullable|integer|min:1|max:300',
+            'include_all' => 'nullable|boolean',
+        ]);
+
+        $query = trim((string) ($validated['q'] ?? ''));
+        $includeAll = (bool) ($validated['include_all'] ?? false);
+
+        if ($query === '' && !$includeAll) {
+            return response()->json([
+                'success' => true,
+                'items' => [],
+            ]);
+        }
+
+        $connection = 'wheninba_MercifulGod';
+        $itemTable = 'mt_item';
+
+        if (!Schema::connection($connection)->hasTable($itemTable)) {
+            return response()->json([
+                'success' => true,
+                'items' => [],
+            ]);
+        }
+
+        $itemColumns = collect(Schema::connection($connection)->getColumnListing($itemTable))
+            ->map(fn ($column) => strtolower((string) $column));
+
+        $itemNameColumn = collect(['item_name', 'name'])
+            ->first(fn ($column) => $itemColumns->contains($column));
+        $itemMerchantIdColumn = collect(['merchant_id'])
+            ->first(fn ($column) => $itemColumns->contains($column));
+
+        if (!$itemNameColumn) {
+            return response()->json([
+                'success' => true,
+                'items' => [],
+            ]);
+        }
+
+        $merchantId = (int) ($validated['merchant_id'] ?? 0);
+        $merchantName = trim((string) ($validated['merchant_name'] ?? ''));
+
+        if ($merchantId <= 0 && $merchantName !== '' && $itemMerchantIdColumn && Schema::connection($connection)->hasTable('mt_merchant')) {
+            $merchantColumns = collect(Schema::connection($connection)->getColumnListing('mt_merchant'))
+                ->map(fn ($column) => strtolower((string) $column));
+
+            $merchantNameColumn = collect(['restaurant_name', 'name'])
+                ->first(fn ($column) => $merchantColumns->contains($column));
+            $merchantIdColumn = collect(['merchant_id'])
+                ->first(fn ($column) => $merchantColumns->contains($column));
+
+            if ($merchantNameColumn && $merchantIdColumn) {
+                $matchedMerchantId = DB::connection($connection)
+                    ->table('mt_merchant')
+                    ->whereRaw('LOWER(' . $merchantNameColumn . ') = ?', [strtolower($merchantName)])
+                    ->value($merchantIdColumn);
+
+                if (!$matchedMerchantId) {
+                    $matchedMerchantId = DB::connection($connection)
+                        ->table('mt_merchant')
+                        ->where($merchantNameColumn, 'like', '%' . $merchantName . '%')
+                        ->value($merchantIdColumn);
+                }
+
+                $merchantId = (int) ($matchedMerchantId ?? 0);
+            }
+        }
+
+        $limit = (int) ($validated['limit'] ?? ($includeAll ? 200 : 10));
+
+        $itemsQuery = DB::connection($connection)
+            ->table($itemTable)
+            ->select($itemNameColumn)
+            ->whereNotNull($itemNameColumn)
+            ->where($itemNameColumn, '!=', '');
+
+        if ($query !== '') {
+            $itemsQuery->where($itemNameColumn, 'like', '%' . $query . '%');
+        }
+
+        if ($itemMerchantIdColumn && $merchantId > 0) {
+            $itemsQuery->where($itemMerchantIdColumn, $merchantId);
+        }
+
+        $items = $itemsQuery
+            ->groupBy($itemNameColumn)
+            ->orderBy($itemNameColumn)
+            ->limit($limit)
+            ->pluck($itemNameColumn)
+            ->filter(fn ($itemName) => filled($itemName))
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'items' => $items,
+            'merchant_id' => $merchantId > 0 ? $merchantId : null,
+        ]);
     }
 
     public function priceNotificationsFeed(Request $request)

@@ -64,21 +64,27 @@ class RiderPayrollController extends Controller
             $addaDfEntries = [];
         }
 
-        // Accumulated deductions for this rider within the pay period.
-        // The upper bound is extended to include the payroll creation date (payout day),
-        // since deductions entered at payout time are saved on that day which is outside
-        // the regular pay period window (e.g. Friday is payout but period ends Thursday).
-        $deductionsQuery = RiderDeduction::where('rider_id', $riderId);
-        if ($fromDate && $toDate) {
-            $payrollDate  = $payroll->created_at->toDateString();
-            $upperBound   = $payrollDate > $toDate ? $payrollDate : $toDate;
-            $deductionsQuery->whereBetween('date', [$fromDate, $upperBound]);
-        } else {
-            $deductionsQuery
-                ->whereYear('date',  $payroll->created_at->year)
-                ->whereMonth('date', $payroll->created_at->month);
-        }
+        // Prefer deductions linked to this payroll, but fall back to the pay-period
+        // rider query so newly entered deductions still appear if the link is missing.
+        $deductionsQuery = RiderDeduction::where('rider_id', $riderId)
+            ->where('payroll_id', $payroll->id);
         $deductionRecords = $deductionsQuery->orderBy('date')->get();
+
+        if ($deductionRecords->isEmpty()) {
+            $deductionsQuery = RiderDeduction::where('rider_id', $riderId);
+            if ($fromDate && $toDate) {
+                $payrollDate  = $payroll->created_at->toDateString();
+                $upperBound   = $payrollDate > $toDate ? $payrollDate : $toDate;
+                $deductionsQuery->whereBetween('date', [$fromDate, $upperBound]);
+            } else {
+                $deductionsQuery
+                    ->whereYear('date',  $payroll->created_at->year)
+                    ->whereMonth('date', $payroll->created_at->month);
+            }
+
+            $deductionRecords = $deductionsQuery->orderBy('date')->get();
+        }
+
         $totalDeductions  = (float) $deductionRecords->sum('amount');
 
         $computedTotal = round(

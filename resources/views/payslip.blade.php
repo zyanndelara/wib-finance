@@ -642,8 +642,17 @@
                 </div>
                 <div class="sum-row">
                     <span class="sum-label">Deductions</span>
-                    <span class="sum-value"
-                        style="color:#dc3545;">&#8369;{{ number_format($totalDeductions, 2) }}</span>
+                    <span class="sum-value" style="color:#dc3545;">&#8369;{{ number_format($totalDeductions, 2) }}</span>
+                </div>
+                <div style="margin-top:2px; font-size:10px; color:#666; line-height:1.35;">
+                    @forelse ($deductionRecords as $deduction)
+                        <div style="display:flex; justify-content:space-between; gap:10px; padding-top:2px;">
+                            <span style="flex:1; word-break:break-word;">{{ $deduction->remarks ?: 'Deduction' }}</span>
+                            <span style="color:#dc3545; white-space:nowrap; font-weight:600;">&#8369;{{ number_format((float) $deduction->amount, 2) }}</span>
+                        </div>
+                    @empty
+                        <div style="font-style:italic; color:#9ca3af;">No deductions recorded for this payroll.</div>
+                    @endforelse
                 </div>
             </div>
         </div>
