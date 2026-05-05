@@ -379,26 +379,22 @@ class RiderController extends Controller
             })
             ->toArray();
 
-        $remittedRiderIds = collect($riderTotalCollectionMap)
-            ->filter(function ($expectedTotal, $riderId) use ($remittedTotalsByRider) {
-                $expected = (float) $expectedTotal;
-                $remitted = (float) ($remittedTotalsByRider[$riderId] ?? 0);
-                return $expected > 0 && $remitted + 0.0001 >= $expected;
-            })
-            ->keys()
+        $remittedRiderIds = Remittance::query()
+            ->whereDate('remittance_date', $statsDateParsed)
+            ->where('status', 'confirmed')
+            ->pluck('rider_id')
+            ->unique()
             ->map(function ($id) {
                 return (int) $id;
             })
             ->values()
             ->all();
 
-        $shortRiderIds = collect($riderTotalCollectionMap)
-            ->filter(function ($expectedTotal, $riderId) use ($remittedTotalsByRider) {
-                $expected = (float) $expectedTotal;
-                $remitted = (float) ($remittedTotalsByRider[$riderId] ?? 0);
-                return $expected > 0 && $remitted > 0 && $remitted + 0.0001 < $expected;
-            })
-            ->keys()
+        $shortRiderIds = Remittance::query()
+            ->whereDate('remittance_date', $statsDateParsed)
+            ->where('status', 'pending')
+            ->pluck('rider_id')
+            ->unique()
             ->map(function ($id) {
                 return (int) $id;
             })
@@ -524,7 +520,6 @@ class RiderController extends Controller
             $nameExists = Rider::query()
                 ->whereRaw("TRIM(CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, ''))) = ?", [$incomingName])
                 ->exists();
-
             if ($nameExists) {
                 return response()->json([
                     'success' => false,

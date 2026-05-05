@@ -136,7 +136,7 @@ class UserController extends Controller
 
         // Send email with generated password to user
         try {
-            $this->sendBrevoPassword($user, $generatedPassword);
+            $this->sendWelcomeEmail($user, $generatedPassword);
 
             AuditLog::log(
                 'New Member Added – ' . $user->email,
@@ -156,36 +156,9 @@ class UserController extends Controller
         }
     }
 
-    private function sendBrevoPassword($user, $generatedPassword)
+    private function sendWelcomeEmail($user, $generatedPassword): void
     {
-        $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', env('BREVO_API_KEY'));
-        $apiInstance = new TransactionalEmailsApi(new Client(), $config);
-
-        $email = $user->email;
-        $name = $user->name;
-        $employeeId = $user->employee_id;
-        $password = $generatedPassword;
-
-        // Render the Blade template to HTML
-        $htmlContent = view('emails.welcome', [
-            'userName' => $name,
-            'employeeId' => $employeeId,
-            'email' => $email,
-            'password' => $password,
-        ])->render();
-
-        $sendSmtpEmail = new SendSmtpEmail([
-            'to' => [["email" => $email, "name" => $name]],
-            'sender' => ["email" => env('MAIL_FROM_ADDRESS'), "name" => env('MAIL_FROM_NAME')],
-            'subject' => 'Welcome to When in Baguio Inc.',
-            'htmlContent' => $htmlContent,
-        ]);
-
-        try {
-            $apiInstance->sendTransacEmail($sendSmtpEmail);
-        } catch (\Exception $e) {
-            Log::error('Brevo verification email failed: ' . $e->getMessage() . '\n' . $e->getTraceAsString());
-        }
+        Mail::to($user->email)->send(new WelcomeMail($user->name, $user->email, $generatedPassword, $user->employee_id));
     }
 
     /**

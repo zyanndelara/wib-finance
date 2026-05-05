@@ -2,18 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EmailVerificationMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use App\Models\AuditLog;
 use App\Models\User;
-use SendinBlue\Client\Configuration;
-use SendinBlue\Client\Api\TransactionalEmailsApi;
-use SendinBlue\Client\Model\SendSmtpEmail;
-use GuzzleHttp\Client;
 use OTPHP\TOTP;
 
 class ProfileController extends Controller
@@ -89,7 +87,7 @@ class ProfileController extends Controller
         $user->save();
 
         if ($emailChanged) {
-            $this->sendBrevoVerification($user->fresh());
+            $this->sendEmailVerification($user->fresh());
             AuditLog::log('Profile Updated (Email Changed)', 'Profile', 'completed', ['notes' => 'New email: ' . $user->email]);
             return redirect()->route('profile')->with('success', 'Profile updated! Please verify your new email address.');
         }
@@ -144,7 +142,9 @@ class ProfileController extends Controller
             return redirect()->back()->with('info', 'Your email is already verified.');
         }
 
-        $this->sendBrevoVerification($user);
+        if (! $this->sendEmailVerification($user)) {
+            return redirect()->back()->withErrors(['email' => 'Failed to send verification email. Please try again later.']);
+        }
 
         return redirect()->back()->with('success', 'Verification email sent successfully!')->with('verification_sent', true);
     }
@@ -193,26 +193,18 @@ class ProfileController extends Controller
         return redirect()->route('login')->with('success', 'Your account has been deleted successfully.');
     }
 
-    private function sendBrevoVerification($user)
+    private function sendEmailVerification($user): bool
     {
-        $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', env('BREVO_API_KEY'));
-        $apiInstance = new TransactionalEmailsApi(new Client(), $config);
-
         $email = $user->email;
         $name = $user->name;
         $verificationUrl = url('/email/verify/' . $user->id . '/' . sha1($user->email));
 
-        $sendSmtpEmail = new SendSmtpEmail([
-            'to' => [["email" => $email, "name" => $name]],
-                'sender' => ["email" => env('MAIL_FROM_ADDRESS'), "name" => env('MAIL_FROM_NAME')],
-            'subject' => 'Verify your email address',
-            'htmlContent' => '<p>Hello ' . $name . ',</p><p>Please verify your email by clicking <a href="' . $verificationUrl . '">here</a>.</p>',
-        ]);
-
         try {
-            $apiInstance->sendTransacEmail($sendSmtpEmail);
+            Mail::to($email)->send(new EmailVerificationMail($name, $verificationUrl));
+            return true;
         } catch (\Exception $e) {
-            Log::error('Brevo verification email failed: ' . $e->getMessage() . '\n' . $e->getTraceAsString());
+            Log::error('Email verification mail failed: ' . $e->getMessage() . '\n' . $e->getTraceAsString());
+            return false;
         }
     }
 

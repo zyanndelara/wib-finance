@@ -324,7 +324,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
                 $salesTrendSeries['annually']['nonPartners'] = $annualNonPartner;
                 $salesTrendSeries['annually']['goodTaste'] = $annualGoodTaste;
             }
-        } catch (\Throwable $exception) {
+        } catch (\Throwable) {
             // Keep zeroed fallbacks so dashboard remains available even if source table changes.
         }
 
@@ -351,8 +351,11 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         Route::put('/remittances/{remittance}', [RemittanceController::class, 'update'])->name('remittances.update');
         Route::delete('/remittances/{remittance}', [RemittanceController::class, 'destroy'])->name('remittances.destroy');
         Route::get('/riders/{rider}/delivery-breakdown', [RemittanceController::class, 'getRiderDeliveryBreakdown'])->name('riders.delivery-breakdown');
+        Route::post('/riders/{rider}/delivery-breakdown/save', [RemittanceController::class, 'saveRiderDeliveryBreakdown'])->name('riders.delivery-breakdown.save');
+        Route::post('/riders/{rider}/delivery-breakdown/update-receipt', [RemittanceController::class, 'updateReceiptNonPartners'])->name('riders.delivery-breakdown.update-receipt');
         Route::get('/riders/{rider}/remittances', [RemittanceController::class, 'getRiderRemittances'])->name('riders.remittances');
         Route::get('/remittances/{remittance}/merchant-breakdown', [RemittanceController::class, 'getRemittanceMerchantBreakdown'])->name('remittances.merchant-breakdown');
+
         Route::get('/remittances-report', [RemittanceController::class, 'report'])->name('remittances.report');
 
     // Non-remitting riders lookup (used by the stat card modal)
@@ -361,11 +364,11 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         $isToday = $date === \Carbon\Carbon::today()->toDateString();
 
         if ($isToday) {
-            $allRiders = \App\Models\Rider::whereIn('status', ['active', 'cleared'])
+            $allRiders = \App\Models\Rider::whereIn('status', ['active', 'cleared'], 'and', false)
                 ->orderBy('first_name')
                 ->orderBy('last_name')
                 ->get();
-            $remittances = \App\Models\Remittance::whereDate('remittance_date', $date)
+            $remittances = \App\Models\Remittance::whereDate('remittance_date', '=', $date, 'and')
                 ->get(['rider_id', 'remittance_date', 'created_at']);
 
             $remittanceMap = $remittances->keyBy('rider_id');
@@ -397,12 +400,12 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         } else {
             // For past dates, check the remittances table directly so it works
             // for ALL dates — not just ones where the scheduler has run.
-            $remittances = \App\Models\Remittance::whereDate('remittance_date', $date)
+            $remittances = \App\Models\Remittance::whereDate('remittance_date', '=', $date, 'and')
                 ->get(['rider_id', 'remittance_date', 'created_at']);
 
             $remittanceMap = $remittances->keyBy('rider_id');
 
-            $allRiders = \App\Models\Rider::whereIn('status', ['active', 'cleared'])
+            $allRiders = \App\Models\Rider::whereIn('status', ['active', 'cleared'], 'and', false)
                 ->whereDate('date_created', '<=', $date)
                 ->orderBy('first_name')
                 ->orderBy('last_name')
@@ -511,50 +514,50 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
         $riderSummaries = $riderSummaryQuery->get();
 
         // Calculate overall statistics for the specified date
-        $totalExpectedRemit = \App\Models\Remittance::whereIn('status', ['pending', 'confirmed'])
+        $totalExpectedRemit = \App\Models\Remittance::whereIn('status', ['pending', 'confirmed'], 'and', false)
             ->whereDate('created_at', $filterDate)
             ->sum('total_remit');
 
-        $totalCashCollected = \App\Models\Remittance::whereIn('status', ['pending', 'confirmed'])
+        $totalCashCollected = \App\Models\Remittance::whereIn('status', ['pending', 'confirmed'], 'and', false)
             ->whereDate('created_at', $filterDate)
             ->sum('total_collection');
 
-        $clearedCount = \App\Models\Remittance::where('status', 'confirmed')
+        $clearedCount = \App\Models\Remittance::where('status', '=', 'confirmed', 'and')
             ->whereDate('created_at', $filterDate)
             ->count();
 
-        $pendingCount = \App\Models\Remittance::where('status', 'pending')
+        $pendingCount = \App\Models\Remittance::where('status', '=', 'pending', 'and')
             ->whereDate('created_at', $filterDate)
             ->count();
 
         // Get only the latest confirmation per rider for this date (matches table column logic)
-        $latestConfirmationIds = \App\Models\BankDepositConfirmation::whereDate('deposit_date', $filterDate)
-            ->selectRaw('MAX(id) as id')
+        $latestConfirmationIds = \App\Models\BankDepositConfirmation::whereDate('deposit_date', '=', $filterDate, 'and')
+            ->selectRaw('MAX(id) as id', [])
             ->groupBy('rider_id')
             ->pluck('id');
 
-        $confirmedCashCollected = \App\Models\BankDepositConfirmation::whereIn('id', $latestConfirmationIds)
+        $confirmedCashCollected = \App\Models\BankDepositConfirmation::whereIn('id', $latestConfirmationIds, 'and', false)
             ->sum('total_amount');
 
         // Total discrepancy = sum of only negative discrepancy values from latest confirmation per rider
-        $totalDiscrepancy = \App\Models\BankDepositConfirmation::whereIn('id', $latestConfirmationIds)
+        $totalDiscrepancy = \App\Models\BankDepositConfirmation::whereIn('id', $latestConfirmationIds, 'and', false)
             ->where('discrepancy', '<', 0)
             ->sum('discrepancy');
 
         // Total change = sum of only positive discrepancy values (excess collected)
-        $totalChange = \App\Models\BankDepositConfirmation::whereIn('id', $latestConfirmationIds)
+        $totalChange = \App\Models\BankDepositConfirmation::whereIn('id', $latestConfirmationIds, 'and', false)
             ->where('discrepancy', '>', 0)
             ->sum('discrepancy');
 
         // Dates that have a negative discrepancy (for calendar indicators)
-        $discrepancyDates = \App\Models\BankDepositConfirmation::selectRaw('DATE(deposit_date) as d')
+        $discrepancyDates = \App\Models\BankDepositConfirmation::selectRaw('DATE(deposit_date) as d', [])
             ->where('discrepancy', '<', 0)
             ->groupBy('d')
             ->pluck('d')
             ->toArray();
 
         // Dates that have at least one positive discrepancy (change/excess cash)
-        $changeDates = \App\Models\BankDepositConfirmation::selectRaw('DATE(deposit_date) as d')
+        $changeDates = \App\Models\BankDepositConfirmation::selectRaw('DATE(deposit_date) as d', [])
             ->where('discrepancy', '>', 0)
             ->groupBy('d')
             ->pluck('d')
@@ -635,7 +638,7 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
             'discrepancy'  => $request->has('discrepancy') ? $request->discrepancy : ($request->total_amount - $request->bank_amount),
         ]);
 
-        $rider = \App\Models\Rider::find($request->rider_id);
+        $rider = \App\Models\Rider::find($request->rider_id, ['*']);
         AuditLog::log(
             'Bank Deposit Confirmed – Rider: ' . ($rider->name ?? $request->rider_id),
             'Bank & Deposit',
@@ -663,11 +666,11 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
 
     Route::get('/bank-deposit/totals', function (\Illuminate\Http\Request $request) {
         $date = $request->get('date', today()->toDateString());
-        $latestIds = \App\Models\BankDepositConfirmation::whereDate('deposit_date', $date)
-            ->selectRaw('MAX(id) as id')
+        $latestIds = \App\Models\BankDepositConfirmation::whereDate('deposit_date', '=', $date, 'and')
+            ->selectRaw('MAX(id) as id', [])
             ->groupBy('rider_id')
             ->pluck('id');
-        $records = \App\Models\BankDepositConfirmation::whereIn('id', $latestIds)->get();
+        $records = \App\Models\BankDepositConfirmation::whereIn('id', $latestIds, 'and', false)->get();
         return response()->json([
             'confirmed_cash' => $records->sum('total_amount'),
             'discrepancy'    => $records->where('discrepancy', '<', 0)->sum('discrepancy'),
@@ -706,12 +709,12 @@ Route::middleware(['auth', 'prevent.back'])->group(function () {
 
         // Overall totals
         $totalExpected  = $riderSummaries->sum('total_remit_amount');
-        $totalConfirmed = \App\Models\BankDepositConfirmation::whereDate('deposit_date', '>=', $dateFrom)
+        $totalConfirmed = \App\Models\BankDepositConfirmation::whereDate('deposit_date', '>=', $dateFrom, 'and')
                             ->whereDate('deposit_date', '<=', $dateTo)->sum('total_amount');
-        $totalDiscrepancy = \App\Models\BankDepositConfirmation::whereDate('deposit_date', '>=', $dateFrom)
+        $totalDiscrepancy = \App\Models\BankDepositConfirmation::whereDate('deposit_date', '>=', $dateFrom, 'and')
                             ->whereDate('deposit_date', '<=', $dateTo)
                             ->where('discrepancy', '<', 0)->sum('discrepancy');
-        $totalChange    = \App\Models\BankDepositConfirmation::whereDate('deposit_date', '>=', $dateFrom)
+        $totalChange    = \App\Models\BankDepositConfirmation::whereDate('deposit_date', '>=', $dateFrom, 'and')
                             ->whereDate('deposit_date', '<=', $dateTo)
                             ->where('discrepancy', '>', 0)->sum('discrepancy');
         $generatedBy    = Auth::user()->name;

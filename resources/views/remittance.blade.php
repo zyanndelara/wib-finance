@@ -139,7 +139,9 @@
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                    document.getElementById('totalRemit').value = breakdownTotalRemit > 0 ? breakdownTotalRemit.toFixed(2) : '';
+                    // Initialize grand total (based on breakdown + delivery fee + tips)
+                    updateGrandTotalField();
             }
         }
 
@@ -763,6 +765,22 @@
             background: linear-gradient(135deg, #5a7d33 0%, #6d9640 100%);
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(67, 96, 38, 0.3);
+        }
+
+        .sheet-breakdown-responsive-table td[contenteditable="true"]:focus {
+            outline: 2px solid #436026;
+            outline-offset: -1px;
+            background-color: #fffef0 !important;
+        }
+
+        .sheet-breakdown-responsive-table td[contenteditable="true"]:hover {
+            background-color: #fffef0 !important;
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .remittance-details-panel {
@@ -1999,7 +2017,7 @@
                     <i class="fas fa-money-bill-wave"></i>
                 </div>
                 <div class="stat-card-label">Cash Collection</div>
-                <div class="stat-card-value">₱{{ number_format($cashCollection, 2) }}</div>
+                <div class="stat-card-value" id="cashCollectionStat" data-original-value="{{ number_format($cashCollection, 2) }}">₱{{ number_format($cashCollection, 2) }}</div>
             </div>
             <div class="stat-card stat-card-digital">
                 <div class="stat-card-icon">
@@ -5535,6 +5553,13 @@
                             <small id="remainingRemitHint" style="display:none; margin-top: 5px; font-size: 12px; font-weight: 600;"></small>
                         </div>
                         <div class="form-group">
+                            <label for="grandTotal"><i class="fas fa-calculator"></i> Grand Total (Sheet)</label>
+                            <input type="number" id="grandTotal" name="grand_total_sheet" placeholder="0.00"
+                                step="0.01" min="0" readonly
+                                style="background: #eef6ff; color: #123e6b; font-weight: 700; cursor: not-allowed; border-color: #9fc3ff;">
+                            <small id="grandTotalHint" style="color: #6c757d; font-size: 12px; display: block; margin-top: 5px;">Based on Detailed Breakdown (Sheet Format) and Mangan entries.</small>
+                        </div>
+                        <div class="form-group">
                             <label><i class="fas fa-credit-card"></i> Mode of Payment</label>
                             <div id="paymentModesContainer" style="display: flex; align-items: center; gap: 16px; margin-top: 0; min-height: 40px; padding: 0 12px; border: 1.5px solid #d6eacc; border-radius: 8px; background: #fff;">
                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
@@ -5549,18 +5574,7 @@
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="form-group">
-                            <label for="grandTotal"><i class="fas fa-calculator"></i> Grand Total</label>
-                            <input type="number" id="grandTotal" name="grand_total" placeholder="0.00"
-                                step="0.01" min="0" readonly
-                                style="background: #f0f9f4; color: #2d4016; font-weight: 700; cursor: not-allowed; border-color: #9dc183;">
-                            <small style="color: #6c757d; font-size: 12px; display: block; margin-top: 5px;">
-                                Computed as Total Remit + Total Delivery Fee + Total Tips.
-                            </small>
-                        </div>
-                        <div></div>
-                    </div>
+                    
 
                     <!-- Payment Breakdown by Mode -->
                     <div id="paymentBreakdownSection" style="display: none; margin-bottom: 20px; padding: 16px; background: #f8faf7; border: 1.5px solid #d6eacc; border-radius: 10px;">
@@ -5771,7 +5785,18 @@
                 <div style="text-align:center; color:#6b7280; font-size: 13px; padding: 30px 12px;">No breakdown loaded yet.</div>
             </div>
             <div class="modal-footer">
-                <button class="modal-btn cancel" onclick="closeTotalDeliveriesBreakdown()">Close</button>
+                <div style="display: flex; gap: 10px; margin-left: auto;">
+                    <button id="breakdownEditBtn" class="modal-btn submit" onclick="toggleBreakdownEditMode()" style="display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-edit"></i>Edit
+                    </button>
+                    <button id="breakdownSaveBtn" class="modal-btn submit" onclick="saveBreakdownChanges()" style="display: none; gap: 6px; align-items: center;">
+                        <i class="fas fa-save"></i>Save
+                    </button>
+                    <button id="breakdownCancelBtn" class="modal-btn cancel" onclick="cancelBreakdownEdit()" style="display: none;">
+                        <i class="fas fa-times"></i>Cancel
+                    </button>
+                    <button class="modal-btn cancel" onclick="closeTotalDeliveriesBreakdown()">Close</button>
+                </div>
             </div>
         </div>
     </div>
@@ -5909,6 +5934,64 @@
             }
         }
 
+        function syncSavedReceiptValuesIntoCurrentBreakdown(savedRows) {
+            const container = currentMerchantBreakdownContainer || document.getElementById('remittanceMerchantBreakdown');
+            if (!container || !currentSelectedBreakdownPayload || !Array.isArray(savedRows) || savedRows.length === 0) {
+                return false;
+            }
+
+            const savedMap = new Map();
+            savedRows.forEach(savedRow => {
+                const refNo = String(savedRow?.ref_no || '').trim();
+                if (!refNo) {
+                    return;
+                }
+
+                const variants = [refNo, refNo.replace(/^#/, '')];
+                if (refNo.replace(/\s+/g, '') !== refNo) {
+                    variants.push(refNo.replace(/\s+/g, ''));
+                }
+
+                const numericMatch = refNo.match(/(\d+)/);
+                if (numericMatch && numericMatch[1]) {
+                    variants.push(numericMatch[1]);
+                }
+
+                variants.forEach(variant => savedMap.set(String(variant), savedRow));
+            });
+
+            const nextPayload = {
+                ...currentSelectedBreakdownPayload,
+                breakdown: Array.isArray(currentSelectedBreakdownPayload.breakdown)
+                    ? currentSelectedBreakdownPayload.breakdown.map(item => ({
+                        ...item,
+                        orders: Array.isArray(item.orders)
+                            ? item.orders.map(order => {
+                                const orderRef = String(order?.order_id || '').trim();
+                                const savedRow = savedMap.get(orderRef)
+                                    || savedMap.get(orderRef.replace(/^#/, ''))
+                                    || savedMap.get(orderRef.replace(/\s+/g, ''))
+                                    || (orderRef.match(/(\d+)/)?.[1] ? savedMap.get(orderRef.match(/(\d+)/)[1]) : null);
+
+                                if (!savedRow || savedRow.receipt_non_partners === undefined || savedRow.receipt_non_partners === null) {
+                                    return order;
+                                }
+
+                                return {
+                                    ...order,
+                                    receipt_non_partners: Number(savedRow.receipt_non_partners || 0)
+                                };
+                            })
+                            : []
+                    }))
+                    : []
+            };
+
+            currentSelectedBreakdownPayload = nextPayload;
+            paintMerchantBreakdown(container, nextPayload, currentSelectedBreakdownRemittance || null);
+            return true;
+        }
+
         function computeManganTotalRemitValue() {
             const merchant = (document.getElementById('manganMerchantInput')?.value || '').trim();
             const amount = parseFloat(document.getElementById('manganTotalAmount')?.value) || 0;
@@ -5942,10 +6025,15 @@
                 }
                 totalRemitInput.dataset.autofilled = 'false';
             }
+
+            // Recompute grand total whenever mangan total changes
+            updateGrandTotalField();
         }
 
         // Mangan entries list
         let manganEntries = [];
+
+        // (Grand total updated via updateGrandTotalField)
 
         function addManganEntry() {
             const merchant = (document.getElementById('manganMerchantInput').value || '').trim();
@@ -6298,6 +6386,7 @@
         let remittanceBreakdownCache = {};
         let currentSelectedBreakdownPayload = null;
         let currentSelectedBreakdownRemittance = null;
+        let currentMerchantBreakdownContainer = null;
 
         function displayRiderRemittances(remittances, riderName) {
             const content = document.getElementById('riderRecordsContent');
@@ -7351,21 +7440,21 @@
             const cacheKey = getTotalDeliveriesCacheKey(riderId, targetDate);
 
             try {
-                let payload = totalDeliveriesBreakdownCache[cacheKey];
-                if (!payload) {
-                    const response = await fetch(`/riders/${encodeURIComponent(riderId)}/delivery-breakdown?date=${encodeURIComponent(targetDate)}`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        }
-                    });
-                    const data = await response.json();
-                    if (!response.ok || !data.success) {
-                        throw new Error(data.message || 'Failed to load delivery breakdown');
+                // Always fetch fresh from the server to ensure saved data is displayed
+                const response = await fetch(`/riders/${encodeURIComponent(riderId)}/delivery-breakdown?date=${encodeURIComponent(targetDate)}&t=${Date.now()}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
                     }
-                    payload = data;
-                    totalDeliveriesBreakdownCache[cacheKey] = payload;
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to load delivery breakdown');
                 }
+                
+                const payload = data;
+                totalDeliveriesBreakdownCache[cacheKey] = payload;
 
                 const mergedPayload = mergeManganEntriesIntoBreakdown(payload);
                 renderTotalDeliveriesDetailedSheet(mergedPayload);
@@ -7380,10 +7469,268 @@
             }
         }
 
+        let breakdownEditMode = false;
+        const breakdownEditedValues = {};
+
         function closeTotalDeliveriesBreakdown() {
             const modal = document.getElementById('totalDeliveriesBreakdownModal');
             if (modal) {
                 modal.style.display = 'none';
+            }
+            
+            // Clear caches so fresh data is fetched when reopening
+            const riderId = document.getElementById('remitRiderId')?.value;
+            const targetDate = getRemitStatsDate();
+            if (riderId) {
+                const cacheKey = getTotalDeliveriesCacheKey(riderId, targetDate);
+                delete totalDeliveriesBreakdownCache[cacheKey];
+            }
+            
+            // Clear merchant breakdown cache for current remittance
+            const currentRemittanceId = Number(selectedRemittanceId || currentSelectedBreakdownRemittance?.id || 0);
+            if (currentRemittanceId) {
+                delete remittanceBreakdownCache[currentRemittanceId];
+            }
+            
+            cancelBreakdownEdit();
+        }
+
+        function toggleBreakdownEditMode() {
+            breakdownEditMode = !breakdownEditMode;
+            const editBtn = document.getElementById('breakdownEditBtn');
+            const saveBtn = document.getElementById('breakdownSaveBtn');
+            const cancelBtn = document.getElementById('breakdownCancelBtn');
+            const merchantEditBtn = document.getElementById('merchantBreakdownEditBtn');
+            const merchantSaveBtn = document.getElementById('merchantBreakdownSaveBtn');
+            const merchantCancelBtn = document.getElementById('merchantBreakdownCancelBtn');
+            const table = document.querySelector('.sheet-breakdown-responsive-table');
+
+            if (!table) return;
+
+            if (breakdownEditMode) {
+                if (editBtn) editBtn.style.display = 'none';
+                if (saveBtn) saveBtn.style.display = 'flex';
+                if (cancelBtn) cancelBtn.style.display = 'flex';
+                if (merchantEditBtn) merchantEditBtn.style.display = 'none';
+                if (merchantSaveBtn) merchantSaveBtn.style.display = 'flex';
+                if (merchantCancelBtn) merchantCancelBtn.style.display = 'flex';
+                makeTableEditable(table);
+            } else {
+                if (editBtn) editBtn.style.display = 'flex';
+                if (saveBtn) saveBtn.style.display = 'none';
+                if (cancelBtn) cancelBtn.style.display = 'none';
+                if (merchantEditBtn) merchantEditBtn.style.display = 'flex';
+                if (merchantSaveBtn) merchantSaveBtn.style.display = 'none';
+                if (merchantCancelBtn) merchantCancelBtn.style.display = 'none';
+                makeTableReadOnly(table);
+            }
+        }
+
+        function makeTableEditable(table) {
+            const bodyRows = table.querySelectorAll('tbody tr');
+            bodyRows.forEach((row, rowIdx) => {
+                const cells = row.querySelectorAll('td');
+                const originalReceiptCell = cells[9];
+                if (originalReceiptCell) {
+                    row.dataset.originalReceiptNonPartners = String(parseFloat(String(originalReceiptCell.textContent || '').replace(/[^0-9.\-]/g, '')) || 0);
+                }
+                cells.forEach((cell, colIdx) => {
+                    // Make only Receipt (Non Partners) column editable (column 9)
+                    if (colIdx === 9) {
+                        cell.style.cursor = 'text';
+                        cell.style.backgroundColor = '#fffaeb';
+                        cell.style.border = '1px solid #fcd34d';
+                        cell.contentEditable = true;
+                        cell.style.position = 'relative';
+                        cell.removeAttribute('data-label');
+                    }
+                });
+            });
+            table.style.userSelect = 'text';
+        }
+
+        function makeTableReadOnly(table) {
+            const bodyRows = table.querySelectorAll('tbody tr');
+            bodyRows.forEach((row) => {
+                const cells = row.querySelectorAll('td');
+                cells.forEach((cell) => {
+                    cell.contentEditable = false;
+                    cell.style.cursor = 'default';
+                    cell.style.backgroundColor = '';
+                    cell.style.border = '';
+                });
+            });
+            table.style.userSelect = 'auto';
+        }
+
+        async function saveBreakdownChanges() {
+            const table = document.querySelector('.sheet-breakdown-responsive-table');
+            if (!table) return;
+
+            const riderId = document.getElementById('remitRiderId')?.value;
+
+            const bodyRows = table.querySelectorAll('tbody tr');
+            const changedData = [];
+
+            bodyRows.forEach((row, rowIdx) => {
+                const cells = row.querySelectorAll('td');
+                const refNum = cells[3]?.textContent?.trim() || '';
+
+                if (refNum) {
+                    // Parse numbers safely
+                    const parseMoney = (txt) => {
+                        if (!txt) return 0;
+                        return parseFloat(String(txt).replace(/[^0-9.\-]/g, '')) || 0;
+                    };
+
+                    const currentReceipt = parseMoney(cells[9]?.textContent);
+                    const originalReceipt = parseMoney(row.dataset.originalReceiptNonPartners || cells[9]?.textContent);
+
+                    if (currentReceipt === originalReceipt) {
+                        return;
+                    }
+
+                    changedData.push({
+                        order_id: refNum,
+                        receipt_non_partners: currentReceipt,
+                    });
+                }
+            });
+
+            if (changedData.length === 0) {
+                showToast('No changes detected', 'warning');
+                return;
+            }
+
+            showToast('Saving changes...', 'info');
+
+            try {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                // POST to update-receipt endpoint - ONLY updates receipt_non_partners in fm_delivery_breakdowns
+                if (!riderId) throw new Error('Rider ID not found');
+
+                const resp = await fetch(`/riders/${encodeURIComponent(riderId)}/delivery-breakdown/update-receipt`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        remittance_id: Number(selectedRemittanceId || currentSelectedBreakdownRemittance?.id || 0) || null,
+                        updates: changedData
+                    })
+                });
+
+                const data = await resp.json();
+                if (!resp.ok || !data.success) {
+                    throw new Error((data && data.message) ? data.message : 'Save failed');
+                }
+
+                // If no records were updated, show warning
+                const updatedCount = Number(data.updated || 0);
+                const updatedRefs = Array.isArray(data.updated_refs) ? data.updated_refs : [];
+
+                if (updatedCount === 0) {
+                    showToast('No matching fm_delivery_breakdowns records were found to update.', 'warning');
+                    return;
+                }
+
+                const savedRows = Array.isArray(data.saved_rows) ? data.saved_rows : [];
+
+                // Immediately update the table with saved receipt_non_partners values from database
+                if (savedRows.length > 0) {
+                    const table = document.querySelector('.sheet-breakdown-responsive-table');
+                    if (table) {
+                        const bodyRows = table.querySelectorAll('tbody tr');
+                        
+                        savedRows.forEach(savedRow => {
+                            const orderRef = String(savedRow.ref_no || '').trim();
+                            const savedReceipt = Number(savedRow.receipt_non_partners || 0);
+                            
+                            if (orderRef) {
+                                // Find and update the matching row in the table
+                                bodyRows.forEach(row => {
+                                    const cells = row.querySelectorAll('td');
+                                    const refNum = cells[3]?.textContent?.trim() || '';
+                                    
+                                    if (refNum === orderRef || refNum.replace(/^#/, '') === orderRef) {
+                                        // Update the Receipt (Non Partners) cell (column 9)
+                                        const receiptCell = cells[9];
+                                        if (receiptCell) {
+                                            receiptCell.textContent = '₱' + savedReceipt.toFixed(2);
+                                            receiptCell.dataset.savedValue = savedReceipt;
+                                        }
+                                    }
+                                });
+                            }
+
+                            syncSavedReceiptValuesIntoCurrentBreakdown(savedRows);
+                        });
+                    }
+                }
+
+                await refreshCurrentMerchantBreakdown().catch(() => false);
+
+                // Exit edit mode after successful save
+                toggleBreakdownEditMode();
+                showToast(`Receipt values updated (${updatedCount})`, 'success');
+
+            } catch (err) {
+                showToast(err.message || 'Unable to save changes', 'error');
+            }
+        }
+
+        function cancelBreakdownEdit() {
+            breakdownEditMode = false;
+            const editBtn = document.getElementById('breakdownEditBtn');
+            const saveBtn = document.getElementById('breakdownSaveBtn');
+            const cancelBtn = document.getElementById('breakdownCancelBtn');
+            const merchantEditBtn = document.getElementById('merchantBreakdownEditBtn');
+            const merchantSaveBtn = document.getElementById('merchantBreakdownSaveBtn');
+            const merchantCancelBtn = document.getElementById('merchantBreakdownCancelBtn');
+            if (editBtn) editBtn.style.display = 'flex';
+            if (saveBtn) saveBtn.style.display = 'none';
+            if (cancelBtn) cancelBtn.style.display = 'none';
+            if (merchantEditBtn) merchantEditBtn.style.display = 'flex';
+            if (merchantSaveBtn) merchantSaveBtn.style.display = 'none';
+            if (merchantCancelBtn) merchantCancelBtn.style.display = 'none';
+
+            const table = document.querySelector('.sheet-breakdown-responsive-table');
+            if (table) makeTableReadOnly(table);
+        }
+
+        async function refreshCurrentMerchantBreakdown() {
+            const container = currentMerchantBreakdownContainer || document.getElementById('remittanceMerchantBreakdown');
+            const remittanceId = Number(selectedRemittanceId || currentSelectedBreakdownRemittance?.id || currentSelectedBreakdownRemittance?.remittance_id || 0);
+
+            if (!container || !remittanceId) {
+                return false;
+            }
+
+            // Clear cache to force fresh fetch from server
+            delete remittanceBreakdownCache[remittanceId];
+
+            try {
+                const response = await fetch(`/remittances/${encodeURIComponent(remittanceId)}/merchant-breakdown?t=${Date.now()}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data) {
+                    return false;
+                }
+
+                remittanceBreakdownCache[remittanceId] = data;
+                paintMerchantBreakdown(container, data, currentSelectedBreakdownRemittance || null);
+                return true;
+            } catch (error) {
+                return false;
             }
         }
 
@@ -7430,6 +7777,7 @@
                 return;
             }
 
+            currentMerchantBreakdownContainer = container;
             currentSelectedBreakdownRemittance = remittance || null;
             currentSelectedBreakdownPayload = null;
 
@@ -7439,13 +7787,15 @@
                     <p style="margin-top: 8px; font-size: 13px;">Loading merchant breakdown...</p>
                 </div>
             `;
-
-            if (remittanceBreakdownCache[remittanceId]) {
-                paintMerchantBreakdown(container, remittanceBreakdownCache[remittanceId], remittance);
-                return;
-            }
-
-            fetch(`/remittances/${remittanceId}/merchant-breakdown`)
+            
+            // Always fetch fresh data to ensure saved values are displayed
+            fetch(`/remittances/${remittanceId}/merchant-breakdown?t=${Date.now()}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     remittanceBreakdownCache[remittanceId] = data;
@@ -7604,8 +7954,19 @@
 
             container.innerHTML = `
                 <div style="margin-top:0; border:1px solid #dce8d4; border-radius:8px; overflow:hidden; background:#fff;">
-                    <div style="padding:12px 14px; background:linear-gradient(135deg,#f0f7ed 0%,#f8fcf5 100%); border-bottom:1px solid #dce8d4; font-size:13px; font-weight:700; color:#2d4016;">
-                        Detailed Breakdown (Sheet Format)
+                    <div style="padding:12px 14px; background:linear-gradient(135deg,#f0f7ed 0%,#f8fcf5 100%); border-bottom:1px solid #dce8d4; font-size:13px; font-weight:700; color:#2d4016; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Detailed Breakdown (Sheet Format)</span>
+                        <div style="display:flex; gap:8px;">
+                            <button id="merchantBreakdownEditBtn" class="modal-btn submit" onclick="toggleBreakdownEditMode()" style="display:flex; align-items:center; gap:4px; padding:6px 12px; font-size:12px;">
+                                <i class="fas fa-edit"></i>Edit
+                            </button>
+                            <button id="merchantBreakdownSaveBtn" class="modal-btn submit" onclick="saveBreakdownChanges()" style="display:none; padding:6px 12px; font-size:12px; gap:4px; align-items:center;">
+                                <i class="fas fa-save"></i>Save
+                            </button>
+                            <button id="merchantBreakdownCancelBtn" class="modal-btn cancel" onclick="cancelBreakdownEdit()" style="display:none; padding:6px 12px; font-size:12px;">
+                                <i class="fas fa-times"></i>Cancel
+                            </button>
+                        </div>
                     </div>
                     <div class="sheet-breakdown-responsive-wrap" style="overflow:auto; max-height:500px; position:relative;">
                         <table class="sheet-breakdown-responsive-table" style="width:100%; border-collapse:collapse; table-layout:auto;">
@@ -8367,19 +8728,29 @@
             const riderId = document.getElementById('remitRiderId')?.value;
             if (!hintEl || !riderId) return;
 
-            const computedExpectedTotal = getAutoTotalRemitByRider(riderId);
-            const expectedTotal = computedExpectedTotal > 0
-                ? computedExpectedTotal
-                : getAutoTotalCollectionByRider(riderId);
+            const grandTotalValue = parseFloat(document.getElementById('grandTotal')?.value || '0') || 0;
+            const expectedTotal = grandTotalValue > 0
+                ? grandTotalValue
+                : (() => {
+                    const computedExpectedTotal = getAutoTotalRemitByRider(riderId);
+                    return computedExpectedTotal > 0
+                        ? computedExpectedTotal
+                        : getAutoTotalCollectionByRider(riderId);
+                })();
             const alreadyRemitted = getAlreadyRemittedAmountByRider(riderId);
             const remainingBefore = Math.max(expectedTotal - alreadyRemitted, 0);
-            const currentRemit = parseFloat(document.getElementById('totalRemit')?.value || '0') || 0;
+            const currentRemit = Array.from(document.querySelectorAll('.payment-amount-input'))
+                .reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
             const remainingAfter = Math.max(remainingBefore - currentRemit, 0);
 
-            if (alreadyRemitted > 0 && remainingBefore > 0) {
+            if (currentRemit > 0 && remainingAfter > 0) {
                 hintEl.style.display = 'block';
                 hintEl.style.color = '#b45309';
-                hintEl.textContent = `Balance: ₱${remainingBefore.toFixed(2)} | After this entry: ₱${remainingAfter.toFixed(2)}`;
+                if (alreadyRemitted > 0) {
+                    hintEl.textContent = `Balance: ₱${remainingBefore.toFixed(2)} | After this entry: ₱${remainingAfter.toFixed(2)}`;
+                } else {
+                    hintEl.textContent = `Balance after this entry: ₱${remainingAfter.toFixed(2)}`;
+                }
                 return;
             }
 
@@ -8411,7 +8782,43 @@
             const totalTips = parseFloat(rawTips || '0') || 0;
             const totalRemit = parseFloat(rawRemit || '0') || 0;
             grandTotalInput.value = (totalRemit + totalDeliveryFee + totalTips).toFixed(2);
+            // keep cash collection displays in sync with grand total when present
+            try { updateCashCollectionFromGrandTotal(); } catch (e) { /* ignore */ }
         }
+
+        function updateCashCollectionFromGrandTotal() {
+            const grandTotalInput = document.getElementById('grandTotal');
+            const cashDisplay = document.getElementById('cashCollectionDisplay');
+            const cashStat = document.getElementById('cashCollectionStat');
+            if (!grandTotalInput || (!cashDisplay && !cashStat)) return;
+
+            const raw = (grandTotalInput.value || '').toString().trim();
+            if (raw === '') {
+                // restore original server-side value where available
+                if (cashStat && cashStat.dataset && cashStat.dataset.originalValue) {
+                    const orig = parseFloat(cashStat.dataset.originalValue) || 0;
+                    const txt = `₱${orig.toFixed(2)}`;
+                    if (cashDisplay) cashDisplay.textContent = txt;
+                    cashStat.textContent = txt;
+                }
+                return;
+            }
+
+            const val = parseFloat(raw) || 0;
+            const formatted = `₱${val.toFixed(2)}`;
+            if (cashDisplay) cashDisplay.textContent = formatted;
+            if (cashStat) cashStat.textContent = formatted;
+        }
+
+        // ensure overview reflects grand total on load and when manually edited
+        window.addEventListener('DOMContentLoaded', function() {
+            try { updateCashCollectionFromGrandTotal(); } catch (e) {}
+            const g = document.getElementById('grandTotal');
+            if (g) {
+                g.addEventListener('input', updateCashCollectionFromGrandTotal);
+                g.addEventListener('change', updateCashCollectionFromGrandTotal);
+            }
+        });
 
         function updateTotalDeliveriesDateHint() {
             const hintEl = document.getElementById('totalDeliveriesHint');
@@ -8641,7 +9048,7 @@
 
             // Highlight the active dropdown
             document.querySelectorAll('.rider-dropdown').forEach(d => d.classList.remove('active-highlight'));
-            if (selectedRow) {
+                if (selectedRow) {
                 const dropdown = selectedRow.querySelector('.rider-dropdown');
                 if (dropdown) dropdown.classList.add('active-highlight');
             }
@@ -8654,6 +9061,7 @@
             document.getElementById('totalDeliveryFee').value = getAutoTotalDeliveryChargeByRider(riderId);
             document.getElementById('totalCollection').value = getAutoTotalCollectionByRider(riderId).toFixed(2);
             document.getElementById('totalTips').value = getAutoTotalTipsByRider(riderId).toFixed(2);
+            const alreadyRemittedAmount = getAlreadyRemittedAmountByRider(riderId);
             updateTotalDeliveriesDateHint();
             updateTotalDeliveryFeeHint();
             updateTotalCollectionHint();
@@ -8668,13 +9076,22 @@
 
             try {
                 const breakdownTotalRemit = await getDetailedBreakdownTotalRemitByRider(riderId, getRemitStatsDate());
-                document.getElementById('totalRemit').value = breakdownTotalRemit > 0 ? breakdownTotalRemit.toFixed(2) : '';
+                const expectedTotal = breakdownTotalRemit > 0
+                    ? breakdownTotalRemit
+                    : getAutoTotalCollectionByRider(riderId);
+                const remainingBalance = Math.max(expectedTotal - alreadyRemittedAmount, 0);
+                document.getElementById('totalRemit').value = remainingBalance > 0
+                    ? remainingBalance.toFixed(2)
+                    : (breakdownTotalRemit > 0 ? breakdownTotalRemit.toFixed(2) : '');
             } catch (_) {
                 const computedExpectedTotal = getAutoTotalRemitByRider(riderId);
                 const expectedTotal = computedExpectedTotal > 0
                     ? computedExpectedTotal
                     : getAutoTotalCollectionByRider(riderId);
-                document.getElementById('totalRemit').value = expectedTotal > 0 ? expectedTotal.toFixed(2) : '';
+                const remainingBalance = Math.max(expectedTotal - alreadyRemittedAmount, 0);
+                document.getElementById('totalRemit').value = remainingBalance > 0
+                    ? remainingBalance.toFixed(2)
+                    : (expectedTotal > 0 ? expectedTotal.toFixed(2) : '');
             }
 
             updateGrandTotalField();
@@ -8752,6 +9169,8 @@
                     const amountInput = document.getElementById(`amount${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
                     paymentBreakdown[mode] = amountInput ? parseFloat(amountInput.value) || 0 : 0;
                 });
+                const paymentBreakdownTotal = Object.values(paymentBreakdown)
+                    .reduce((sum, amount) => sum + (parseFloat(amount) || 0), 0);
 
                 // Convert selected modes to string format
                 const modeOfPayment = selectedModes.length === 1 ? selectedModes[0] : 'multiple';
@@ -8762,6 +9181,8 @@
                 formData.set('payment_modes_json', JSON.stringify(selectedModes));
                 formData.set('payment_breakdown_json', JSON.stringify(paymentBreakdown));
                 formData.set('remarks_amount', remarksAmount);
+                formData.set('total_remit', paymentBreakdownTotal.toFixed(2));
+                formData.set('grand_total_base', (parseFloat(document.getElementById('grandTotal')?.value || '0') || 0).toFixed(2));
 
                 // Admin optional reset for blocked riders: allow bypassing previous-day block check.
                 if (hasOverride && isBlockedRow) {
@@ -8777,7 +9198,7 @@
                     riderName: riderName,
                     totalDeliveries: totalDeliveries,
                     totalDeliveryFee: totalDeliveryFee,
-                    totalRemit: totalRemit,
+                    totalRemit: paymentBreakdownTotal.toFixed(2),
                     totalTips: totalTips,
                     totalCollection: totalCollection,
                     modeOfPayment: modeOfPayment,
@@ -8822,13 +9243,32 @@
                     }
                 }
 
-                document.getElementById('cashCollectionDisplay').textContent = '₱' + cashAmount.toFixed(2).replace(
-                    /\B(?=(\d{3})+(?!\d))/g, ',');
+                // Always sync cash collection from grandTotal if present
+                try { updateCashCollectionFromGrandTotal(); } catch (e) {}
                 document.getElementById('digitalCollectionDisplay').textContent = '₱' + digitalAmount.toFixed(2).replace(
                     /\B(?=(\d{3})+(?!\d))/g, ',');
-                const netTurnover = Math.max((parseFloat(totalRemit || 0) || 0) - (remarksData.totalAmount || 0), 0);
+
+                // NET TO TURN OVER: sum of payment breakdown cash/gcash fields
+                let netTurnover = 0;
+                document.querySelectorAll('.payment-amount-input').forEach(input => {
+                    netTurnover += parseFloat(input.value) || 0;
+                });
                 document.getElementById('netTurnoverDisplay').textContent = '₱' + netTurnover.toFixed(2)
                     .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+                // Ensure the remit amount sent to backend matches Grand Total (Sheet) / Cash Collection
+                if (pendingRemittance && pendingRemittance.formData) {
+                    const grandTotalInput = document.getElementById('grandTotal');
+                    let remitValue = 0;
+                    if (paymentBreakdownTotal > 0) {
+                        remitValue = paymentBreakdownTotal;
+                    } else if (grandTotalInput && grandTotalInput.value !== '') {
+                        remitValue = parseFloat(grandTotalInput.value) || 0;
+                    } else {
+                        remitValue = netTurnover;
+                    }
+                    pendingRemittance.formData.set('totalRemit', remitValue.toFixed(2));
+                }
 
                 // Update remarks in details panel
                 const remarksSection = document.querySelector('.expenses-section .expenses-content');
@@ -11046,25 +11486,8 @@
             const totalRemitInput = document.getElementById('totalRemit');
 
             function getBreakdownBaseAmount() {
-                const remitValue = parseFloat(totalRemitInput?.value || '0') || 0;
-                if (remitValue > 0) {
-                    return remitValue;
-                }
-
-                const riderId = document.getElementById('remitRiderId')?.value;
-                if (riderId) {
-                    const computedExpectedTotal = getAutoTotalRemitByRider(riderId);
-                    const expectedTotal = computedExpectedTotal > 0
-                        ? computedExpectedTotal
-                        : getAutoTotalCollectionByRider(riderId);
-                    const alreadyRemitted = getAlreadyRemittedAmountByRider(riderId);
-                    const remainingBefore = Math.max(expectedTotal - alreadyRemitted, 0);
-                    if (remainingBefore > 0) {
-                        return remainingBefore;
-                    }
-                }
-
-                return parseFloat(totalCollection?.value || '0') || 0;
+                const grandTotalValue = parseFloat(document.getElementById('grandTotal')?.value || '0') || 0;
+                return grandTotalValue > 0 ? grandTotalValue : 0;
             }
 
             function updatePaymentBreakdown() {
@@ -11079,14 +11502,15 @@
 
                 breakdownSection.style.display = 'block';
                 const breakdownBaseAmount = getBreakdownBaseAmount();
-                
+                const baseForDefaults = breakdownBaseAmount;
+
                 // Build breakdown fields HTML
                 let fieldsHTML = '';
-                let totalPayment = 0;
 
                 selectedModes.forEach(mode => {
                     const modeLabel = mode === 'cash' ? 'Cash' : 'GCash';
                     const inputId = `amount${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+                    const defaultValue = (baseForDefaults / selectedModes.length) || 0;
                     
                     fieldsHTML += `
                         <div style="display: grid; grid-template-columns: 1fr 150px; gap: 12px; align-items: center;">
@@ -11098,8 +11522,8 @@
                                 step="0.01" 
                                 min="0"
                                 placeholder="0.00"
-                                value="${breakdownBaseAmount / selectedModes.length}"
-                                style="background: #fff; border: 1.5px solid #d6eacc; padding: 8px 12px; border-radius: 6px; font-weight: 600,"
+                                value="${defaultValue.toFixed(2)}"
+                                style="background: #fff; border: 1.5px solid #d6eacc; padding: 8px 12px; border-radius: 6px; font-weight: 600;"
                                 onchange="updateTotalPaymentDisplay()">
                         </div>
                     `;

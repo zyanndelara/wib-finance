@@ -1,11 +1,12 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Mail\PasswordResetPinMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
@@ -249,38 +250,9 @@ class AuthController extends Controller {
                 ]
             );
 
-            // Send PIN via Brevo API (uses BREVO_API_KEY for REST API authentication)
+            // Send PIN via SMTP using the configured mailer
             try {
-                $htmlContent = view('emails.pin-reset', [
-                    'pin'       => $pin,
-                    'userEmail' => $email,
-                ])->render();
-
-                $apiKey = env('BREVO_API_KEY');
-                if (!$apiKey) {
-                    Log::error('BREVO_API_KEY is not set in .env file');
-                    return back()->withErrors(['email' => 'Email service not configured. Please contact administrator.'])->withInput();
-                }
-
-                $response = Http::withHeaders([
-                    'api-key'      => $apiKey,
-                    'Content-Type' => 'application/json',
-                ])->post('https://api.brevo.com/v3/smtp/email', [
-                    'sender' => [
-                        'name'  => config('mail.from.name'),
-                        'email' => config('mail.from.address'),
-                    ],
-                    'to' => [
-                        ['email' => $email],
-                    ],
-                    'subject'     => 'Your Password Reset PIN Code',
-                    'htmlContent' => $htmlContent,
-                ]);
-
-                if ($response->failed()) {
-                    Log::error('Brevo API PIN email failed: ' . $response->body());
-                    return back()->withErrors(['email' => 'Failed to send PIN email. Please try again later.'])->withInput();
-                }
+                Mail::to($email)->send(new PasswordResetPinMail($pin, $email));
             } catch (\Exception $e) {
                 Log::error('Password reset PIN email failed: ' . $e->getMessage());
                 return back()->withErrors(['email' => 'Failed to send PIN email. Please try again later.'])->withInput();
